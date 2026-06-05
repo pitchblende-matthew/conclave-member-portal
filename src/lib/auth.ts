@@ -61,3 +61,9 @@ export async function requireUser(): Promise<User> {
   if (!user) throw new Error("UNAUTHENTICATED");
   return user;
 }
+
+export async function requireAdmin(): Promise<User> {
+  const user = await requireUser();
+  if (user.is_admin !== 1) throw new Error("FORBIDDEN");
+  return user;
+}

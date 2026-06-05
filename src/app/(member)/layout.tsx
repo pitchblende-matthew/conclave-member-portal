@@ -20,7 +20,7 @@ export default async function MemberLayout({ children }: { children: React.React
           <Link href="/companies">Companies</Link>
           <Link href="/events">Events</Link>
           <Link href="/profile">Profile</Link>
-          {user.is_admin === 1 && <Link href="/admin/invites">Invites</Link>}
+          {user.is_admin === 1 && <Link href="/admin">Admin</Link>}
           <a href={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}>Sign out</a>
         </nav>
       </header>

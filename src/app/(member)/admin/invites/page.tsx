@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -24,6 +25,7 @@ export default async function AdminInvites() {
 
   return (
     <>
+      <p className="meta"><Link href="/admin">← Admin</Link></p>
       <div className="tag">Admin · Invitations</div>
       <h1 style={{ fontSize: "2.6rem" }}>Invite members</h1>
       <p className="meta">Generate an invitation, then share the link. Each code works once.</p>

@@ -1,27 +1,27 @@
-"use server";
-
-import { redirect } from "next/navigation";
-import { getDb } from "@/lib/db";
-import { verifyPassword } from "@/lib/crypto";
-import { createSession } from "@/lib/auth";
-import type { User } from "@/lib/types";
-
-export type LoginState = { error?: string };
-
-export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Enter your email and password." };
-
-  const user = await getDb()
-    .prepare("SELECT * FROM users WHERE email = ?")
-    .bind(email)
-    .first<User>();
-
-  if (!user || !(await verifyPassword(password, user.password_hash))) {
-    return { error: "Invalid email or password." };
+{
+  "name": "conclave-portal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "db:migrate:local": "wrangler d1 migrations apply conclave-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply conclave-db --remote"
+  },
+  "dependencies": {
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250121.0",
+    "@opennextjs/cloudflare": "^1.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.86.0"
   }
-
-  await createSession(user.id);
-  redirect("/dashboard");
 }

@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
 import ProfileForm from "@/app/(member)/profile/form";
+import Wordmark from "@/components/wordmark";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,8 @@ export default async function Onboarding() {
 
   return (
     <main className="page" style={{ maxWidth: 680, margin: "0 auto", padding: "3rem 1.5rem 4rem" }}>
-      <div className="eyebrow">Conclave · Welcome</div>
+      <div style={{ marginBottom: "1rem" }}><Wordmark size={1.6} /></div>
+      <div className="eyebrow">Welcome</div>
       <h1 style={{ fontSize: "2.6rem" }}>Complete your profile</h1>
       <p className="meta" style={{ maxWidth: 560 }}>
         You&apos;re approved. Add a photo and a few details so the rest of the network knows who you are.

@@ -3,18 +3,20 @@ import { getMediaBucket } from "@/lib/media";
 
 export const dynamic = "force-dynamic";
 
-// Serves member/company images from R2. Gated to signed-in members so portal
-// media stays private. The session cookie is scoped to the mount path, so it is
-// sent with these same-origin requests automatically.
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ key: string[] }> }
-) {
+// Serves member/company images from R2. The object key is passed as a query
+// param (not a path segment) so the URL doesn't end in an image extension —
+// Webflow Cloud's edge would otherwise route a `.png`/`.jpg` request to its
+// static-asset layer and 404 before reaching this Worker.
+//
+// Gated to signed-in members; the session cookie is scoped to the mount path
+// and sent automatically with same-origin requests.
+export async function GET(req: Request) {
   const user = await getSessionUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const { key: segments } = await params;
-  const key = segments.join("/");
+  const key = new URL(req.url).searchParams.get("key");
+  if (!key) return new Response("Bad request", { status: 400 });
+
   const object = await getMediaBucket().get(key);
   if (!object) return new Response("Not found", { status: 404 });
 

@@ -31,6 +31,22 @@ export interface Company {
   created_at: number;
 }
 
+export interface Topic {
+  id: number;
+  title: string;
+  created_by: number;
+  created_at: number;
+  last_activity_at: number;
+}
+
+export interface Post {
+  id: number;
+  topic_id: number;
+  user_id: number;
+  body: string;
+  created_at: number;
+}
+
 export interface EventRow {
   id: number;
   title: string;

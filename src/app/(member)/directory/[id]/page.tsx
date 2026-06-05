@@ -18,7 +18,7 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
     .prepare(
       `SELECT u.id, u.name, u.email, u.role, u.location, u.bio, u.avatar_key,
               u.pronouns, u.phone, u.website, u.linkedin, u.twitter, u.company_id,
-              c.name AS company_name
+              COALESCE(c.name, NULLIF(u.company, '')) AS company_name
        FROM users u
        LEFT JOIN companies c ON c.id = u.company_id
        WHERE u.id = ?`
@@ -48,7 +48,11 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
               {member.role || ""}
               {member.role && member.company_name ? " · " : ""}
               {member.company_name ? (
-                <Link href={`/companies/${member.company_id}`}>{member.company_name}</Link>
+                member.company_id ? (
+                  <Link href={`/companies/${member.company_id}`}>{member.company_name}</Link>
+                ) : (
+                  member.company_name
+                )
               ) : null}
               {!member.role && !member.company_name ? "—" : ""}
             </p>

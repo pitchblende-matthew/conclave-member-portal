@@ -7,29 +7,33 @@ import { createSession } from "@/lib/auth";
 
 export type SignupState = { error?: string };
 
-// Invite-only signup.
-// Bootstrap rule: if there are zero users yet, the first signup is allowed
-// without an invite and is made an admin (so you can issue invites afterward).
+// Step 1 — Request access.
+// Anyone may request access; the account starts as `pending` until an admin
+// approves it. A valid invite code from a member auto-approves on the spot.
+// Bootstrap: the very first account needs no invite and becomes an approved admin.
 export async function signup(_prev: SignupState, formData: FormData): Promise<SignupState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const field = (name: string) => String(formData.get(name) ?? "").trim();
+  const email = field("email").toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const name = String(formData.get("name") ?? "").trim();
-  const invite = String(formData.get("invite") ?? "").trim();
+  const name = field("name");
+  const company = field("company");
+  const role = field("role");
+  const linkedin = field("linkedin");
+  const invite = field("invite");
 
   if (!email || !password) return { error: "Email and password are required." };
   if (password.length < 8) return { error: "Use a password of at least 8 characters." };
 
   const db = getDb();
-
   const existing = await db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
   if (existing) return { error: "An account with that email already exists." };
 
   const countRow = await db.prepare("SELECT COUNT(*) AS n FROM users").first<{ n: number }>();
   const isFirstUser = (countRow?.n ?? 0) === 0;
 
+  // Validate an invite if one was supplied.
   let inviteValid = false;
-  if (!isFirstUser) {
-    if (!invite) return { error: "An invitation code is required to join." };
+  if (invite && !isFirstUser) {
     const inv = await db
       .prepare("SELECT token FROM invites WHERE token = ? AND used_by IS NULL")
       .bind(invite)
@@ -38,17 +42,25 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
     inviteValid = true;
   }
 
+  const approved = isFirstUser || inviteValid;
   const now = Date.now();
   const hash = await hashPassword(password);
+
   const res = await db
     .prepare(
-      "INSERT INTO users (email, password_hash, name, is_admin, created_at) VALUES (?, ?, ?, ?, ?)"
+      `INSERT INTO users (email, password_hash, name, company, role, linkedin, is_admin, status, approved_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .bind(email, hash, name, isFirstUser ? 1 : 0, now)
+    .bind(
+      email, hash, name, company, role, linkedin,
+      isFirstUser ? 1 : 0,
+      approved ? "approved" : "pending",
+      approved ? now : null,
+      now
+    )
     .run();
 
   const userId = Number(res.meta.last_row_id);
-
   if (inviteValid) {
     await db
       .prepare("UPDATE invites SET used_by = ?, used_at = ? WHERE token = ?")
@@ -57,5 +69,6 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
   }
 
   await createSession(userId);
-  redirect("/profile");
+  // Approved members go straight to onboarding; everyone else waits for approval.
+  redirect(approved ? "/onboarding" : "/pending");
 }

@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Avatar from "@/components/avatar";
-import { updateProfile, uploadAvatar, removeAvatar } from "./actions";
+import { updateProfile, uploadAvatar, removeAvatar, type ProfileState } from "./actions";
 
 type Initial = {
   name: string;
@@ -26,9 +26,17 @@ type CompanyOption = { id: number; name: string };
 export default function ProfileForm({
   initial,
   companies,
+  submitAction = updateProfile,
+  submitLabel = "Save changes",
+  showSaved = true,
+  allowCreateCompany = true,
 }: {
   initial: Initial;
   companies: CompanyOption[];
+  submitAction?: (prev: ProfileState, formData: FormData) => Promise<ProfileState>;
+  submitLabel?: string;
+  showSaved?: boolean;
+  allowCreateCompany?: boolean;
 }) {
   const router = useRouter();
 
@@ -38,7 +46,7 @@ export default function ProfileForm({
   const [preview, setPreview] = useState<string | null>(null);
 
   // Details
-  const [state, formAction, pending] = useActionState(updateProfile, {});
+  const [state, formAction, pending] = useActionState(submitAction, {});
 
   // Refresh server data after a successful avatar change so the stored image shows.
   useEffect(() => {
@@ -107,9 +115,11 @@ export default function ProfileForm({
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-            <p className="note" style={{ marginTop: "0.35rem" }}>
-              Not listed? <Link href="/companies/new">Add a company</Link>.
-            </p>
+            {allowCreateCompany && (
+              <p className="note" style={{ marginTop: "0.35rem" }}>
+                Not listed? <Link href="/companies/new">Add a company</Link>.
+              </p>
+            )}
           </div>
           <div>
             <label htmlFor="location">Location</label>
@@ -136,10 +146,10 @@ export default function ProfileForm({
         <label htmlFor="bio">Short bio</label>
         <textarea id="bio" name="bio" defaultValue={initial.bio} />
 
-        {state?.ok && <div className="note">Saved.</div>}
+        {showSaved && state?.ok && <div className="note">Saved.</div>}
         {state?.error && <div className="error">{state.error}</div>}
         <button className="btn" type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save changes"}
+          {pending ? "Saving…" : submitLabel}
         </button>
       </form>
     </>

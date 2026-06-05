@@ -7,6 +7,8 @@ export const dynamic = "force-dynamic";
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  if (user.status !== "approved") redirect("/pending");
+  if (user.onboarded !== 1) redirect("/onboarding");
 
   return (
     <div className="shell">

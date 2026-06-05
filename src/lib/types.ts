@@ -15,6 +15,10 @@ export interface User {
   twitter: string;
   company_id: number;
   is_admin: number;
+  status: string; // pending | approved | declined
+  onboarded: number;
+  approved_at: number | null;
+  approved_by: number | null;
   created_at: number;
 }
 

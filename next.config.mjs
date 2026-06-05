@@ -30,6 +30,9 @@ const nextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins,
+      // Profile photos / company logos post through Server Actions; the default
+      // cap is 1 MB, but media.ts allows images up to 5 MB. Allow headroom.
+      bodySizeLimit: "6mb",
     },
   },
 };

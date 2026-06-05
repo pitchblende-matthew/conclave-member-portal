@@ -40,7 +40,11 @@ export async function storeImage(prefix: string, file: unknown): Promise<StoreRe
 
   const key = `${prefix}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
   const data = await file.arrayBuffer();
-  await getMediaBucket().put(key, data, { httpMetadata: { contentType: file.type } });
+  try {
+    await getMediaBucket().put(key, data, { httpMetadata: { contentType: file.type } });
+  } catch {
+    return { error: "Couldn't save the image. Object storage may not be configured yet." };
+  }
   return { key };
 }
 

@@ -204,3 +204,22 @@ main.page { padding: 2.5rem 0 4rem; }
   background: none; border: none; padding: 0; cursor: pointer; font: inherit;
   color: #9b2c2c; font-size: 0.8rem; text-decoration: underline;
 }
+
+/* Category chips / filters */
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip {
+  display: inline-block; padding: 0.3rem 0.85rem; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  font-size: 0.78rem; letter-spacing: 0.02em; text-decoration: none; cursor: pointer;
+}
+.chip:hover { border-color: var(--sage-soft); }
+.chip-active { background: var(--sage); color: var(--cream); border-color: var(--sage); }
+.chip-active:hover { border-color: var(--sage); }
+.chip-static {
+  background: var(--cream-deep); color: var(--sage-deep); border-color: transparent;
+  font-family: "JetBrains Mono", monospace; font-size: 0.6rem; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 0.22rem 0.6rem; flex: none;
+}
+.inline-form { display: flex; gap: 0.6rem; align-items: center; }
+.inline-form input { flex: 1; }
+.inline-form .inline-btn { flex: none; }

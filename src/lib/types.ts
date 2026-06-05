@@ -38,9 +38,18 @@ export interface Company {
 export interface Topic {
   id: number;
   title: string;
+  category_id: number;
   created_by: number;
   created_at: number;
   last_activity_at: number;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  sort_order: number;
+  created_at: number;
 }
 
 export interface Post {

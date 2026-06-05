@@ -2,13 +2,13 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Avatar from "@/components/avatar";
-import { updateProfile, uploadAvatar, removeAvatar, type ProfileState } from "./actions";
+import { updateProfile, uploadAvatar, removeAvatar } from "./actions";
+import { completeOnboarding } from "@/app/onboarding/actions";
 
 type Initial = {
   name: string;
-  companyId: number;
+  companyName: string;
   role: string;
   location: string;
   pronouns: string;
@@ -26,19 +26,18 @@ type CompanyOption = { id: number; name: string };
 export default function ProfileForm({
   initial,
   companies,
-  submitAction = updateProfile,
-  submitLabel = "Save changes",
-  showSaved = true,
-  allowCreateCompany = true,
+  mode = "profile",
 }: {
   initial: Initial;
   companies: CompanyOption[];
-  submitAction?: (prev: ProfileState, formData: FormData) => Promise<ProfileState>;
-  submitLabel?: string;
-  showSaved?: boolean;
-  allowCreateCompany?: boolean;
+  mode?: "profile" | "onboarding";
 }) {
   const router = useRouter();
+  const onboarding = mode === "onboarding";
+
+  // Submit action imported directly (not passed as a prop) so the server-action
+  // reference is stable on the client.
+  const submit = onboarding ? completeOnboarding : updateProfile;
 
   // Avatar upload
   const [upState, upAction, upPending] = useActionState(uploadAvatar, {});
@@ -46,7 +45,7 @@ export default function ProfileForm({
   const [preview, setPreview] = useState<string | null>(null);
 
   // Details
-  const [state, formAction, pending] = useActionState(submitAction, {});
+  const [state, formAction, pending] = useActionState(submit, {});
 
   // Refresh server data after a successful avatar change so the stored image shows.
   useEffect(() => {
@@ -108,18 +107,23 @@ export default function ProfileForm({
             <input id="role" name="role" defaultValue={initial.role} />
           </div>
           <div>
-            <label htmlFor="company_id">Company</label>
-            <select id="company_id" name="company_id" defaultValue={String(initial.companyId)}>
-              <option value="0">— None —</option>
+            <label htmlFor="company_name">Company</label>
+            <input
+              id="company_name"
+              name="company_name"
+              list="company-options"
+              defaultValue={initial.companyName}
+              placeholder="Search or type to add"
+              autoComplete="off"
+            />
+            <datalist id="company-options">
               {companies.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.name} />
               ))}
-            </select>
-            {allowCreateCompany && (
-              <p className="note" style={{ marginTop: "0.35rem" }}>
-                Not listed? <Link href="/companies/new">Add a company</Link>.
-              </p>
-            )}
+            </datalist>
+            <p className="note" style={{ marginTop: "0.35rem" }}>
+              Pick an existing company, or type a new name to add it.
+            </p>
           </div>
           <div>
             <label htmlFor="location">Location</label>
@@ -146,10 +150,10 @@ export default function ProfileForm({
         <label htmlFor="bio">Short bio</label>
         <textarea id="bio" name="bio" defaultValue={initial.bio} />
 
-        {showSaved && state?.ok && <div className="note">Saved.</div>}
+        {!onboarding && state?.ok && <div className="note">Saved.</div>}
         {state?.error && <div className="error">{state.error}</div>}
         <button className="btn" type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? "Saving…" : onboarding ? "Finish & enter" : "Save changes"}
         </button>
       </form>
     </>

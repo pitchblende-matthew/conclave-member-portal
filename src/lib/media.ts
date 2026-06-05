@@ -21,10 +21,11 @@ export function getMediaBucket(): R2Bucket {
   return env.MEDIA;
 }
 
-// Builds the in-app URL that serves a stored object (basePath-aware).
+// Builds the in-app URL that serves a stored object. The key goes in a query
+// param so the path has no file extension (see app/api/media/route.ts).
 export function mediaUrl(key: string): string {
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  return `${base}/api/media/${key}`;
+  return `${base}/api/media?key=${encodeURIComponent(key)}`;
 }
 
 export type StoreResult = { key: string } | { error: string };

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import Wordmark from "@/components/wordmark";
 import { login } from "./actions";
 
 export default function LoginPage() {
@@ -9,7 +10,8 @@ export default function LoginPage() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="eyebrow">Conclave · Members</div>
+        <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
+        <div className="eyebrow">Members</div>
         <h1>Sign in</h1>
         <p className="meta">Welcome back. Enter your details to continue.</p>
         <form action={formAction}>

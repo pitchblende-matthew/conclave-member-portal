@@ -21,7 +21,7 @@ export default async function Directory() {
   return (
     <>
       <div className="tag">Member directory</div>
-      <h1 style={{ fontSize: "2.6rem" }}>Who&apos;s inside</h1>
+      <h1 style={{ fontSize: "2.6rem" }}>Who&apos;s <span className="em">inside</span></h1>
       <div className="grid" style={{ marginTop: "1.5rem" }}>
         {results.map((m) => (
           <Link key={m.id} href={`/directory/${m.id}`} className="card member-card">

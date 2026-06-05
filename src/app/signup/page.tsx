@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Wordmark from "@/components/wordmark";
 import { signup } from "./actions";
 
 function SignupForm() {
@@ -12,7 +13,8 @@ function SignupForm() {
   const [state, formAction, pending] = useActionState(signup, {});
   return (
     <div className="auth-card">
-      <div className="eyebrow">Conclave · By invitation</div>
+      <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
+      <div className="eyebrow">By invitation</div>
       <h1>Request access</h1>
       <p className="meta">
         {invite

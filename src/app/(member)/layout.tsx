@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
+import Wordmark from "@/components/wordmark";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +14,8 @@ export default async function MemberLayout({ children }: { children: React.React
   return (
     <div className="shell">
       <header className="topbar">
-        <Link href="/dashboard" className="wordmark" style={{ textDecoration: "none", color: "inherit" }}>
-          Conclave
+        <Link href="/dashboard" className="wordmark-link">
+          <Wordmark size={1.5} />
         </Link>
         <nav className="member-nav">
           <Link href="/dashboard">Dashboard</Link>

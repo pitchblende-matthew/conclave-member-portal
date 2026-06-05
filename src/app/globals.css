@@ -1,13 +1,13 @@
 :root {
   --cream: #f5f1e8;
-  --cream-deep: #ebe4d3;
-  --paper: #ffffff;
-  --ink: #0a0a0a;
-  --sage: #51655a;
-  --sage-deep: #3d4d44;
-  --sage-soft: #8a9890;
-  --muted: #6b6b6b;
-  --line: rgba(10, 10, 10, 0.1);
+  --cream-deep: #e8e1cf;
+  --paper: #fffdf8;
+  --ink: #14140f;
+  --sage: #6e7a5e;
+  --sage-deep: #4c5440;
+  --sage-soft: #9aa088;
+  --muted: #6b695f;
+  --line: rgba(20, 20, 15, 0.12);
 }
 
 * { box-sizing: border-box; }
@@ -71,6 +71,14 @@ input, textarea, select {
   color: var(--ink);
 }
 textarea { min-height: 110px; resize: vertical; }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--sage);
+  box-shadow: 0 0 0 3px rgba(110, 122, 94, 0.16);
+}
+
+/* Olive-sage italic emphasis, echoing the marketing display type */
+.em { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 500; color: var(--sage); }
 
 .btn {
   display: inline-block;
@@ -106,7 +114,20 @@ textarea { min-height: 110px; resize: vertical; }
   flex-wrap: wrap;
   gap: 0.75rem;
 }
-.wordmark { font-family: "Cormorant Garamond", serif; font-size: 1.6rem; font-weight: 600; letter-spacing: 0.02em; }
+/* Brand wordmark (logo) */
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: var(--ink);
+}
+.wordmark-text { position: relative; top: 0.02em; }
+.wordmark-sprig { width: 0.7em; height: auto; color: var(--sage); flex: none; }
+.wordmark-link { text-decoration: none; }
 .member-nav { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
 .member-nav a { color: var(--ink); text-decoration: none; font-size: 0.85rem; letter-spacing: 0.03em; }
 .member-nav a:hover { color: var(--sage); }

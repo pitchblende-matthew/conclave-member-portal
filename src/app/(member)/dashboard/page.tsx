@@ -17,7 +17,9 @@ export default async function Dashboard() {
   return (
     <>
       <div className="tag">Member dashboard</div>
-      <h1 style={{ fontSize: "2.6rem" }}>Welcome{user?.name ? `, ${user.name}` : ""}.</h1>
+      <h1 style={{ fontSize: "2.6rem" }}>
+        Welcome{user?.name ? <>, <span className="em">{user.name}</span></> : ""}.
+      </h1>
       <p className="meta" style={{ maxWidth: 560 }}>
         A small, deliberately curated room for owners and operators. Here&apos;s where things stand.
       </p>

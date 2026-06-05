@@ -18,6 +18,7 @@ export default async function MemberLayout({ children }: { children: React.React
           <Link href="/dashboard">Dashboard</Link>
           <Link href="/directory">Directory</Link>
           <Link href="/companies">Companies</Link>
+          <Link href="/board">Board</Link>
           <Link href="/events">Events</Link>
           <Link href="/profile">Profile</Link>
           {user.is_admin === 1 && <Link href="/admin">Admin</Link>}

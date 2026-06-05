@@ -7,6 +7,12 @@ export interface User {
   role: string;
   location: string;
   bio: string;
+  avatar_key: string;
+  pronouns: string;
+  phone: string;
+  website: string;
+  linkedin: string;
+  twitter: string;
   is_admin: number;
   created_at: number;
 }

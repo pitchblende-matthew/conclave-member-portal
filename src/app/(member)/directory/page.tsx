@@ -9,9 +9,13 @@ export const dynamic = "force-dynamic";
 export default async function Directory() {
   const { results } = await getDb()
     .prepare(
-      "SELECT id, name, company, role, location, bio, avatar_key, pronouns FROM users ORDER BY name COLLATE NOCASE"
+      `SELECT u.id, u.name, u.role, u.location, u.bio, u.avatar_key, u.pronouns,
+              c.name AS company_name
+       FROM users u
+       LEFT JOIN companies c ON c.id = u.company_id
+       ORDER BY u.name COLLATE NOCASE`
     )
-    .all<Partial<User>>();
+    .all<Partial<User> & { company_name: string | null }>();
 
   return (
     <>
@@ -28,7 +32,7 @@ export default async function Directory() {
                   {m.pronouns ? <span className="pronouns"> · {m.pronouns}</span> : null}
                 </h3>
                 <p className="meta" style={{ margin: 0 }}>
-                  {[m.role, m.company].filter(Boolean).join(" · ") || "—"}
+                  {[m.role, m.company_name].filter(Boolean).join(" · ") || "—"}
                 </p>
               </div>
             </div>

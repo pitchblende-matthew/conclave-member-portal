@@ -61,7 +61,7 @@ a { color: var(--sage-deep); }
 .auth-card h1 { font-size: 2.4rem; }
 
 label { display: block; font-size: 0.8rem; letter-spacing: 0.02em; margin: 1rem 0 0.35rem; }
-input, textarea {
+input, textarea, select {
   width: 100%;
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--line);
@@ -166,3 +166,4 @@ main.page { padding: 2.5rem 0 4rem; }
 .detail-list dt { color: var(--muted); }
 .detail-list dd { margin: 0; }
 .links-row { display: flex; gap: 0.6rem; margin-top: 1.25rem; flex-wrap: wrap; }
+.topline { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }

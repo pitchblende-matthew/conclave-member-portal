@@ -2,12 +2,13 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Avatar from "@/components/avatar";
 import { updateProfile, uploadAvatar, removeAvatar } from "./actions";
 
 type Initial = {
   name: string;
-  company: string;
+  companyId: number;
   role: string;
   location: string;
   pronouns: string;
@@ -20,7 +21,15 @@ type Initial = {
   avatarUrl: string | null;
 };
 
-export default function ProfileForm({ initial }: { initial: Initial }) {
+type CompanyOption = { id: number; name: string };
+
+export default function ProfileForm({
+  initial,
+  companies,
+}: {
+  initial: Initial;
+  companies: CompanyOption[];
+}) {
   const router = useRouter();
 
   // Avatar upload
@@ -91,8 +100,16 @@ export default function ProfileForm({ initial }: { initial: Initial }) {
             <input id="role" name="role" defaultValue={initial.role} />
           </div>
           <div>
-            <label htmlFor="company">Company</label>
-            <input id="company" name="company" defaultValue={initial.company} />
+            <label htmlFor="company_id">Company</label>
+            <select id="company_id" name="company_id" defaultValue={String(initial.companyId)}>
+              <option value="0">— None —</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <p className="note" style={{ marginTop: "0.35rem" }}>
+              Not listed? <Link href="/companies/new">Add a company</Link>.
+            </p>
           </div>
           <div>
             <label htmlFor="location">Location</label>

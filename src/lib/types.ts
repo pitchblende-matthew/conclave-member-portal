@@ -13,7 +13,21 @@ export interface User {
   website: string;
   linkedin: string;
   twitter: string;
+  company_id: number;
   is_admin: number;
+  created_at: number;
+}
+
+export interface Company {
+  id: number;
+  name: string;
+  logo_key: string;
+  website: string;
+  industry: string;
+  size: string;
+  location: string;
+  description: string;
+  created_by: number | null;
   created_at: number;
 }
 

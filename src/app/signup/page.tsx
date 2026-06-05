@@ -13,25 +13,35 @@ function SignupForm() {
   return (
     <div className="auth-card">
       <div className="eyebrow">Conclave · By invitation</div>
-      <h1>Create your account</h1>
-      <p className="meta">Curated, deliberately small. Set up your access below.</p>
+      <h1>Request access</h1>
+      <p className="meta">
+        {invite
+          ? "You've been invited — set up your account below."
+          : "Tell us who you are. New requests are reviewed before approval; an invite code from a member gets you in immediately."}
+      </p>
       <form action={formAction}>
-        <input type="hidden" name="invite" defaultValue={invite} />
+        {invite && <input type="hidden" name="invite" defaultValue={invite} />}
         <label htmlFor="name">Name</label>
         <input id="name" name="name" type="text" autoComplete="name" required />
         <label htmlFor="email">Email</label>
         <input id="email" name="email" type="email" autoComplete="email" required />
         <label htmlFor="password">Password</label>
         <input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
+        <label htmlFor="company">Company</label>
+        <input id="company" name="company" type="text" autoComplete="organization" />
+        <label htmlFor="role">Title</label>
+        <input id="role" name="role" type="text" autoComplete="organization-title" />
+        <label htmlFor="linkedin">LinkedIn</label>
+        <input id="linkedin" name="linkedin" type="text" placeholder="https://linkedin.com/in/…" />
         {!invite && (
           <>
-            <label htmlFor="invite">Invitation code</label>
-            <input id="invite" name="invite" type="text" placeholder="Required unless you're the first member" />
+            <label htmlFor="invite">Invitation code (optional)</label>
+            <input id="invite" name="invite" type="text" placeholder="Skips the review if you have one" />
           </>
         )}
         {state?.error && <div className="error">{state.error}</div>}
         <button className="btn" type="submit" disabled={pending}>
-          {pending ? "Creating…" : "Create account"}
+          {pending ? "Submitting…" : "Request access"}
         </button>
       </form>
       <p className="note">

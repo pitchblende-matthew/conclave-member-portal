@@ -6,7 +6,9 @@ export const dynamic = "force-dynamic";
 export default async function Dashboard() {
   const user = await getSessionUser();
   const db = getDb();
-  const members = await db.prepare("SELECT COUNT(*) AS n FROM users").first<{ n: number }>();
+  const members = await db
+    .prepare("SELECT COUNT(*) AS n FROM users WHERE status = 'approved'")
+    .first<{ n: number }>();
   const upcoming = await db
     .prepare("SELECT COUNT(*) AS n FROM events WHERE starts_at > ?")
     .bind(Date.now())

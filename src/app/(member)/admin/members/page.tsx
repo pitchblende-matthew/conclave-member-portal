@@ -24,8 +24,10 @@ export default async function AdminMembers() {
 
   const { results } = await getDb()
     .prepare(
-      `SELECT u.id, u.name, u.email, u.avatar_key, u.is_admin, c.name AS company_name
+      `SELECT u.id, u.name, u.email, u.avatar_key, u.is_admin,
+              COALESCE(c.name, NULLIF(u.company, '')) AS company_name
        FROM users u LEFT JOIN companies c ON c.id = u.company_id
+       WHERE u.status = 'approved'
        ORDER BY u.name COLLATE NOCASE`
     )
     .all<Row>();

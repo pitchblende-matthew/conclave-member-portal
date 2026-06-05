@@ -10,9 +10,10 @@ export default async function Directory() {
   const { results } = await getDb()
     .prepare(
       `SELECT u.id, u.name, u.role, u.location, u.bio, u.avatar_key, u.pronouns,
-              c.name AS company_name
+              COALESCE(c.name, NULLIF(u.company, '')) AS company_name
        FROM users u
        LEFT JOIN companies c ON c.id = u.company_id
+       WHERE u.status = 'approved'
        ORDER BY u.name COLLATE NOCASE`
     )
     .all<Partial<User> & { company_name: string | null }>();

@@ -6,6 +6,30 @@ import { requireAdmin } from "@/lib/auth";
 import { deleteImage } from "@/lib/media";
 import type { Company } from "@/lib/types";
 
+// Approve a pending access request.
+export async function approveMember(formData: FormData): Promise<void> {
+  const me = await requireAdmin();
+  const userId = Number(formData.get("userId"));
+  if (!userId) return;
+  await getDb()
+    .prepare("UPDATE users SET status = 'approved', approved_at = ?, approved_by = ? WHERE id = ?")
+    .bind(Date.now(), me.id, userId)
+    .run();
+  revalidatePath("/admin/requests");
+  revalidatePath("/admin");
+  revalidatePath("/directory");
+}
+
+// Decline a pending request (kept on record; the person can't access the portal).
+export async function declineMember(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const userId = Number(formData.get("userId"));
+  if (!userId) return;
+  await getDb().prepare("UPDATE users SET status = 'declined' WHERE id = ?").bind(userId).run();
+  revalidatePath("/admin/requests");
+  revalidatePath("/admin");
+}
+
 // Promote or demote a member. Admins can't demote themselves (avoids lockout).
 export async function setAdmin(formData: FormData): Promise<void> {
   const me = await requireAdmin();

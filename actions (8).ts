@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 
-export async function updateProfile(_prev: { ok?: boolean; error?: string }, formData: FormData) {
+export type ProfileState = { ok?: boolean; error?: string };
+
+export async function updateProfile(_prev: ProfileState, formData: FormData): Promise<ProfileState> {
   const user = await requireUser();
   const name = String(formData.get("name") ?? "").trim();
   const company = String(formData.get("company") ?? "").trim();

@@ -5,10 +5,12 @@ import { getDb } from "@/lib/db";
 import { hashPassword } from "@/lib/crypto";
 import { createSession } from "@/lib/auth";
 
+export type SignupState = { error?: string };
+
 // Invite-only signup.
 // Bootstrap rule: if there are zero users yet, the first signup is allowed
 // without an invite and is made an admin (so you can issue invites afterward).
-export async function signup(_prev: { error?: string }, formData: FormData) {
+export async function signup(_prev: SignupState, formData: FormData): Promise<SignupState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const name = String(formData.get("name") ?? "").trim();

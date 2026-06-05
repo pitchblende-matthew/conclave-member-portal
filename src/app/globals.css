@@ -167,3 +167,11 @@ main.page { padding: 2.5rem 0 4rem; }
 .detail-list dd { margin: 0; }
 .links-row { display: flex; gap: 0.6rem; margin-top: 1.25rem; flex-wrap: wrap; }
 .topline { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.admin-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.admin-row .member-card-head { flex: 1; min-width: 200px; }
+.badge {
+  display: inline-block; margin-left: 0.6rem; padding: 0.1rem 0.5rem; border-radius: 999px;
+  background: var(--sage); color: var(--cream); font-family: "JetBrains Mono", monospace;
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; vertical-align: middle;
+}
+.stat { font-family: "Cormorant Garamond", serif; font-size: 2rem; font-weight: 600; color: var(--sage-deep); }

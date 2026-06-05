@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { storeImage, deleteImage } from "@/lib/media";
+import { findOrCreateCompany } from "@/lib/companies";
 
 export type ProfileState = { ok?: boolean; error?: string };
 
@@ -20,7 +21,7 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
   const linkedin = field("linkedin");
   const twitter = field("twitter");
   const bio = field("bio");
-  const companyId = Number(formData.get("company_id") ?? 0) || 0;
+  const companyId = await findOrCreateCompany(field("company_name"), user.id);
 
   await getDb()
     .prepare(

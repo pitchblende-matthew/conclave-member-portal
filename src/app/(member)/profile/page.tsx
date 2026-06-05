@@ -10,6 +10,7 @@ export default async function Profile() {
   const { results: companies } = await getDb()
     .prepare("SELECT id, name FROM companies ORDER BY name COLLATE NOCASE")
     .all<{ id: number; name: string }>();
+  const companyName = companies.find((c) => c.id === user.company_id)?.name ?? user.company ?? "";
   return (
     <>
       <div className="tag">Your profile</div>
@@ -20,7 +21,7 @@ export default async function Profile() {
           companies={companies}
           initial={{
             name: user.name,
-            companyId: user.company_id,
+            companyName,
             role: user.role,
             location: user.location,
             pronouns: user.pronouns,

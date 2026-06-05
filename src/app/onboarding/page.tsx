@@ -3,7 +3,6 @@ import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
 import ProfileForm from "@/app/(member)/profile/form";
-import { completeOnboarding } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +29,10 @@ export default async function Onboarding() {
       <div className="card" style={{ marginTop: "1.5rem" }}>
         <ProfileForm
           companies={companies}
-          submitAction={completeOnboarding}
-          submitLabel="Finish & enter"
-          showSaved={false}
-          allowCreateCompany={false}
+          mode="onboarding"
           initial={{
             name: user.name,
-            companyId: user.company_id,
+            companyName: user.company,
             role: user.role,
             location: user.location,
             pronouns: user.pronouns,

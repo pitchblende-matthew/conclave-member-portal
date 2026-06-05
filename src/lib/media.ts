@@ -21,11 +21,24 @@ export function getMediaBucket(): R2Bucket {
   return env.MEDIA;
 }
 
+// The app's mount base path (e.g. "/portal"). Webflow Cloud applies this to
+// routing automatically but does NOT inline NEXT_PUBLIC_BASE_PATH into the
+// build, so process.env reads empty at runtime. Read it from the Cloudflare
+// env binding instead (NEXT_PUBLIC_BASE_PATH if set, else Webflow's mount path).
+function mountBasePath(): string {
+  try {
+    const { env } = getCloudflareContext() as unknown as { env: CloudflareEnv };
+    return env?.NEXT_PUBLIC_BASE_PATH || env?.COSMIC_MOUNT_PATH || "";
+  } catch {
+    return process.env.NEXT_PUBLIC_BASE_PATH || "";
+  }
+}
+
 // Builds the in-app URL that serves a stored object. The key goes in a query
-// param so the path has no file extension (see app/api/media/route.ts).
+// param so the path has no file extension (see app/api/media/route.ts), and the
+// mount base path is prefixed so the request reaches the app, not the site root.
 export function mediaUrl(key: string): string {
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  return `${base}/api/media?key=${encodeURIComponent(key)}`;
+  return `${mountBasePath()}/api/media?key=${encodeURIComponent(key)}`;
 }
 
 export type StoreResult = { key: string } | { error: string };

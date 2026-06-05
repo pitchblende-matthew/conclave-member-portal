@@ -1,0 +1,76 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getDb } from "@/lib/db";
+import { mediaUrl } from "@/lib/media";
+import Avatar from "@/components/avatar";
+import type { User } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+function twitterUrl(value: string): string {
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://x.com/${value.replace(/^@/, "")}`;
+}
+
+export default async function MemberProfile({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const member = await getDb()
+    .prepare(
+      `SELECT id, name, email, company, role, location, bio, avatar_key,
+              pronouns, phone, website, linkedin, twitter
+       FROM users WHERE id = ?`
+    )
+    .bind(Number(id))
+    .first<Partial<User>>();
+
+  if (!member) notFound();
+
+  const links: { label: string; href: string }[] = [];
+  if (member.website) links.push({ label: "Website", href: member.website });
+  if (member.linkedin) links.push({ label: "LinkedIn", href: member.linkedin });
+  if (member.twitter) links.push({ label: "X / Twitter", href: twitterUrl(member.twitter) });
+
+  return (
+    <>
+      <p className="meta"><Link href="/directory">← Directory</Link></p>
+      <div className="card" style={{ maxWidth: 680, marginTop: "0.5rem" }}>
+        <div className="profile-head">
+          <Avatar src={member.avatar_key ? mediaUrl(member.avatar_key) : null} name={member.name} size={96} />
+          <div>
+            <h1 style={{ fontSize: "2.2rem", marginBottom: "0.15rem" }}>
+              {member.name || "Member"}
+              {member.pronouns ? <span className="pronouns"> · {member.pronouns}</span> : null}
+            </h1>
+            <p className="meta" style={{ margin: 0 }}>
+              {[member.role, member.company].filter(Boolean).join(" · ") || "—"}
+            </p>
+            {member.location ? <p className="meta" style={{ margin: 0 }}>{member.location}</p> : null}
+          </div>
+        </div>
+
+        {member.bio ? <p style={{ marginTop: "1.25rem" }}>{member.bio}</p> : null}
+
+        <dl className="detail-list">
+          <dt>Email</dt>
+          <dd><a href={`mailto:${member.email}`}>{member.email}</a></dd>
+          {member.phone ? (
+            <>
+              <dt>Phone</dt>
+              <dd><a href={`tel:${member.phone}`}>{member.phone}</a></dd>
+            </>
+          ) : null}
+        </dl>
+
+        {links.length > 0 && (
+          <div className="links-row">
+            {links.map((l) => (
+              <a key={l.label} className="btn btn-ghost inline-btn" href={l.href} target="_blank" rel="noreferrer">
+                {l.label}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

@@ -12,7 +12,6 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
   const field = (name: string) => String(formData.get(name) ?? "").trim();
 
   const name = field("name");
-  const company = field("company");
   const role = field("role");
   const location = field("location");
   const pronouns = field("pronouns");
@@ -21,15 +20,16 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
   const linkedin = field("linkedin");
   const twitter = field("twitter");
   const bio = field("bio");
+  const companyId = Number(formData.get("company_id") ?? 0) || 0;
 
   await getDb()
     .prepare(
       `UPDATE users SET
-         name = ?, company = ?, role = ?, location = ?, pronouns = ?,
-         phone = ?, website = ?, linkedin = ?, twitter = ?, bio = ?
+         name = ?, role = ?, location = ?, pronouns = ?,
+         phone = ?, website = ?, linkedin = ?, twitter = ?, bio = ?, company_id = ?
        WHERE id = ?`
     )
-    .bind(name, company, role, location, pronouns, phone, website, linkedin, twitter, bio, user.id)
+    .bind(name, role, location, pronouns, phone, website, linkedin, twitter, bio, companyId, user.id)
     .run();
 
   revalidatePath("/profile");

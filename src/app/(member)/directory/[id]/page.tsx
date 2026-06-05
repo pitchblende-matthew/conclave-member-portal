@@ -16,12 +16,15 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const member = await getDb()
     .prepare(
-      `SELECT id, name, email, company, role, location, bio, avatar_key,
-              pronouns, phone, website, linkedin, twitter
-       FROM users WHERE id = ?`
+      `SELECT u.id, u.name, u.email, u.role, u.location, u.bio, u.avatar_key,
+              u.pronouns, u.phone, u.website, u.linkedin, u.twitter, u.company_id,
+              c.name AS company_name
+       FROM users u
+       LEFT JOIN companies c ON c.id = u.company_id
+       WHERE u.id = ?`
     )
     .bind(Number(id))
-    .first<Partial<User>>();
+    .first<Partial<User> & { company_name: string | null }>();
 
   if (!member) notFound();
 
@@ -42,7 +45,12 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
               {member.pronouns ? <span className="pronouns"> · {member.pronouns}</span> : null}
             </h1>
             <p className="meta" style={{ margin: 0 }}>
-              {[member.role, member.company].filter(Boolean).join(" · ") || "—"}
+              {member.role || ""}
+              {member.role && member.company_name ? " · " : ""}
+              {member.company_name ? (
+                <Link href={`/companies/${member.company_id}`}>{member.company_name}</Link>
+              ) : null}
+              {!member.role && !member.company_name ? "—" : ""}
             </p>
             {member.location ? <p className="meta" style={{ margin: 0 }}>{member.location}</p> : null}
           </div>

@@ -1,0 +1,129 @@
+:root {
+  --cream: #f5f1e8;
+  --cream-deep: #ebe4d3;
+  --paper: #ffffff;
+  --ink: #0a0a0a;
+  --sage: #51655a;
+  --sage-deep: #3d4d44;
+  --sage-soft: #8a9890;
+  --muted: #6b6b6b;
+  --line: rgba(10, 10, 10, 0.1);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  line-height: 1.1;
+  margin: 0 0 0.5rem;
+}
+
+a { color: var(--sage-deep); }
+
+.shell { max-width: 1040px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* Centered card for auth pages */
+.auth-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+}
+.eyebrow {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 1rem;
+}
+.auth-card h1 { font-size: 2.4rem; }
+
+label { display: block; font-size: 0.8rem; letter-spacing: 0.02em; margin: 1rem 0 0.35rem; }
+input, textarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--cream);
+  font: inherit;
+  color: var(--ink);
+}
+textarea { min-height: 110px; resize: vertical; }
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--cream);
+  font: inherit;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: center;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+.error { color: #9b2c2c; font-size: 0.85rem; margin-top: 1rem; }
+.note { color: var(--muted); font-size: 0.85rem; margin-top: 1rem; }
+
+/* Member chrome */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.wordmark { font-family: "Cormorant Garamond", serif; font-size: 1.6rem; font-weight: 600; letter-spacing: 0.02em; }
+.member-nav { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
+.member-nav a { color: var(--ink); text-decoration: none; font-size: 0.85rem; letter-spacing: 0.03em; }
+.member-nav a:hover { color: var(--sage); }
+
+main.page { padding: 2.5rem 0 4rem; }
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.meta { color: var(--muted); font-size: 0.85rem; }
+.tag {
+  display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 0.65rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage);
+}
+.footer { border-top: 1px solid var(--line); padding: 1.5rem 0; color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.inline-btn { width: auto; margin-top: 0; padding: 0.5rem 1rem; font-size: 0.7rem; }

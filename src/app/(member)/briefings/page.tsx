@@ -5,35 +5,42 @@ import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import LocalTime from "@/components/local-time";
 import EmptyState from "@/components/empty-state";
+import Pager from "@/components/pager";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+const PAGE_SIZE = 18;
 
 type Row = Briefing & { category_name: string | null };
 
 export default async function Briefings({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; page?: string }>;
 }) {
   await requireUser();
-  const { category } = await searchParams;
+  const { category, page: pageParam } = await searchParams;
   const db = getDb();
+  const page = Math.max(1, Number(pageParam) || 1);
 
   const { results: categories } = await db
     .prepare("SELECT id, name, slug FROM briefing_categories ORDER BY sort_order, name COLLATE NOCASE")
     .all<{ id: number; name: string; slug: string }>();
   const active = categories.find((c) => c.slug === category) ?? null;
 
-  const { results } = await db
+  const { results: rows } = await db
     .prepare(
       `SELECT b.*, c.name AS category_name
        FROM briefings b LEFT JOIN briefing_categories c ON c.id = b.category_id
        WHERE b.published = 1${active ? " AND b.category_id = ?" : ""}
-       ORDER BY b.published_at DESC, b.id DESC`
+       ORDER BY b.published_at DESC, b.id DESC LIMIT ? OFFSET ?`
     )
-    .bind(...(active ? [active.id] : []))
+    .bind(...(active ? [active.id] : []), PAGE_SIZE + 1, (page - 1) * PAGE_SIZE)
     .all<Row>();
+  const hasNext = rows.length > PAGE_SIZE;
+  const results = rows.slice(0, PAGE_SIZE);
+  const pagerParams: Record<string, string> = {};
+  if (active) pagerParams.category = active.slug;
 
   return (
     <>
@@ -94,6 +101,7 @@ export default async function Briefings({
           </EmptyState>
         )}
       </div>
+      <Pager page={page} hasNext={hasNext} basePath="/briefings" params={pagerParams} />
     </>
   );
 }

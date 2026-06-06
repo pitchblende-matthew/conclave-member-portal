@@ -7,31 +7,38 @@ import { marketsIn, resolveArea } from "@/lib/region";
 import Avatar from "@/components/avatar";
 import AreaFilter from "@/components/area-filter";
 import EmptyState from "@/components/empty-state";
+import Pager from "@/components/pager";
 import type { User } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+const PAGE_SIZE = 24;
 
 export default async function Directory({
   searchParams,
 }: {
-  searchParams: Promise<{ area?: string }>;
+  searchParams: Promise<{ area?: string; page?: string }>;
 }) {
   const user = await requireUser();
-  const { area } = await searchParams;
+  const { area, page: pageParam } = await searchParams;
   const active = resolveArea(area, user.dma_slug);
   const markets = await marketsIn("users");
+  const page = Math.max(1, Number(pageParam) || 1);
 
-  const { results } = await getDb()
+  const { results: rows } = await getDb()
     .prepare(
       `SELECT u.id, u.name, u.role, u.location, u.dma_name, u.bio, u.avatar_key, u.pronouns,
               COALESCE(c.name, NULLIF(u.company, '')) AS company_name
        FROM users u
        LEFT JOIN companies c ON c.id = u.company_id
        WHERE u.status = 'approved'${active ? " AND u.dma_slug = ?" : ""}
-       ORDER BY u.name COLLATE NOCASE`
+       ORDER BY u.name COLLATE NOCASE LIMIT ? OFFSET ?`
     )
-    .bind(...(active ? [active] : []))
+    .bind(...(active ? [active] : []), PAGE_SIZE + 1, (page - 1) * PAGE_SIZE)
     .all<Partial<User> & { company_name: string | null }>();
+  const hasNext = rows.length > PAGE_SIZE;
+  const results = rows.slice(0, PAGE_SIZE);
+  const pagerParams: Record<string, string> = {};
+  if (area) pagerParams.area = area;
 
   return (
     <>
@@ -76,6 +83,7 @@ export default async function Directory({
           </EmptyState>
         )}
       </div>
+      <Pager page={page} hasNext={hasNext} basePath="/directory" params={pagerParams} />
     </>
   );
 }

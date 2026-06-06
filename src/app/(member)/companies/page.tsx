@@ -7,8 +7,10 @@ import { marketsIn, resolveArea } from "@/lib/region";
 import Avatar from "@/components/avatar";
 import AreaFilter from "@/components/area-filter";
 import EmptyState from "@/components/empty-state";
+import Pager from "@/components/pager";
 
 export const dynamic = "force-dynamic";
+const PAGE_SIZE = 24;
 
 type CompanyRow = {
   id: number;
@@ -23,23 +25,28 @@ type CompanyRow = {
 export default async function Companies({
   searchParams,
 }: {
-  searchParams: Promise<{ area?: string }>;
+  searchParams: Promise<{ area?: string; page?: string }>;
 }) {
   const user = await requireUser();
-  const { area } = await searchParams;
+  const { area, page: pageParam } = await searchParams;
   const active = resolveArea(area, user.dma_slug);
   const markets = await marketsIn("companies");
+  const page = Math.max(1, Number(pageParam) || 1);
 
-  const { results } = await getDb()
+  const { results: rows } = await getDb()
     .prepare(
       `SELECT c.id, c.name, c.logo_key, c.industry, c.location, c.dma_name,
               (SELECT COUNT(*) FROM users u WHERE u.company_id = c.id) AS member_count
        FROM companies c
        ${active ? "WHERE c.dma_slug = ?" : ""}
-       ORDER BY c.name COLLATE NOCASE`
+       ORDER BY c.name COLLATE NOCASE LIMIT ? OFFSET ?`
     )
-    .bind(...(active ? [active] : []))
+    .bind(...(active ? [active] : []), PAGE_SIZE + 1, (page - 1) * PAGE_SIZE)
     .all<CompanyRow>();
+  const hasNext = rows.length > PAGE_SIZE;
+  const results = rows.slice(0, PAGE_SIZE);
+  const pagerParams: Record<string, string> = {};
+  if (area) pagerParams.area = area;
 
   return (
     <>
@@ -83,6 +90,7 @@ export default async function Companies({
           </EmptyState>
         )}
       </div>
+      <Pager page={page} hasNext={hasNext} basePath="/companies" params={pagerParams} />
     </>
   );
 }

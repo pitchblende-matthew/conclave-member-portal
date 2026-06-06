@@ -14,11 +14,12 @@ export default async function AdminHome() {
   const user = await requireUser();
   if (user.is_admin !== 1) redirect("/dashboard");
 
-  const [requests, members, companies, events, invites] = await Promise.all([
+  const [requests, members, companies, events, categories, invites] = await Promise.all([
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'approved'"),
     count("SELECT COUNT(*) AS n FROM companies"),
     count("SELECT COUNT(*) AS n FROM events"),
+    count("SELECT COUNT(*) AS n FROM categories"),
     count("SELECT COUNT(*) AS n FROM invites WHERE used_by IS NULL"),
   ]);
 
@@ -27,6 +28,7 @@ export default async function AdminHome() {
     { href: "/admin/events", title: "Events", value: events, hint: "Create, edit, see attendees" },
     { href: "/admin/members", title: "Members", value: members, hint: "Promote admins, remove members" },
     { href: "/admin/companies", title: "Companies", value: companies, hint: "Edit or remove companies" },
+    { href: "/admin/categories", title: "Categories", value: categories, hint: "Board categories" },
     { href: "/admin/invites", title: "Invitations", value: invites, hint: "Unused invites · generate more" },
   ];
 

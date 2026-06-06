@@ -27,7 +27,14 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
   const user = await requireUser();
 
   const db = getDb();
-  const topic = await db.prepare("SELECT * FROM topics WHERE id = ?").bind(topicId).first<Topic>();
+  const topic = await db
+    .prepare(
+      `SELECT t.*, c.name AS category_name, c.slug AS category_slug
+       FROM topics t LEFT JOIN categories c ON c.id = t.category_id
+       WHERE t.id = ?`
+    )
+    .bind(topicId)
+    .first<Topic & { category_name: string | null; category_slug: string | null }>();
   if (!topic) notFound();
 
   const { results: posts } = await db
@@ -46,7 +53,12 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
   return (
     <>
       <p className="meta"><Link href="/board">← Board</Link></p>
-      <div className="topline">
+      {topic.category_name ? (
+        <Link href={`/board?category=${topic.category_slug}`} className="chip chip-static" style={{ textDecoration: "none" }}>
+          {topic.category_name}
+        </Link>
+      ) : null}
+      <div className="topline" style={{ marginTop: "0.5rem" }}>
         <h1 style={{ fontSize: "2.4rem" }}>{topic.title}</h1>
         {canDeleteTopic && (
           <form action={deleteTopic}>

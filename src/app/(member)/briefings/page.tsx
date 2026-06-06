@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import { formatDateTime } from "@/lib/format";
+import EmptyState from "@/components/empty-state";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +55,11 @@ export default async function Briefings() {
             </Link>
           );
         })}
-        {results.length === 0 && <p className="meta">No briefings yet — check back soon.</p>}
+        {results.length === 0 && (
+          <EmptyState title="No briefings yet">
+            <Link href="/briefings/submit">Submit one for review →</Link>
+          </EmptyState>
+        )}
       </div>
     </>
   );

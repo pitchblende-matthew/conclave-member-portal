@@ -5,6 +5,7 @@ import { mediaUrl } from "@/lib/media";
 import { marketsIn, resolveArea } from "@/lib/region";
 import Avatar from "@/components/avatar";
 import AreaFilter from "@/components/area-filter";
+import EmptyState from "@/components/empty-state";
 import type { User } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -69,7 +70,9 @@ export default async function Directory({
           </Link>
         ))}
         {results.length === 0 && (
-          <p className="meta">{active ? "No members in this market yet — try All areas." : "No members yet."}</p>
+          <EmptyState title={active ? "No members in this market yet" : "No members yet"}>
+            {active ? "Try switching to All areas." : null}
+          </EmptyState>
         )}
       </div>
     </>

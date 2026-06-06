@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { marketsIn, resolveArea } from "@/lib/region";
 import AreaFilter from "@/components/area-filter";
+import EmptyState from "@/components/empty-state";
 import type { EventRow } from "@/lib/types";
 import { toggleRsvp } from "./actions";
 
@@ -99,7 +100,11 @@ export default async function Events({
             </div>
           );
         })}
-        {events.length === 0 && <p className="meta">No events scheduled yet.</p>}
+        {events.length === 0 && (
+          <EmptyState title="No events scheduled yet">
+            <Link href="/events/submit">Submit one for review →</Link>
+          </EmptyState>
+        )}
       </div>
     </>
   );

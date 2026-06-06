@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
 import { formatDateTime } from "@/lib/format";
 import { connectionCounts } from "@/lib/connections";
+import Icon from "@/components/icons";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -84,24 +85,24 @@ export default async function Dashboard() {
 
       {/* Market snapshot */}
       <div className="grid" style={{ marginTop: "1.5rem" }}>
-        <Link href={hasDma ? `/directory?area=${user.dma_slug}` : "/directory"} className="card member-card">
-          <div className="tag">Members</div>
-          <div className="stat">{marketMembers}</div>
+        <Link href={hasDma ? `/directory?area=${user.dma_slug}` : "/directory"} className="card member-card stat-card">
+          <div className="topline"><span className="card-ico"><Icon name="members" size={20} /></span><span className="stat">{marketMembers}</span></div>
+          <div className="tag" style={{ marginTop: "0.5rem" }}>Members</div>
           <p className="meta" style={{ margin: 0 }}>in {marketLabel}</p>
         </Link>
-        <Link href={hasDma ? `/companies?area=${user.dma_slug}` : "/companies"} className="card member-card">
-          <div className="tag">Companies</div>
-          <div className="stat">{marketCompanies}</div>
+        <Link href={hasDma ? `/companies?area=${user.dma_slug}` : "/companies"} className="card member-card stat-card">
+          <div className="topline"><span className="card-ico"><Icon name="companies" size={20} /></span><span className="stat">{marketCompanies}</span></div>
+          <div className="tag" style={{ marginTop: "0.5rem" }}>Companies</div>
           <p className="meta" style={{ margin: 0 }}>in {marketLabel}</p>
         </Link>
-        <Link href={hasDma ? `/events?area=${user.dma_slug}` : "/events"} className="card member-card">
-          <div className="tag">Upcoming events</div>
-          <div className="stat">{marketEvents}</div>
+        <Link href={hasDma ? `/events?area=${user.dma_slug}` : "/events"} className="card member-card stat-card">
+          <div className="topline"><span className="card-ico"><Icon name="events" size={20} /></span><span className="stat">{marketEvents}</span></div>
+          <div className="tag" style={{ marginTop: "0.5rem" }}>Upcoming events</div>
           <p className="meta" style={{ margin: 0 }}>near you &amp; virtual</p>
         </Link>
-        <Link href="/connections" className="card member-card">
-          <div className="tag">Connections</div>
-          <div className="stat">{connections}</div>
+        <Link href="/connections" className="card member-card stat-card">
+          <div className="topline"><span className="card-ico"><Icon name="connections" size={20} /></span><span className="stat">{connections}</span></div>
+          <div className="tag" style={{ marginTop: "0.5rem" }}>Connections</div>
           <p className="meta" style={{ margin: 0 }}>
             {pendingIncoming > 0 ? <strong>{pendingIncoming} request{pendingIncoming === 1 ? "" : "s"} waiting</strong> : "mutual connections"}
           </p>
@@ -112,7 +113,7 @@ export default async function Dashboard() {
         {/* Your events */}
         <section className="card">
           <div className="topline">
-            <h2 style={{ fontSize: "1.5rem" }}>Your events</h2>
+            <h2 className="sec-head" style={{ fontSize: "1.5rem" }}><Icon name="events" size={18} />Your events</h2>
             <Link href="/events" className="meta">All events →</Link>
           </div>
           {myEvents.length > 0 ? (
@@ -135,7 +136,7 @@ export default async function Dashboard() {
         {/* Board activity */}
         <section className="card">
           <div className="topline">
-            <h2 style={{ fontSize: "1.5rem" }}>From the board</h2>
+            <h2 className="sec-head" style={{ fontSize: "1.5rem" }}><Icon name="board" size={18} />From the board</h2>
             <Link href="/board" className="meta">Open board →</Link>
           </div>
           {topics.length > 0 ? (
@@ -161,7 +162,7 @@ export default async function Dashboard() {
       {/* Latest briefings */}
       <section style={{ marginTop: "1.75rem" }}>
         <div className="topline">
-          <h2 style={{ fontSize: "1.5rem" }}>Latest briefings</h2>
+          <h2 className="sec-head" style={{ fontSize: "1.5rem" }}><Icon name="briefings" size={18} />Latest briefings</h2>
           <Link href="/briefings" className="meta">All briefings →</Link>
         </div>
         <div className="grid" style={{ marginTop: "0.75rem" }}>

@@ -40,6 +40,7 @@ export interface Company {
   zip: string;
   dma_slug: string;
   dma_name: string;
+  linkedin: string;
   description: string;
   created_by: number | null;
   created_at: number;
@@ -97,7 +98,18 @@ export interface EventRow {
   zip: string;
   dma_slug: string;
   dma_name: string;
+  is_virtual: number;
+  meeting_url: string;
   starts_at: number;
   capacity: number;
   created_at: number;
+}
+
+export interface Connection {
+  id: number;
+  requester_id: number;
+  addressee_id: number;
+  status: string; // pending | accepted
+  created_at: number;
+  responded_at: number | null;
 }

@@ -44,7 +44,7 @@ export default async function AdminEvents() {
       <div style={{ marginTop: "1.5rem" }}>
         {events.map((ev) => (
           <div key={ev.id} className="card">
-            <div className="tag">{formatDate(ev.starts_at)}{ev.location ? ` · ${ev.location}` : ""}</div>
+            <div className="tag">{formatDate(ev.starts_at)}{ev.location ? ` · ${ev.location}` : ""}{ev.is_virtual ? " · Virtual" : ""}</div>
             <h3 style={{ fontSize: "1.5rem" }}>{ev.title}</h3>
             <p className="meta">
               {(countMap.get(ev.id) ?? 0)} attending{ev.capacity ? ` · ${ev.capacity} seats` : ""}

@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
+import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
+import { connectionState } from "@/lib/connections";
 import Avatar from "@/components/avatar";
+import ConnectControls from "@/components/connect-controls";
 import type { User } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +17,7 @@ function twitterUrl(value: string): string {
 
 export default async function MemberProfile({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const me = await requireUser();
   const member = await getDb()
     .prepare(
       `SELECT u.id, u.name, u.email, u.role, u.location, u.dma_name, u.bio, u.avatar_key,
@@ -27,6 +31,8 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
     .first<Partial<User> & { company_name: string | null }>();
 
   if (!member) notFound();
+
+  const connState = await connectionState(me.id, member.id!);
 
   const links: { label: string; href: string }[] = [];
   if (member.website) links.push({ label: "Website", href: member.website });
@@ -62,6 +68,12 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
             ) : null}
           </div>
         </div>
+
+        {connState !== "self" && (
+          <div style={{ marginTop: "1.25rem" }}>
+            <ConnectControls otherId={member.id!} state={connState} />
+          </div>
+        )}
 
         {member.bio ? <p style={{ marginTop: "1.25rem" }}>{member.bio}</p> : null}
 

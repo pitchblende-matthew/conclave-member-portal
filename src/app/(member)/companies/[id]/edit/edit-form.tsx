@@ -10,6 +10,7 @@ type Initial = {
   id: number;
   name: string;
   website: string;
+  linkedin: string;
   industry: string;
   size: string;
   city: string;
@@ -85,6 +86,10 @@ export default function EditCompanyForm({ initial }: { initial: Initial }) {
           <div>
             <label htmlFor="website">Website</label>
             <input id="website" name="website" type="url" defaultValue={initial.website} placeholder="https://" />
+          </div>
+          <div>
+            <label htmlFor="linkedin">LinkedIn</label>
+            <input id="linkedin" name="linkedin" type="url" defaultValue={initial.linkedin} placeholder="https://linkedin.com/company/…" />
           </div>
           <RegionFields city={initial.city} state={initial.state} zip={initial.zip} />
         </div>

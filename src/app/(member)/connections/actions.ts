@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
+import { emailConnectionRequest } from "@/lib/email";
 import type { Connection } from "@/lib/types";
 
 async function pairRow(a: number, b: number) {
@@ -39,6 +40,8 @@ export async function sendConnect(formData: FormData): Promise<void> {
       .bind(me.id, other, now)
       .run();
     await notify(other, "connection_request", { actorId: me.id });
+    const target = await db.prepare("SELECT email, name FROM users WHERE id = ?").bind(other).first<{ email: string; name: string }>();
+    if (target?.email) await emailConnectionRequest(target.email, target.name, me.name);
   } else if (row.status === "pending" && row.addressee_id === me.id) {
     await db.prepare("UPDATE connections SET status = 'accepted', responded_at = ? WHERE id = ?").bind(now, row.id).run();
     // They asked first, so accepting it connects us — let them know.

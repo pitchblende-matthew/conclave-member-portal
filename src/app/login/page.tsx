@@ -24,6 +24,9 @@ export default function LoginPage() {
             {pending ? "Signing in…" : "Sign in"}
           </button>
         </form>
+        <p className="note" style={{ marginTop: "0.85rem" }}>
+          <Link href="/forgot-password">Forgot your password?</Link>
+        </p>
         <p className="note">
           Have an invitation? <Link href="/signup">Create your account</Link>.
         </p>

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { deleteImage } from "@/lib/media";
+import { emailAccessApproved, emailAccessDeclined } from "@/lib/email";
 import type { Company } from "@/lib/types";
 
 // Approve a pending access request.
@@ -11,10 +12,13 @@ export async function approveMember(formData: FormData): Promise<void> {
   const me = await requireAdmin();
   const userId = Number(formData.get("userId"));
   if (!userId) return;
-  await getDb()
+  const db = getDb();
+  await db
     .prepare("UPDATE users SET status = 'approved', approved_at = ?, approved_by = ? WHERE id = ?")
     .bind(Date.now(), me.id, userId)
     .run();
+  const u = await db.prepare("SELECT email, name FROM users WHERE id = ?").bind(userId).first<{ email: string; name: string }>();
+  if (u?.email) await emailAccessApproved(u.email, u.name);
   revalidatePath("/admin/requests");
   revalidatePath("/admin");
   revalidatePath("/directory");
@@ -25,7 +29,10 @@ export async function declineMember(formData: FormData): Promise<void> {
   await requireAdmin();
   const userId = Number(formData.get("userId"));
   if (!userId) return;
-  await getDb().prepare("UPDATE users SET status = 'declined' WHERE id = ?").bind(userId).run();
+  const db = getDb();
+  await db.prepare("UPDATE users SET status = 'declined' WHERE id = ?").bind(userId).run();
+  const u = await db.prepare("SELECT email, name FROM users WHERE id = ?").bind(userId).first<{ email: string; name: string }>();
+  if (u?.email) await emailAccessDeclined(u.email, u.name);
   revalidatePath("/admin/requests");
   revalidatePath("/admin");
 }

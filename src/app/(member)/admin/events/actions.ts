@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { regionFromForm } from "@/lib/region";
 import { notify } from "@/lib/notifications";
+import { emailSubmissionDecision } from "@/lib/email";
 
 export type EventState = { ok?: boolean; error?: string };
 
@@ -96,9 +97,13 @@ export async function approveEvent(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const id = Number(formData.get("eventId"));
   if (!id) return;
-  const ev = await getDb().prepare("SELECT submitted_by FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null }>();
+  const ev = await getDb().prepare("SELECT submitted_by, title FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string }>();
   await getDb().prepare("UPDATE events SET status = 'approved' WHERE id = ?").bind(id).run();
-  if (ev?.submitted_by) await notify(ev.submitted_by, "event_approved", { actorId: admin.id });
+  if (ev?.submitted_by) {
+    await notify(ev.submitted_by, "event_approved", { actorId: admin.id });
+    const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(ev.submitted_by).first<{ email: string }>();
+    if (u?.email) await emailSubmissionDecision(u.email, "event", ev.title, true);
+  }
   revalidatePath("/admin/events");
   revalidatePath("/events");
 }
@@ -108,9 +113,13 @@ export async function declineEvent(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const id = Number(formData.get("eventId"));
   if (!id) return;
-  const ev = await getDb().prepare("SELECT submitted_by FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null }>();
+  const ev = await getDb().prepare("SELECT submitted_by, title FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string }>();
   await getDb().prepare("UPDATE events SET status = 'declined' WHERE id = ?").bind(id).run();
-  if (ev?.submitted_by) await notify(ev.submitted_by, "event_declined", { actorId: admin.id });
+  if (ev?.submitted_by) {
+    await notify(ev.submitted_by, "event_declined", { actorId: admin.id });
+    const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(ev.submitted_by).first<{ email: string }>();
+    if (u?.email) await emailSubmissionDecision(u.email, "event", ev.title, false);
+  }
   revalidatePath("/admin/events");
 }
 

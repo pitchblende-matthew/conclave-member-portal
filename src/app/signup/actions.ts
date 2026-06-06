@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { hashPassword } from "@/lib/crypto";
 import { createSession } from "@/lib/auth";
 import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
+import { emailWelcome, emailAccessPending, emailAdminsNewRequest } from "@/lib/email";
 
 export type SignupState = { error?: string };
 
@@ -76,6 +77,14 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
       .prepare("UPDATE invites SET used_by = ?, used_at = ? WHERE token = ?")
       .bind(userId, now, invite)
       .run();
+  }
+
+  // Transactional email (best-effort; no-ops until email is configured).
+  if (approved) {
+    await emailWelcome(email, name);
+  } else {
+    await emailAccessPending(email, name);
+    await emailAdminsNewRequest(name);
   }
 
   await createSession(userId);

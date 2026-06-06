@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { regionFromForm } from "@/lib/region";
 import { notifyAdmins } from "@/lib/notifications";
+import { emailAdminsNewSubmission } from "@/lib/email";
 
 export type SubmitState = { ok?: boolean; error?: string };
 
@@ -38,6 +39,7 @@ export async function submitEvent(_prev: SubmitState, formData: FormData): Promi
     .run();
 
   await notifyAdmins("event_submitted", { actorId: user.id });
+  await emailAdminsNewSubmission("event", user.name, title);
   revalidatePath("/admin/events");
   return { ok: true };
 }

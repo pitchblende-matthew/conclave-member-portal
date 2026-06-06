@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
+import { emailAdminsNewSubmission } from "@/lib/email";
 
 export type SubmitBriefingState = { ok?: boolean; error?: string };
 
@@ -30,6 +31,7 @@ export async function submitBriefing(_prev: SubmitBriefingState, formData: FormD
     .run();
 
   await notifyAdmins("briefing_submitted", { actorId: user.id });
+  await emailAdminsNewSubmission("briefing", user.name, title);
   revalidatePath("/admin/briefings");
   return { ok: true };
 }

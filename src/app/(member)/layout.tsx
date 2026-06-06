@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import Wordmark from "@/components/wordmark";
+import MemberNav from "@/components/member-nav";
 
 export const dynamic = "force-dynamic";
 
@@ -17,17 +18,10 @@ export default async function MemberLayout({ children }: { children: React.React
         <Link href="/dashboard" className="wordmark-link">
           <Wordmark size={1.5} />
         </Link>
-        <nav className="member-nav">
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/directory">Directory</Link>
-          <Link href="/companies">Companies</Link>
-          <Link href="/board">Board</Link>
-          <Link href="/events">Events</Link>
-          <Link href="/briefings">Briefings</Link>
-          <Link href="/profile">Profile</Link>
-          {user.is_admin === 1 && <Link href="/admin">Admin</Link>}
-          <a href={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}>Sign out</a>
-        </nav>
+        <MemberNav
+          isAdmin={user.is_admin === 1}
+          logoutHref={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}
+        />
       </header>
       <main className="page">{children}</main>
       <footer className="footer">Private. By invitation.</footer>

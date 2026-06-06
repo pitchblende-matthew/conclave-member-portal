@@ -128,9 +128,38 @@ input:focus, textarea:focus, select:focus {
 .wordmark-text { position: relative; top: 0.02em; }
 .wordmark-sprig { width: 0.7em; height: auto; color: var(--sage); flex: none; }
 .wordmark-link { text-decoration: none; }
-.member-nav { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
-.member-nav a { color: var(--ink); text-decoration: none; font-size: 0.85rem; letter-spacing: 0.03em; }
-.member-nav a:hover { color: var(--sage); }
+.member-nav { display: flex; gap: 1.4rem; align-items: center; }
+.nav-link {
+  color: var(--ink); text-decoration: none; font-size: 0.85rem; letter-spacing: 0.03em;
+  background: none; border: none; cursor: pointer; font: inherit; padding: 0;
+  display: inline-flex; align-items: center; gap: 0.3rem; line-height: 1;
+}
+.nav-link:hover { color: var(--sage); }
+.nav-group { position: relative; }
+.nav-group-btn .caret { font-size: 0.75em; transition: transform 0.15s ease; }
+.nav-group.open .nav-group-btn .caret { transform: rotate(180deg); }
+.nav-dropdown {
+  position: absolute; right: 0; top: calc(100% + 0.65rem);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+  padding: 0.35rem; min-width: 176px; display: none; flex-direction: column;
+  box-shadow: 0 14px 34px rgba(20, 20, 15, 0.12); z-index: 60;
+}
+.nav-group.open .nav-dropdown { display: flex; }
+.nav-drop-link {
+  display: block; padding: 0.55rem 0.7rem; border-radius: 7px;
+  color: var(--ink); text-decoration: none; font-size: 0.85rem;
+}
+.nav-drop-link:hover { background: var(--cream-deep); color: var(--sage-deep); }
+.nav-toggle {
+  display: none; background: none; border: 1px solid var(--line); border-radius: 8px;
+  width: 42px; height: 42px; cursor: pointer; color: var(--ink); align-items: center; justify-content: center;
+}
+.nav-toggle-icon { font-size: 1.1rem; line-height: 1; }
+
+/* Open a desktop dropdown on hover too, for pointer users. */
+@media (hover: hover) and (min-width: 769px) {
+  .nav-group:hover .nav-dropdown { display: flex; }
+}
 
 main.page { padding: 2.5rem 0 4rem; }
 .card {
@@ -263,4 +292,48 @@ main.page { padding: 2.5rem 0 4rem; }
   display: flex; align-items: center; justify-content: center;
   background: var(--cream-deep); color: var(--sage-deep);
   border: 1px dashed var(--line); font-size: 0.85rem;
+}
+
+/* Long, unbreakable strings (URLs, emails, market names) shouldn't force scroll. */
+body { overflow-wrap: break-word; }
+
+/* ---- Mobile ---- */
+@media (max-width: 768px) {
+  .topbar { padding: 1rem 0; }
+  .nav-toggle { display: inline-flex; }
+
+  /* The nav drops to its own full-width line below the logo, hidden until opened. */
+  .member-nav {
+    display: none; width: 100%; flex-direction: column; align-items: stretch;
+    gap: 0.15rem; padding-top: 0.75rem; margin-top: 0.5rem; border-top: 1px solid var(--line);
+  }
+  .member-nav.open { display: flex; }
+  .nav-link { padding: 0.7rem 0.25rem; font-size: 0.95rem; }
+  .nav-group { width: 100%; }
+  .nav-group-btn { width: 100%; justify-content: space-between; color: var(--sage); }
+  /* Dropdowns render inline (expanded) inside the mobile panel. */
+  .nav-dropdown {
+    position: static; display: flex; box-shadow: none; border: none; padding: 0 0 0.35rem 0.9rem;
+    min-width: 0; background: none;
+  }
+  .nav-drop-link { padding: 0.6rem 0.25rem; }
+
+  /* Scale down the inline-sized hero headings on small screens. */
+  main.page h1 { font-size: 2rem !important; }
+  main.page h2 { font-size: 1.45rem !important; }
+  .auth-card h1 { font-size: 2rem; }
+
+  /* Filters stack and span the row for easier tapping. */
+  .area-filter { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .area-jump { width: 100%; }
+  .area-jump select { flex: 1; min-width: 0; }
+  .topline { align-items: flex-start; }
+  .topline .inline-btn { margin-top: 0.25rem; }
+}
+
+@media (max-width: 480px) {
+  .shell { padding: 0 1.1rem; }
+  main.page { padding: 1.75rem 0 3rem; }
+  .card { padding: 1.2rem; }
+  main.page h1 { font-size: 1.8rem !important; }
 }

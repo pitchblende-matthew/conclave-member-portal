@@ -4,8 +4,10 @@ import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import LocalTime from "@/components/local-time";
 import EmptyState from "@/components/empty-state";
+import Pager from "@/components/pager";
 
 export const dynamic = "force-dynamic";
+const PAGE_SIZE = 25;
 
 // A stable, muted accent colour per category for the topic-card strip.
 const ACCENTS = ["#6e7a5e", "#a08442", "#9c6b4f", "#4f7a6e", "#5f7085", "#7a5f70"];
@@ -30,11 +32,12 @@ type TopicRow = {
 export default async function Board({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; scope?: string }>;
+  searchParams: Promise<{ category?: string; scope?: string; page?: string }>;
 }) {
   const user = await requireUser();
-  const { category, scope } = await searchParams;
+  const { category, scope, page: pageParam } = await searchParams;
   const db = getDb();
+  const page = Math.max(1, Number(pageParam) || 1);
 
   const { results: categories } = await db
     .prepare("SELECT id, name, slug FROM categories ORDER BY sort_order, name COLLATE NOCASE")
@@ -50,7 +53,7 @@ export default async function Board({
   if (scopeMine) { conds.push("t.dma_slug = ?"); binds.push(user.dma_slug); }
   const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
 
-  const { results } = await db
+  const { results: rows } = await db
     .prepare(
       `SELECT t.id, t.title, t.last_activity_at, t.dma_name,
               a.name AS author,
@@ -60,10 +63,15 @@ export default async function Board({
        LEFT JOIN users a ON a.id = t.created_by
        LEFT JOIN categories c ON c.id = t.category_id
        ${where}
-       ORDER BY t.last_activity_at DESC`
+       ORDER BY t.last_activity_at DESC LIMIT ? OFFSET ?`
     )
-    .bind(...binds)
+    .bind(...binds, PAGE_SIZE + 1, (page - 1) * PAGE_SIZE)
     .all<TopicRow>();
+  const hasNext = rows.length > PAGE_SIZE;
+  const results = rows.slice(0, PAGE_SIZE);
+  const pagerParams: Record<string, string> = {};
+  if (active) pagerParams.category = active.slug;
+  if (scopeMine) pagerParams.scope = "mine";
 
   // Links that preserve the other active filter.
   const href = (next: { category?: string | null; scope?: string | null }) => {
@@ -126,6 +134,7 @@ export default async function Board({
           </EmptyState>
         )}
       </div>
+      <Pager page={page} hasNext={hasNext} basePath="/board" params={pagerParams} />
     </>
   );
 }

@@ -486,3 +486,14 @@ body { overflow-wrap: break-word; }
 .prose code { background: var(--cream-deep); padding: 0.1rem 0.35rem; border-radius: 4px; font-family: "JetBrains Mono", monospace; font-size: 0.85em; }
 .prose strong { font-weight: 600; }
 .prose > :last-child { margin-bottom: 0; }
+
+/* Pager */
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; }
+.pager .meta { margin: 0; }
+.pager-disabled { opacity: 0.4; pointer-events: none; }
+
+/* Search */
+.search-form { position: relative; display: flex; align-items: center; gap: 0.5rem; margin-top: 1.25rem; max-width: 580px; }
+.search-form input { flex: 1; padding-left: 2.35rem; }
+.search-ico { position: absolute; left: 0.72rem; top: 50%; transform: translateY(-50%); color: var(--sage); display: inline-flex; pointer-events: none; }
+.search-form .inline-btn { flex: none; }

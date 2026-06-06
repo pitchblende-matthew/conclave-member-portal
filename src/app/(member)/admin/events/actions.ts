@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { regionFromForm } from "@/lib/region";
+import { notify } from "@/lib/notifications";
 
 export type EventState = { ok?: boolean; error?: string };
 
@@ -88,6 +89,29 @@ export async function updateEvent(_prev: EventState, formData: FormData): Promis
   revalidatePath(`/admin/events/${id}`);
   revalidatePath("/events");
   return { ok: true };
+}
+
+// Approve a member-submitted event so it appears on the calendar.
+export async function approveEvent(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("eventId"));
+  if (!id) return;
+  const ev = await getDb().prepare("SELECT submitted_by FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null }>();
+  await getDb().prepare("UPDATE events SET status = 'approved' WHERE id = ?").bind(id).run();
+  if (ev?.submitted_by) await notify(ev.submitted_by, "event_approved", { actorId: admin.id });
+  revalidatePath("/admin/events");
+  revalidatePath("/events");
+}
+
+// Decline a member-submitted event (kept out of every list).
+export async function declineEvent(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("eventId"));
+  if (!id) return;
+  const ev = await getDb().prepare("SELECT submitted_by FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null }>();
+  await getDb().prepare("UPDATE events SET status = 'declined' WHERE id = ?").bind(id).run();
+  if (ev?.submitted_by) await notify(ev.submitted_by, "event_declined", { actorId: admin.id });
+  revalidatePath("/admin/events");
 }
 
 export async function deleteEvent(formData: FormData): Promise<void> {

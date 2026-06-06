@@ -32,8 +32,8 @@ export default async function Dashboard() {
     ? await one("SELECT COUNT(*) AS n FROM companies WHERE dma_slug=?", user.dma_slug)
     : await one("SELECT COUNT(*) AS n FROM companies");
   const marketEvents = hasDma
-    ? await one("SELECT COUNT(*) AS n FROM events WHERE starts_at>? AND (dma_slug=? OR is_virtual=1)", now, user.dma_slug)
-    : await one("SELECT COUNT(*) AS n FROM events WHERE starts_at>?", now);
+    ? await one("SELECT COUNT(*) AS n FROM events WHERE starts_at>? AND status='approved' AND (dma_slug=? OR is_virtual=1)", now, user.dma_slug)
+    : await one("SELECT COUNT(*) AS n FROM events WHERE starts_at>? AND status='approved'", now);
 
   // Your upcoming RSVPs.
   const { results: myEvents } = await db

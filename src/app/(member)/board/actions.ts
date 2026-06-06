@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { notify } from "@/lib/notifications";
 import type { Post, Topic } from "@/lib/types";
 
 export type BoardState = { ok?: boolean; error?: string };
@@ -45,11 +46,25 @@ export async function createReply(_prev: BoardState, formData: FormData): Promis
 
   const db = getDb();
   const now = Date.now();
-  await db
+  const res = await db
     .prepare("INSERT INTO posts (topic_id, user_id, body, created_at) VALUES (?, ?, ?, ?)")
     .bind(topicId, user.id, body, now)
     .run();
   await db.prepare("UPDATE topics SET last_activity_at = ? WHERE id = ?").bind(now, topicId).run();
+
+  // Notify everyone in the thread (author + prior posters) except the replier.
+  const postId = Number(res.meta.last_row_id);
+  const topic = await db.prepare("SELECT created_by FROM topics WHERE id = ?").bind(topicId).first<{ created_by: number }>();
+  const { results: participants } = await db
+    .prepare("SELECT DISTINCT user_id FROM posts WHERE topic_id = ? AND user_id != ?")
+    .bind(topicId, user.id)
+    .all<{ user_id: number }>();
+  const recipients = new Set<number>(participants.map((p) => p.user_id));
+  if (topic?.created_by) recipients.add(topic.created_by);
+  recipients.delete(user.id);
+  for (const rid of recipients) {
+    await notify(rid, "topic_reply", { actorId: user.id, topicId, postId });
+  }
 
   revalidatePath(`/board/${topicId}`);
   revalidatePath("/board");
@@ -94,6 +109,8 @@ export async function deleteTopic(formData: FormData): Promise<void> {
 
   await db.prepare("DELETE FROM posts WHERE topic_id = ?").bind(topicId).run();
   await db.prepare("DELETE FROM topics WHERE id = ?").bind(topicId).run();
+  // Drop any reply notifications that pointed at this topic.
+  await db.prepare("DELETE FROM notifications WHERE topic_id = ?").bind(topicId).run();
 
   revalidatePath("/board");
   redirect("/board");

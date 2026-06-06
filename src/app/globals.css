@@ -108,12 +108,13 @@ input:focus, textarea:focus, select:focus {
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 1.25rem 0;
   border-bottom: 1px solid var(--line);
   flex-wrap: wrap;
   gap: 0.75rem;
 }
+/* Logo on the left; the bell + nav group to the right. */
+.topbar .wordmark-link { margin-right: auto; }
 /* Brand wordmark (logo) */
 .wordmark {
   display: inline-flex;
@@ -155,6 +156,39 @@ input:focus, textarea:focus, select:focus {
   width: 42px; height: 42px; cursor: pointer; color: var(--ink); align-items: center; justify-content: center;
 }
 .nav-toggle-icon { font-size: 1.1rem; line-height: 1; }
+
+/* Notifications bell */
+.bell { position: relative; display: inline-flex; flex: none; }
+.bell-btn {
+  position: relative; background: none; border: 1px solid var(--line); border-radius: 8px;
+  width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1.05rem; color: var(--ink);
+}
+.bell-btn:hover { border-color: var(--sage-soft); }
+.bell-badge {
+  position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; background: #9b2c2c; color: #fff; font-family: "JetBrains Mono", monospace;
+  font-size: 0.62rem; display: flex; align-items: center; justify-content: center; line-height: 1;
+}
+.bell-backdrop { position: fixed; inset: 0; background: transparent; border: none; z-index: 70; cursor: default; }
+.bell-panel {
+  position: absolute; right: 0; top: calc(100% + 0.6rem); width: 330px; max-width: 86vw;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(20, 20, 15, 0.14); z-index: 80; overflow: hidden;
+}
+.bell-head {
+  padding: 0.7rem 0.9rem; font-family: "JetBrains Mono", monospace; font-size: 0.65rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage); border-bottom: 1px solid var(--line);
+}
+.bell-item {
+  display: flex; flex-direction: column; gap: 0.2rem; padding: 0.7rem 0.9rem;
+  text-decoration: none; color: var(--ink); font-size: 0.88rem; border-bottom: 1px solid var(--line);
+}
+.bell-item:last-child { border-bottom: none; }
+.bell-item:hover { background: var(--cream); }
+.bell-item.unread { background: rgba(110, 122, 94, 0.10); }
+.bell-item.unread:hover { background: rgba(110, 122, 94, 0.16); }
+.bell-time { font-size: 0.72rem; color: var(--muted); }
 
 /* Open a desktop dropdown on hover too, for pointer users. */
 @media (hover: hover) and (min-width: 769px) {

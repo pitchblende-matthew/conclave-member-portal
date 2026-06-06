@@ -28,11 +28,11 @@ export default async function Events({
   const active = resolveArea(area, user.dma_slug);
   const markets = await marketsIn("events");
 
-  // When filtering to a market, still include network-wide events (no market set).
+  // When filtering to a market, still include network-wide and virtual events.
   const { results: events } = await db
     .prepare(
       `SELECT * FROM events
-       ${active ? "WHERE dma_slug = ? OR dma_slug = ''" : ""}
+       ${active ? "WHERE dma_slug = ? OR dma_slug = '' OR is_virtual = 1" : ""}
        ORDER BY starts_at ASC`
     )
     .bind(...(active ? [active] : []))
@@ -70,6 +70,7 @@ export default async function Events({
             <div key={ev.id} className="card">
               <div className="tag">
                 {formatDate(ev.starts_at)}{ev.location ? ` · ${ev.location}` : ""}
+                {ev.is_virtual === 1 ? <span className="market-tag" style={{ marginLeft: "0.6rem" }}>Virtual</span> : null}
                 {ev.dma_name ? <span className="market-tag" style={{ marginLeft: "0.6rem" }}>{ev.dma_name}</span> : null}
               </div>
               <h3 style={{ fontSize: "1.7rem" }}>{ev.title}</h3>
@@ -77,12 +78,17 @@ export default async function Events({
               <p className="meta">
                 {attending} attending{ev.capacity ? ` · ${ev.capacity} seats` : ""}
               </p>
-              <form action={toggleRsvp}>
-                <input type="hidden" name="eventId" value={ev.id} />
-                <button className={`btn inline-btn ${isGoing ? "btn-ghost" : ""}`} type="submit">
-                  {isGoing ? "Cancel RSVP" : "RSVP"}
-                </button>
-              </form>
+              <div className="btn-row">
+                <form action={toggleRsvp}>
+                  <input type="hidden" name="eventId" value={ev.id} />
+                  <button className={`btn inline-btn ${isGoing ? "btn-ghost" : ""}`} type="submit">
+                    {isGoing ? "Cancel RSVP" : "RSVP"}
+                  </button>
+                </form>
+                {isGoing && ev.is_virtual === 1 && ev.meeting_url ? (
+                  <a className="btn inline-btn" href={ev.meeting_url} target="_blank" rel="noreferrer">Join online ↗</a>
+                ) : null}
+              </div>
             </div>
           );
         })}

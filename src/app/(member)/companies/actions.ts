@@ -15,6 +15,7 @@ function readFields(formData: FormData) {
   return {
     name: field("name"),
     website: field("website"),
+    linkedin: field("linkedin"),
     industry: field("industry"),
     size: field("size"),
     city: field("city"),
@@ -37,11 +38,11 @@ export async function createCompany(_prev: CompanyState, formData: FormData): Pr
 
   const res = await getDb()
     .prepare(
-      `INSERT INTO companies (name, website, industry, size, location, city, state, zip, dma_slug, dma_name, description, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO companies (name, website, linkedin, industry, size, location, city, state, zip, dma_slug, dma_name, description, created_by, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
-      f.name, f.website, f.industry, f.size,
+      f.name, f.website, f.linkedin, f.industry, f.size,
       locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       f.description, user.id, Date.now()
     )
@@ -68,12 +69,12 @@ export async function updateCompany(_prev: CompanyState, formData: FormData): Pr
 
   await getDb()
     .prepare(
-      `UPDATE companies SET name = ?, website = ?, industry = ?, size = ?,
+      `UPDATE companies SET name = ?, website = ?, linkedin = ?, industry = ?, size = ?,
          location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?, description = ?
        WHERE id = ?`
     )
     .bind(
-      f.name, f.website, f.industry, f.size,
+      f.name, f.website, f.linkedin, f.industry, f.size,
       locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       f.description, companyId
     )

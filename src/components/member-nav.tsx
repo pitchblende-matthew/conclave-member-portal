@@ -38,6 +38,7 @@ export default function MemberNav({ isAdmin, logoutHref }: { isAdmin: boolean; l
           <div className="nav-dropdown">
             <Link href="/directory" className="nav-drop-link" onClick={close}>Members</Link>
             <Link href="/companies" className="nav-drop-link" onClick={close}>Companies</Link>
+            <Link href="/connections" className="nav-drop-link" onClick={close}>Connections</Link>
           </div>
         </div>
 

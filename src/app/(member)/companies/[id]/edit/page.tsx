@@ -33,6 +33,7 @@ export default async function EditCompany({ params }: { params: Promise<{ id: st
             id: company.id,
             name: company.name,
             website: company.website,
+            linkedin: company.linkedin,
             industry: company.industry,
             size: company.size,
             city: company.city,

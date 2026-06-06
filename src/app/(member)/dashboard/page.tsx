@@ -1,40 +1,194 @@
-import { getSessionUser } from "@/lib/auth";
+import Link from "next/link";
+import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { mediaUrl } from "@/lib/media";
+import { formatDateTime } from "@/lib/format";
+import { connectionCounts } from "@/lib/connections";
+import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+function eventDate(ms: number): string {
+  try {
+    return new Date(ms).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+  } catch {
+    return "";
+  }
+}
+
 export default async function Dashboard() {
-  const user = await getSessionUser();
+  const user = await requireUser();
   const db = getDb();
-  const members = await db
-    .prepare("SELECT COUNT(*) AS n FROM users WHERE status = 'approved'")
-    .first<{ n: number }>();
-  const upcoming = await db
-    .prepare("SELECT COUNT(*) AS n FROM events WHERE starts_at > ?")
-    .bind(Date.now())
-    .first<{ n: number }>();
+  const now = Date.now();
+  const hasDma = !!user.dma_slug;
+  const one = async (sql: string, ...binds: (string | number)[]) =>
+    (await db.prepare(sql).bind(...binds).first<{ n: number }>())?.n ?? 0;
+
+  // Your market (or the whole network if location isn't set yet).
+  const marketMembers = hasDma
+    ? await one("SELECT COUNT(*) AS n FROM users WHERE status='approved' AND dma_slug=?", user.dma_slug)
+    : await one("SELECT COUNT(*) AS n FROM users WHERE status='approved'");
+  const marketCompanies = hasDma
+    ? await one("SELECT COUNT(*) AS n FROM companies WHERE dma_slug=?", user.dma_slug)
+    : await one("SELECT COUNT(*) AS n FROM companies");
+  const marketEvents = hasDma
+    ? await one("SELECT COUNT(*) AS n FROM events WHERE starts_at>? AND (dma_slug=? OR is_virtual=1)", now, user.dma_slug)
+    : await one("SELECT COUNT(*) AS n FROM events WHERE starts_at>?", now);
+
+  // Your upcoming RSVPs.
+  const { results: myEvents } = await db
+    .prepare(
+      `SELECT e.id, e.title, e.starts_at, e.is_virtual, e.location, e.dma_name
+       FROM rsvps r JOIN events e ON e.id = r.event_id
+       WHERE r.user_id = ? AND e.starts_at > ?
+       ORDER BY e.starts_at ASC LIMIT 4`
+    )
+    .bind(user.id, now)
+    .all<{ id: number; title: string; starts_at: number; is_virtual: number; location: string; dma_name: string }>();
+
+  const { connections, pendingIncoming } = await connectionCounts(user.id);
+
+  // Latest briefings.
+  const { results: briefings } = await db
+    .prepare("SELECT * FROM briefings WHERE published = 1 ORDER BY published_at DESC, id DESC LIMIT 3")
+    .all<Briefing>();
+
+  // Recent board activity, weighted to your area (your-market + network-wide topics).
+  const { results: topics } = await db
+    .prepare(
+      `SELECT t.id, t.title, t.last_activity_at, t.dma_name,
+              c.name AS category_name,
+              (SELECT COUNT(*) FROM posts p WHERE p.topic_id = t.id) - 1 AS replies
+       FROM topics t LEFT JOIN categories c ON c.id = t.category_id
+       ${hasDma ? "WHERE t.dma_slug = ? OR t.dma_slug = ''" : ""}
+       ORDER BY t.last_activity_at DESC LIMIT 5`
+    )
+    .bind(...(hasDma ? [user.dma_slug] : []))
+    .all<{ id: number; title: string; last_activity_at: number; dma_name: string; category_name: string | null; replies: number }>();
+
+  const marketLabel = hasDma ? user.dma_name : "the network";
 
   return (
     <>
       <div className="tag">Member dashboard</div>
-      <h1 style={{ fontSize: "2.6rem" }}>
-        Welcome{user?.name ? <>, <span className="em">{user.name}</span></> : ""}.
+      <h1 style={{ fontSize: "2.6rem", marginBottom: "0.35rem" }}>
+        Welcome{user.name ? <>, <span className="em">{user.name}</span></> : ""}.
       </h1>
-      <p className="meta" style={{ maxWidth: 560 }}>
-        A small, deliberately curated room for owners and operators. Here&apos;s where things stand.
+      <p className="meta" style={{ maxWidth: 600 }}>
+        {hasDma ? (
+          <>Your market is <strong>{user.dma_name}</strong>. Here&apos;s what&apos;s near you.</>
+        ) : (
+          <>Add your City / State / ZIP in your <Link href="/profile">profile</Link> to localize everything to your media market.</>
+        )}
       </p>
-      <div className="grid" style={{ marginTop: "2rem" }}>
-        <div className="card">
+
+      {/* Market snapshot */}
+      <div className="grid" style={{ marginTop: "1.5rem" }}>
+        <Link href={hasDma ? `/directory?area=${user.dma_slug}` : "/directory"} className="card member-card">
           <div className="tag">Members</div>
-          <h2 style={{ fontSize: "2.4rem" }}>{members?.n ?? 0}</h2>
-          <p className="meta">people in the network</p>
-        </div>
-        <div className="card">
-          <div className="tag">Upcoming</div>
-          <h2 style={{ fontSize: "2.4rem" }}>{upcoming?.n ?? 0}</h2>
-          <p className="meta">events on the calendar</p>
-        </div>
+          <div className="stat">{marketMembers}</div>
+          <p className="meta" style={{ margin: 0 }}>in {marketLabel}</p>
+        </Link>
+        <Link href={hasDma ? `/companies?area=${user.dma_slug}` : "/companies"} className="card member-card">
+          <div className="tag">Companies</div>
+          <div className="stat">{marketCompanies}</div>
+          <p className="meta" style={{ margin: 0 }}>in {marketLabel}</p>
+        </Link>
+        <Link href={hasDma ? `/events?area=${user.dma_slug}` : "/events"} className="card member-card">
+          <div className="tag">Upcoming events</div>
+          <div className="stat">{marketEvents}</div>
+          <p className="meta" style={{ margin: 0 }}>near you &amp; virtual</p>
+        </Link>
+        <Link href="/connections" className="card member-card">
+          <div className="tag">Connections</div>
+          <div className="stat">{connections}</div>
+          <p className="meta" style={{ margin: 0 }}>
+            {pendingIncoming > 0 ? <strong>{pendingIncoming} request{pendingIncoming === 1 ? "" : "s"} waiting</strong> : "mutual connections"}
+          </p>
+        </Link>
       </div>
+
+      <div className="dash-cols">
+        {/* Your events */}
+        <section className="card">
+          <div className="topline">
+            <h2 style={{ fontSize: "1.5rem" }}>Your events</h2>
+            <Link href="/events" className="meta">All events →</Link>
+          </div>
+          {myEvents.length > 0 ? (
+            <ul className="dash-list">
+              {myEvents.map((e) => (
+                <li key={e.id}>
+                  <span className="dash-date">{eventDate(e.starts_at)}</span>
+                  <span>
+                    {e.title}
+                    {e.is_virtual ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>Virtual</span> : e.dma_name ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>{e.dma_name}</span> : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="meta">No upcoming RSVPs. <Link href="/events">Find an event →</Link></p>
+          )}
+        </section>
+
+        {/* Board activity */}
+        <section className="card">
+          <div className="topline">
+            <h2 style={{ fontSize: "1.5rem" }}>From the board</h2>
+            <Link href="/board" className="meta">Open board →</Link>
+          </div>
+          {topics.length > 0 ? (
+            <ul className="dash-list">
+              {topics.map((t) => (
+                <li key={t.id}>
+                  <Link href={`/board/${t.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                    {t.title}
+                    {t.dma_name ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>{t.dma_name}</span> : null}
+                    <span className="meta" style={{ display: "block", fontSize: "0.78rem" }}>
+                      {t.category_name ? `${t.category_name} · ` : ""}{Math.max(0, t.replies)} repl{t.replies === 1 ? "y" : "ies"} · {formatDateTime(t.last_activity_at)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="meta">No discussions yet. <Link href="/board/new">Start one →</Link></p>
+          )}
+        </section>
+      </div>
+
+      {/* Latest briefings */}
+      <section style={{ marginTop: "1.75rem" }}>
+        <div className="topline">
+          <h2 style={{ fontSize: "1.5rem" }}>Latest briefings</h2>
+          <Link href="/briefings" className="meta">All briefings →</Link>
+        </div>
+        <div className="grid" style={{ marginTop: "0.75rem" }}>
+          {briefings.map((b) => {
+            const cover = b.cover_key ? mediaUrl(b.cover_key) : null;
+            const inner = (
+              <>
+                {cover ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={cover} alt="" className="briefing-cover" />
+                ) : null}
+                <div className="briefing-body">
+                  <span className="market-tag">{b.kind === "link" ? "Link ↗" : "Article"}</span>
+                  <h3 style={{ fontSize: "1.25rem", margin: "0.4rem 0 0.2rem" }}>{b.title}</h3>
+                  {b.summary ? <p className="meta" style={{ margin: 0 }}>{b.summary}</p> : null}
+                </div>
+              </>
+            );
+            return b.kind === "link" ? (
+              <a key={b.id} href={b.url} target="_blank" rel="noreferrer" className="card briefing-card">{inner}</a>
+            ) : (
+              <Link key={b.id} href={`/briefings/${b.id}`} className="card briefing-card">{inner}</Link>
+            );
+          })}
+          {briefings.length === 0 && <p className="meta">No briefings yet.</p>}
+        </div>
+      </section>
     </>
   );
 }

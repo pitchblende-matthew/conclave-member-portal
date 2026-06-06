@@ -24,6 +24,10 @@ export default function CreateCompanyForm() {
           <label htmlFor="website">Website</label>
           <input id="website" name="website" type="url" placeholder="https://" />
         </div>
+        <div>
+          <label htmlFor="linkedin">LinkedIn</label>
+          <input id="linkedin" name="linkedin" type="url" placeholder="https://linkedin.com/company/…" />
+        </div>
         <RegionFields />
       </div>
       <p className="note" style={{ marginTop: "-0.25rem" }}>

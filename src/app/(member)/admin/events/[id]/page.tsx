@@ -44,6 +44,8 @@ export default async function EditEvent({ params }: { params: Promise<{ id: stri
             city: ev.city,
             state: ev.state,
             zip: ev.zip,
+            isVirtual: ev.is_virtual === 1,
+            meetingUrl: ev.meeting_url,
             startsAtMs: ev.starts_at,
             capacity: ev.capacity,
           }}

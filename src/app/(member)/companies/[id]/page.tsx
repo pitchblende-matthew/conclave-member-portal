@@ -52,9 +52,10 @@ export default async function CompanyProfile({ params }: { params: Promise<{ id:
 
         {company.description ? <p style={{ marginTop: "1.25rem" }}>{company.description}</p> : null}
 
-        {company.website ? (
+        {company.website || company.linkedin ? (
           <div className="links-row">
-            <a className="btn btn-ghost inline-btn" href={company.website} target="_blank" rel="noreferrer">Website</a>
+            {company.website ? <a className="btn btn-ghost inline-btn" href={company.website} target="_blank" rel="noreferrer">Website</a> : null}
+            {company.linkedin ? <a className="btn btn-ghost inline-btn" href={company.linkedin} target="_blank" rel="noreferrer">LinkedIn</a> : null}
           </div>
         ) : null}
 

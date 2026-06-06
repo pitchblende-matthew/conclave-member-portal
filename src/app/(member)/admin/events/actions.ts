@@ -25,6 +25,8 @@ function readEvent(formData: FormData) {
     city: field("city"),
     state: field("state"),
     zip: field("zip"),
+    isVirtual: formData.get("is_virtual") === "1",
+    meetingUrl: field("meeting_url"),
     startsAt: parseStartsAt(field("starts_at")),
     capacity: Number(formData.get("capacity") ?? 0) || 0,
   };
@@ -35,16 +37,20 @@ export async function createEvent(_prev: EventState, formData: FormData): Promis
   const e = readEvent(formData);
   if (!e.title) return { error: "Title is required." };
   if (e.startsAt === null) return { error: "A valid date and time is required." };
-  const region = await regionFromForm(e.city, e.state, e.zip);
+  // Virtual events are network-wide, so they carry no media market.
+  const region = e.isVirtual
+    ? { city: "", state: "", zip: "", dma_slug: "", dma_name: "" }
+    : await regionFromForm(e.city, e.state, e.zip);
 
   await getDb()
     .prepare(
-      `INSERT INTO events (title, description, location, city, state, zip, dma_slug, dma_name, starts_at, capacity, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO events (title, description, location, city, state, zip, dma_slug, dma_name, is_virtual, meeting_url, starts_at, capacity, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       e.title, e.description, e.location,
       region.city, region.state, region.zip, region.dma_slug, region.dma_name,
+      e.isVirtual ? 1 : 0, e.isVirtual ? e.meetingUrl : "",
       e.startsAt, e.capacity, Date.now()
     )
     .run();
@@ -60,17 +66,20 @@ export async function updateEvent(_prev: EventState, formData: FormData): Promis
   const e = readEvent(formData);
   if (!e.title) return { error: "Title is required." };
   if (e.startsAt === null) return { error: "A valid date and time is required." };
-  const region = await regionFromForm(e.city, e.state, e.zip);
+  const region = e.isVirtual
+    ? { city: "", state: "", zip: "", dma_slug: "", dma_name: "" }
+    : await regionFromForm(e.city, e.state, e.zip);
 
   await getDb()
     .prepare(
       `UPDATE events SET title = ?, description = ?, location = ?,
-         city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?, starts_at = ?, capacity = ?
+         city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?, is_virtual = ?, meeting_url = ?, starts_at = ?, capacity = ?
        WHERE id = ?`
     )
     .bind(
       e.title, e.description, e.location,
       region.city, region.state, region.zip, region.dma_slug, region.dma_name,
+      e.isVirtual ? 1 : 0, e.isVirtual ? e.meetingUrl : "",
       e.startsAt, e.capacity, id
     )
     .run();

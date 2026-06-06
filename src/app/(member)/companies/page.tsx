@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Eyebrow from "@/components/eyebrow";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
@@ -44,7 +45,7 @@ export default async function Companies({
     <>
       <div className="topline">
         <div>
-          <div className="tag">Companies</div>
+          <Eyebrow icon="companies">Companies</Eyebrow>
           <h1 style={{ fontSize: "2.6rem" }}>The network&apos;s companies</h1>
         </div>
         <Link href="/companies/new" className="btn inline-btn">Add a company</Link>

@@ -6,6 +6,7 @@ import { mediaUrl } from "@/lib/media";
 import { connectionState } from "@/lib/connections";
 import Avatar from "@/components/avatar";
 import ConnectControls from "@/components/connect-controls";
+import { Sprig } from "@/components/icons";
 import type { User } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -42,32 +43,31 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
   return (
     <>
       <p className="meta"><Link href="/directory">← Directory</Link></p>
-      <div className="card" style={{ maxWidth: 680, marginTop: "0.5rem" }}>
-        <div className="profile-head">
-          <Avatar src={member.avatar_key ? mediaUrl(member.avatar_key) : null} name={member.name} size={96} />
-          <div>
-            <h1 style={{ fontSize: "2.2rem", marginBottom: "0.15rem" }}>
-              {member.name || "Member"}
-              {member.pronouns ? <span className="pronouns"> · {member.pronouns}</span> : null}
-            </h1>
-            <p className="meta" style={{ margin: 0 }}>
-              {member.role || ""}
-              {member.role && member.company_name ? " · " : ""}
-              {member.company_name ? (
-                member.company_id ? (
-                  <Link href={`/companies/${member.company_id}`}>{member.company_name}</Link>
-                ) : (
-                  member.company_name
-                )
-              ) : null}
-              {!member.role && !member.company_name ? "—" : ""}
-            </p>
-            {member.location ? <p className="meta" style={{ margin: 0 }}>{member.location}</p> : null}
-            {member.dma_name ? (
-              <p style={{ margin: "0.5rem 0 0" }}><span className="market-tag">{member.dma_name}</span></p>
-            ) : null}
-          </div>
-        </div>
+      <div className="card profile-card" style={{ maxWidth: 680, marginTop: "0.5rem" }}>
+        <div className="profile-banner"><Sprig size={120} className="banner-sprig" /></div>
+        <span className="profile-avatar">
+          <Avatar src={member.avatar_key ? mediaUrl(member.avatar_key) : null} name={member.name} size={92} />
+        </span>
+        <h1 style={{ fontSize: "2.2rem", margin: "0.75rem 0 0.15rem" }}>
+          {member.name || "Member"}
+          {member.pronouns ? <span className="pronouns"> · {member.pronouns}</span> : null}
+        </h1>
+        <p className="meta" style={{ margin: 0 }}>
+          {member.role || ""}
+          {member.role && member.company_name ? " · " : ""}
+          {member.company_name ? (
+            member.company_id ? (
+              <Link href={`/companies/${member.company_id}`}>{member.company_name}</Link>
+            ) : (
+              member.company_name
+            )
+          ) : null}
+          {!member.role && !member.company_name ? "—" : ""}
+        </p>
+        {member.location ? <p className="meta" style={{ margin: 0 }}>{member.location}</p> : null}
+        {member.dma_name ? (
+          <p style={{ margin: "0.5rem 0 0" }}><span className="market-tag">{member.dma_name}</span></p>
+        ) : null}
 
         {connState !== "self" && (
           <div style={{ marginTop: "1.25rem" }}>

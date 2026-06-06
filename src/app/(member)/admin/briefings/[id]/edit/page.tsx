@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/components/local-time";
 import BriefingForm from "../../briefing-form";
 import BriefingCover from "../../briefing-cover";
 import { setPublished } from "../../actions";
@@ -26,7 +26,7 @@ export default async function EditBriefing({ params }: { params: Promise<{ id: s
       <div className="topline">
         <div>
           <div className="tag">
-            Admin · Edit briefing · {b.published ? `Published ${b.published_at ? formatDateTime(b.published_at) : ""}` : "Draft"}
+            Admin · Edit briefing · {b.published ? <>Published {b.published_at ? <LocalTime ms={b.published_at} /> : null}</> : "Draft"}
           </div>
           <h1 style={{ fontSize: "2.4rem" }}>{b.title}</h1>
         </div>

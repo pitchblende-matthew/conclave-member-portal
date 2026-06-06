@@ -3,21 +3,11 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import ConfirmSubmit from "@/components/confirm-submit";
+import LocalTime from "@/components/local-time";
 import { deleteEvent, approveEvent, declineEvent } from "./actions";
 import type { EventRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-function formatDate(ms: number): string {
-  try {
-    return new Date(ms).toLocaleString("en-US", {
-      weekday: "short", month: "long", day: "numeric", year: "numeric",
-      hour: "numeric", minute: "2-digit", timeZone: "UTC",
-    }) + " UTC";
-  } catch {
-    return "";
-  }
-}
 
 export default async function AdminEvents() {
   const user = await requireUser();
@@ -55,7 +45,7 @@ export default async function AdminEvents() {
           <h2 style={{ fontSize: "1.5rem" }}>Pending submissions <span className="badge">{pending.length}</span></h2>
           {pending.map((ev) => (
             <div key={ev.id} className="card">
-              <div className="tag">{formatDate(ev.starts_at)}{ev.location ? ` · ${ev.location}` : ""}{ev.is_virtual ? " · Virtual" : ""}</div>
+              <div className="tag"><LocalTime ms={ev.starts_at} mode="datetimeLong" />{ev.location ? ` · ${ev.location}` : ""}{ev.is_virtual ? " · Virtual" : ""}</div>
               <h3 style={{ fontSize: "1.5rem" }}>{ev.title}</h3>
               <p className="meta">Submitted by {ev.submitter || "a member"}{ev.dma_name ? ` · ${ev.dma_name}` : ""}</p>
               {ev.description ? <p>{ev.description}</p> : null}
@@ -79,7 +69,7 @@ export default async function AdminEvents() {
         {pending.length > 0 && <h2 style={{ fontSize: "1.5rem" }}>On the calendar</h2>}
         {events.map((ev) => (
           <div key={ev.id} className="card">
-            <div className="tag">{formatDate(ev.starts_at)}{ev.location ? ` · ${ev.location}` : ""}{ev.is_virtual ? " · Virtual" : ""}</div>
+            <div className="tag"><LocalTime ms={ev.starts_at} mode="datetimeLong" />{ev.location ? ` · ${ev.location}` : ""}{ev.is_virtual ? " · Virtual" : ""}</div>
             <h3 style={{ fontSize: "1.5rem" }}>{ev.title}</h3>
             <p className="meta">
               {(countMap.get(ev.id) ?? 0)} attending{ev.capacity ? ` · ${ev.capacity} seats` : ""}

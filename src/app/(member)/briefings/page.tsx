@@ -1,8 +1,9 @@
 import Link from "next/link";
+import Eyebrow from "@/components/eyebrow";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/components/local-time";
 import EmptyState from "@/components/empty-state";
 import type { Briefing } from "@/lib/types";
 
@@ -18,7 +19,7 @@ export default async function Briefings() {
     <>
       <div className="topline">
         <div>
-          <div className="tag">Briefings</div>
+          <Eyebrow icon="briefings">Briefings</Eyebrow>
           <h1 style={{ fontSize: "2.6rem" }}>What we&apos;re <span className="em">reading</span></h1>
         </div>
         <Link href="/briefings/submit" className="btn inline-btn">Submit a briefing</Link>
@@ -40,7 +41,7 @@ export default async function Briefings() {
                 <h3 style={{ fontSize: "1.4rem", margin: "0.5rem 0 0.25rem" }}>{b.title}</h3>
                 {b.summary ? <p className="meta" style={{ margin: 0 }}>{b.summary}</p> : null}
                 <p className="meta" style={{ marginTop: "0.6rem", fontSize: "0.78rem" }}>
-                  {b.published_at ? formatDateTime(b.published_at) : ""}
+                  {b.published_at ? <LocalTime ms={b.published_at} /> : ""}
                 </p>
               </div>
             </>

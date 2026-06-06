@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import Avatar from "@/components/avatar";
+import { Sprig } from "@/components/icons";
 import JoinCompanyButton from "./join-button";
 import type { Company, User } from "@/lib/types";
 
@@ -33,22 +34,21 @@ export default async function CompanyProfile({ params }: { params: Promise<{ id:
   return (
     <>
       <p className="meta"><Link href="/companies">← Companies</Link></p>
-      <div className="card" style={{ maxWidth: 720, marginTop: "0.5rem" }}>
-        <div className="profile-head">
-          <Avatar src={company.logo_key ? mediaUrl(company.logo_key) : null} name={company.name} size={96} />
-          <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: "2.2rem", marginBottom: "0.15rem" }}>{company.name}</h1>
-            <p className="meta" style={{ margin: 0 }}>
-              {[company.industry, company.size, company.location].filter(Boolean).join(" · ") || "—"}
-            </p>
-            {company.dma_name ? (
-              <p style={{ margin: "0.5rem 0 0" }}><span className="market-tag">{company.dma_name}</span></p>
-            ) : null}
-          </div>
-          {canEdit && (
-            <Link href={`/companies/${companyId}/edit`} className="btn btn-ghost inline-btn">Edit</Link>
-          )}
-        </div>
+      <div className="card profile-card" style={{ maxWidth: 720, marginTop: "0.5rem" }}>
+        <div className="profile-banner"><Sprig size={120} className="banner-sprig" /></div>
+        {canEdit && (
+          <Link href={`/companies/${companyId}/edit`} className="btn btn-ghost inline-btn profile-edit">Edit</Link>
+        )}
+        <span className="profile-avatar">
+          <Avatar src={company.logo_key ? mediaUrl(company.logo_key) : null} name={company.name} size={92} />
+        </span>
+        <h1 style={{ fontSize: "2.2rem", margin: "0.75rem 0 0.15rem" }}>{company.name}</h1>
+        <p className="meta" style={{ margin: 0 }}>
+          {[company.industry, company.size, company.location].filter(Boolean).join(" · ") || "—"}
+        </p>
+        {company.dma_name ? (
+          <p style={{ margin: "0.5rem 0 0" }}><span className="market-tag">{company.dma_name}</span></p>
+        ) : null}
 
         {company.description ? <p style={{ marginTop: "1.25rem" }}>{company.description}</p> : null}
 

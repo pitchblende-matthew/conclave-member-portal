@@ -1,23 +1,15 @@
 import Link from "next/link";
+import Eyebrow from "@/components/eyebrow";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { marketsIn, resolveArea } from "@/lib/region";
 import AreaFilter from "@/components/area-filter";
 import EmptyState from "@/components/empty-state";
+import LocalTime from "@/components/local-time";
 import type { EventRow } from "@/lib/types";
 import { toggleRsvp } from "./actions";
 
 export const dynamic = "force-dynamic";
-
-function formatDate(ms: number): string {
-  try {
-    return new Date(ms).toLocaleDateString("en-US", {
-      weekday: "short", month: "long", day: "numeric", year: "numeric",
-    });
-  } catch {
-    return "";
-  }
-}
 
 export default async function Events({
   searchParams,
@@ -56,7 +48,7 @@ export default async function Events({
     <>
       <div className="topline">
         <div>
-          <div className="tag">Events</div>
+          <Eyebrow icon="events">Events</Eyebrow>
           <h1 style={{ fontSize: "2.6rem" }}>What&apos;s happening</h1>
         </div>
         <Link href="/events/submit" className="btn inline-btn">Submit an event</Link>
@@ -77,7 +69,7 @@ export default async function Events({
           return (
             <div key={ev.id} className="card">
               <div className="tag">
-                {formatDate(ev.starts_at)}{ev.location ? ` · ${ev.location}` : ""}
+<LocalTime ms={ev.starts_at} mode="date" />{ev.location ? ` · ${ev.location}` : ""}
                 {ev.is_virtual === 1 ? <span className="market-tag" style={{ marginLeft: "0.6rem" }}>Virtual</span> : null}
                 {ev.dma_name ? <span className="market-tag" style={{ marginLeft: "0.6rem" }}>{ev.dma_name}</span> : null}
               </div>

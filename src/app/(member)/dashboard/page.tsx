@@ -2,20 +2,13 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
-import { formatDateTime } from "@/lib/format";
 import { connectionCounts } from "@/lib/connections";
-import Icon from "@/components/icons";
+import Icon, { Sprig } from "@/components/icons";
+import Eyebrow from "@/components/eyebrow";
+import LocalTime from "@/components/local-time";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-function eventDate(ms: number): string {
-  try {
-    return new Date(ms).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
-  } catch {
-    return "";
-  }
-}
 
 export default async function Dashboard() {
   const user = await requireUser();
@@ -71,17 +64,20 @@ export default async function Dashboard() {
 
   return (
     <>
-      <div className="tag">Member dashboard</div>
-      <h1 style={{ fontSize: "2.6rem", marginBottom: "0.35rem" }}>
-        Welcome{user.name ? <>, <span className="em">{user.name}</span></> : ""}.
-      </h1>
-      <p className="meta" style={{ maxWidth: 600 }}>
-        {hasDma ? (
-          <>Your market is <strong>{user.dma_name}</strong>. Here&apos;s what&apos;s near you.</>
-        ) : (
-          <>Add your City / State / ZIP in your <Link href="/profile">profile</Link> to localize everything to your media market.</>
-        )}
-      </p>
+      <div className="dash-hero">
+        <Sprig size={150} className="dash-hero-sprig" />
+        <Eyebrow icon="dashboard">Member dashboard</Eyebrow>
+        <h1 style={{ fontSize: "2.6rem", marginBottom: "0.35rem" }}>
+          Welcome{user.name ? <>, <span className="em">{user.name}</span></> : ""}.
+        </h1>
+        <p className="meta" style={{ maxWidth: 600 }}>
+          {hasDma ? (
+            <>Your market is <strong>{user.dma_name}</strong>. Here&apos;s what&apos;s near you.</>
+          ) : (
+            <>Add your City / State / ZIP in your <Link href="/profile">profile</Link> to localize everything to your media market.</>
+          )}
+        </p>
+      </div>
 
       {/* Market snapshot */}
       <div className="grid" style={{ marginTop: "1.5rem" }}>
@@ -120,7 +116,7 @@ export default async function Dashboard() {
             <ul className="dash-list">
               {myEvents.map((e) => (
                 <li key={e.id}>
-                  <span className="dash-date">{eventDate(e.starts_at)}</span>
+                  <span className="dash-date"><LocalTime ms={e.starts_at} mode="dayshort" /></span>
                   <span>
                     {e.title}
                     {e.is_virtual ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>Virtual</span> : e.dma_name ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>{e.dma_name}</span> : null}
@@ -147,7 +143,7 @@ export default async function Dashboard() {
                     {t.title}
                     {t.dma_name ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>{t.dma_name}</span> : null}
                     <span className="meta" style={{ display: "block", fontSize: "0.78rem" }}>
-                      {t.category_name ? `${t.category_name} · ` : ""}{Math.max(0, t.replies)} repl{t.replies === 1 ? "y" : "ies"} · {formatDateTime(t.last_activity_at)}
+                      {t.category_name ? `${t.category_name} · ` : ""}{Math.max(0, t.replies)} repl{t.replies === 1 ? "y" : "ies"} · <LocalTime ms={t.last_activity_at} />
                     </span>
                   </Link>
                 </li>

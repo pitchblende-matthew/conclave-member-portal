@@ -56,6 +56,7 @@ export default async function AdminMembers() {
                 </div>
               </Link>
               <div className="btn-row">
+                <Link href={`/admin/members/${m.id}/edit`} className="btn btn-ghost inline-btn">Edit details</Link>
                 <form action={setAdmin}>
                   <input type="hidden" name="userId" value={m.id} />
                   <input type="hidden" name="makeAdmin" value={m.is_admin === 1 ? "0" : "1"} />

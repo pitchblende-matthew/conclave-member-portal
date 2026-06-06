@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/components/local-time";
 import ConfirmSubmit from "@/components/confirm-submit";
 import { approveMember, declineMember } from "../actions";
 
@@ -45,7 +45,7 @@ export default async function AdminRequests() {
         {results.map((r) => (
           <div key={r.id} className="card">
             <div className="tag">
-              {r.status === "pending" ? `Requested ${formatDateTime(r.created_at)}` : "Declined"}
+              {r.status === "pending" ? <>Requested <LocalTime ms={r.created_at} /></> : "Declined"}
             </div>
             <h3 style={{ fontSize: "1.4rem", marginBottom: "0.25rem" }}>{r.name || "—"}</h3>
             <p className="meta" style={{ margin: 0 }}>

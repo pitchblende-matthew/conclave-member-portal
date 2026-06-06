@@ -1,10 +1,20 @@
 import Link from "next/link";
+import Eyebrow from "@/components/eyebrow";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/components/local-time";
 import EmptyState from "@/components/empty-state";
 
 export const dynamic = "force-dynamic";
+
+// A stable, muted accent colour per category for the topic-card strip.
+const ACCENTS = ["#6e7a5e", "#a08442", "#9c6b4f", "#4f7a6e", "#5f7085", "#7a5f70"];
+function accentFor(slug: string | null): string {
+  if (!slug) return "var(--line)";
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+  return ACCENTS[h % ACCENTS.length];
+}
 
 type TopicRow = {
   id: number;
@@ -70,7 +80,7 @@ export default async function Board({
     <>
       <div className="topline">
         <div>
-          <div className="tag">Discussion</div>
+          <Eyebrow icon="board">Discussion</Eyebrow>
           <h1 style={{ fontSize: "2.6rem" }}>The <span className="em">board</span></h1>
         </div>
         <Link href="/board/new" className="btn inline-btn">New topic</Link>
@@ -96,7 +106,7 @@ export default async function Board({
         {results.map((t) => {
           const replies = Math.max(0, t.reply_count - 1); // first post is the opener
           return (
-            <Link key={t.id} href={`/board/${t.id}`} className="card member-card">
+            <Link key={t.id} href={`/board/${t.id}`} className="card member-card topic-card" style={{ borderLeftColor: accentFor(t.category_slug), borderLeftWidth: "3px" }}>
               <div className="member-card-head" style={{ justifyContent: "space-between" }}>
                 <h3 style={{ fontSize: "1.4rem", marginBottom: 0 }}>{t.title}</h3>
                 <span style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -105,7 +115,7 @@ export default async function Board({
                 </span>
               </div>
               <p className="meta" style={{ margin: "0.4rem 0 0" }}>
-                {t.author || "Member"} · {replies} {replies === 1 ? "reply" : "replies"} · last activity {formatDateTime(t.last_activity_at)}
+                {t.author || "Member"} · {replies} {replies === 1 ? "reply" : "replies"} · last activity <LocalTime ms={t.last_activity_at} />
               </p>
             </Link>
           );

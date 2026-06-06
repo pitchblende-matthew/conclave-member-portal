@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/components/local-time";
 import ConfirmSubmit from "@/components/confirm-submit";
 import { setPublished, deleteBriefing, approveBriefing, declineBriefing } from "./actions";
 import type { Briefing } from "@/lib/types";
@@ -67,7 +67,7 @@ export default async function AdminBriefings() {
           <div key={b.id} className="card">
             <div className="tag">
               {b.kind === "link" ? "Link" : "Article"} ·{" "}
-              {b.published ? `Published ${b.published_at ? formatDateTime(b.published_at) : ""}` : "Draft"}
+              {b.published ? <>Published {b.published_at ? <LocalTime ms={b.published_at} /> : null}</> : "Draft"}
             </div>
             <h3 style={{ fontSize: "1.5rem" }}>{b.title}</h3>
             {b.summary ? <p className="meta">{b.summary}</p> : null}

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/components/local-time";
 import Avatar from "@/components/avatar";
 import ConfirmSubmit from "@/components/confirm-submit";
 import ReplyForm from "./reply-form";
@@ -86,7 +86,7 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
                   <div>
                     <strong>{p.author || "Member"}</strong>
                     {i === 0 ? <span className="badge">Opener</span> : null}
-                    <p className="meta" style={{ margin: 0 }}>{formatDateTime(p.created_at)}</p>
+                    <p className="meta" style={{ margin: 0 }}><LocalTime ms={p.created_at} /></p>
                   </div>
                 </Link>
                 {/* The opening post is removed via "Delete topic" to avoid orphaning it. */}

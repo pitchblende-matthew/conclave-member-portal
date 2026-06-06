@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Eyebrow from "@/components/eyebrow";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
@@ -34,7 +35,7 @@ export default async function Directory({
 
   return (
     <>
-      <div className="tag">Member directory</div>
+      <Eyebrow icon="members">Member directory</Eyebrow>
       <h1 style={{ fontSize: "2.6rem" }}>Who&apos;s <span className="em">inside</span></h1>
 
       <AreaFilter

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Eyebrow from "@/components/eyebrow";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
@@ -55,7 +56,7 @@ export default async function Connections() {
 
   return (
     <>
-      <div className="tag">Network</div>
+      <Eyebrow icon="connections">Network</Eyebrow>
       <h1 style={{ fontSize: "2.6rem" }}>Your <span className="em">connections</span></h1>
 
       {incoming.length > 0 && (

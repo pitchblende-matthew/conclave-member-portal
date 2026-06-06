@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/components/local-time";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export default async function BriefingReader({ params }: { params: Promise<{ id:
       <h1 style={{ fontSize: "2.6rem", marginBottom: "0.5rem" }}>{b.title}</h1>
       <p className="meta" style={{ marginTop: 0 }}>
         {author?.name ? `${author.name} · ` : ""}
-        {b.published_at ? formatDateTime(b.published_at) : "Draft"}
+        {b.published_at ? <LocalTime ms={b.published_at} /> : "Draft"}
       </p>
 
       {b.cover_key ? (

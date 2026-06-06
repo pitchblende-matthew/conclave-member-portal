@@ -122,6 +122,42 @@ export async function removeCompanyLogo(_prev: CompanyState, formData: FormData)
   return { ok: true };
 }
 
+export async function uploadCompanyCover(_prev: CompanyState, formData: FormData): Promise<CompanyState> {
+  const user = await requireUser();
+  const companyId = Number(formData.get("companyId"));
+  if (!canEdit(user, companyId)) return { error: "You don't have permission to edit this company." };
+
+  const result = await storeImage(`companies/${companyId}/cover`, formData.get("cover"));
+  if ("error" in result) return { error: result.error };
+
+  const existing = await getDb()
+    .prepare("SELECT cover_key FROM companies WHERE id = ?")
+    .bind(companyId)
+    .first<Pick<Company, "cover_key">>();
+
+  await getDb().prepare("UPDATE companies SET cover_key = ? WHERE id = ?").bind(result.key, companyId).run();
+  if (existing?.cover_key && existing.cover_key !== result.key) await deleteImage(existing.cover_key);
+
+  revalidatePath(`/companies/${companyId}`);
+  return { ok: true };
+}
+
+export async function removeCompanyCover(_prev: CompanyState, formData: FormData): Promise<CompanyState> {
+  const user = await requireUser();
+  const companyId = Number(formData.get("companyId"));
+  if (!canEdit(user, companyId)) return { error: "You don't have permission to edit this company." };
+
+  const existing = await getDb()
+    .prepare("SELECT cover_key FROM companies WHERE id = ?")
+    .bind(companyId)
+    .first<Pick<Company, "cover_key">>();
+  if (existing?.cover_key) await deleteImage(existing.cover_key);
+
+  await getDb().prepare("UPDATE companies SET cover_key = '' WHERE id = ?").bind(companyId).run();
+  revalidatePath(`/companies/${companyId}`);
+  return { ok: true };
+}
+
 // Set (or clear, with companyId = 0) the signed-in member's company.
 export async function setMyCompany(companyId: number): Promise<void> {
   const user = await requireUser();

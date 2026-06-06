@@ -440,3 +440,18 @@ body { overflow-wrap: break-word; }
 .dash-hero { position: relative; }
 .dash-hero-sprig { position: absolute; top: -8px; right: 0; color: var(--sage); opacity: 0.1; pointer-events: none; }
 @media (max-width: 560px) { .dash-hero-sprig { display: none; } }
+
+/* Cover-image editor (profile & company forms) */
+.cover-edit-row { margin-bottom: 1.5rem; }
+.cover-edit {
+  height: 120px; border-radius: 10px; border: 1px dashed var(--line);
+  background-color: var(--cream-deep); background-size: cover; background-position: center;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 0.6rem;
+}
+/* Cover image inside a profile/company banner */
+.banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Section divider with a centered sprig */
+.divider { display: flex; align-items: center; gap: 1rem; margin: 2rem 0 1.25rem; }
+.divider-line { flex: 1; height: 1px; background: var(--line); }
+.divider-sprig { color: var(--sage-soft); flex: none; }

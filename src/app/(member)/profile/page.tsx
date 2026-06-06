@@ -34,6 +34,7 @@ export default async function Profile() {
             bio: user.bio,
             email: user.email,
             avatarUrl: user.avatar_key ? mediaUrl(user.avatar_key) : null,
+            coverUrl: user.cover_key ? mediaUrl(user.cover_key) : null,
           }}
         />
       </div>

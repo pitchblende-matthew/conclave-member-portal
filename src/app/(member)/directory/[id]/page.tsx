@@ -21,7 +21,7 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
   const me = await requireUser();
   const member = await getDb()
     .prepare(
-      `SELECT u.id, u.name, u.email, u.role, u.location, u.dma_name, u.bio, u.avatar_key,
+      `SELECT u.id, u.name, u.email, u.role, u.location, u.dma_name, u.bio, u.avatar_key, u.cover_key,
               u.pronouns, u.phone, u.website, u.linkedin, u.twitter, u.company_id,
               COALESCE(c.name, NULLIF(u.company, '')) AS company_name
        FROM users u
@@ -44,7 +44,14 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
     <>
       <p className="meta"><Link href="/directory">← Directory</Link></p>
       <div className="card profile-card" style={{ maxWidth: 680, marginTop: "0.5rem" }}>
-        <div className="profile-banner"><Sprig size={120} className="banner-sprig" /></div>
+        <div className="profile-banner">
+          {member.cover_key ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={mediaUrl(member.cover_key)} alt="" className="banner-img" />
+          ) : (
+            <Sprig size={120} className="banner-sprig" />
+          )}
+        </div>
         <span className="profile-avatar">
           <Avatar src={member.avatar_key ? mediaUrl(member.avatar_key) : null} name={member.name} size={92} />
         </span>

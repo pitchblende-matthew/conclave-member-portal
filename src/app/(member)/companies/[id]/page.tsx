@@ -35,7 +35,14 @@ export default async function CompanyProfile({ params }: { params: Promise<{ id:
     <>
       <p className="meta"><Link href="/companies">← Companies</Link></p>
       <div className="card profile-card" style={{ maxWidth: 720, marginTop: "0.5rem" }}>
-        <div className="profile-banner"><Sprig size={120} className="banner-sprig" /></div>
+        <div className="profile-banner">
+          {company.cover_key ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={mediaUrl(company.cover_key)} alt="" className="banner-img" />
+          ) : (
+            <Sprig size={120} className="banner-sprig" />
+          )}
+        </div>
         {canEdit && (
           <Link href={`/companies/${companyId}/edit`} className="btn btn-ghost inline-btn profile-edit">Edit</Link>
         )}

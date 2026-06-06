@@ -13,6 +13,7 @@ export interface User {
   dma_name: string;
   bio: string;
   avatar_key: string;
+  cover_key: string;
   pronouns: string;
   phone: string;
   website: string;
@@ -31,6 +32,7 @@ export interface Company {
   id: number;
   name: string;
   logo_key: string;
+  cover_key: string;
   website: string;
   industry: string;
   size: string;

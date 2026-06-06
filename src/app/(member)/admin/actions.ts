@@ -4,8 +4,55 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { deleteImage } from "@/lib/media";
+import { findOrCreateCompany } from "@/lib/companies";
+import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 import { emailAccessApproved, emailAccessDeclined } from "@/lib/email";
 import type { Company } from "@/lib/types";
+
+export type AdminMemberState = { ok?: boolean; error?: string };
+
+// Edit another member's profile details (admin only).
+export async function adminUpdateMember(_prev: AdminMemberState, formData: FormData): Promise<AdminMemberState> {
+  await requireAdmin();
+  const userId = Number(formData.get("userId"));
+  if (!userId) return { error: "Unknown member." };
+  const field = (name: string) => String(formData.get(name) ?? "").trim();
+
+  const email = field("email").toLowerCase();
+  if (!email) return { error: "Email is required." };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
+
+  const regionError = validateRegion(field("city"), field("state"), field("zip"));
+  if (regionError) return { error: regionError };
+
+  const db = getDb();
+  const clash = await db.prepare("SELECT id FROM users WHERE email = ? AND id != ?").bind(email, userId).first();
+  if (clash) return { error: "Another member already uses that email." };
+
+  const region = await regionFromForm(field("city"), field("state"), field("zip"));
+  const companyId = await findOrCreateCompany(field("company_name"), userId);
+
+  await db
+    .prepare(
+      `UPDATE users SET
+         email = ?, name = ?, role = ?, pronouns = ?,
+         location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?,
+         phone = ?, website = ?, linkedin = ?, twitter = ?, bio = ?, company_id = ?
+       WHERE id = ?`
+    )
+    .bind(
+      email, field("name"), field("role"), field("pronouns"),
+      locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
+      field("phone"), field("website"), field("linkedin"), field("twitter"), field("bio"), companyId, userId
+    )
+    .run();
+
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${userId}/edit`);
+  revalidatePath("/directory");
+  revalidatePath(`/directory/${userId}`);
+  return { ok: true };
+}
 
 // Approve a pending access request.
 export async function approveMember(formData: FormData): Promise<void> {

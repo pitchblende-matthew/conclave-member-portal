@@ -168,7 +168,7 @@ export default async function Dashboard() {
         </div>
         <div className="grid" style={{ marginTop: "0.75rem" }}>
           {briefings.map((b) => {
-            const cover = b.cover_key ? mediaUrl(b.cover_key) : null;
+            const cover = b.cover_key ? mediaUrl(b.cover_key) : (b.cover_url || null);
             const inner = (
               <>
                 {cover ? (

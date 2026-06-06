@@ -2,10 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { mediaUrl } from "@/lib/media";
 import LocalTime from "@/components/local-time";
 import ConfirmSubmit from "@/components/confirm-submit";
-import { setPublished, deleteBriefing, approveBriefing, declineBriefing } from "./actions";
+import { setPublished, deleteBriefing, approveBriefing, declineBriefing, fetchBriefingCover, fetchMissingBriefingCovers } from "./actions";
 import type { Briefing } from "@/lib/types";
+
+const coverSrc = (b: Briefing) => (b.cover_key ? mediaUrl(b.cover_key) : (b.cover_url || null));
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +36,12 @@ export default async function AdminBriefings() {
           <div className="tag">Admin · Briefings</div>
           <h1 style={{ fontSize: "2.6rem" }}>Manage briefings</h1>
         </div>
-        <Link href="/admin/briefings/new" className="btn inline-btn">New briefing</Link>
+        <div className="btn-row">
+          <form action={fetchMissingBriefingCovers}>
+            <button className="btn btn-ghost inline-btn" type="submit">Fetch link covers</button>
+          </form>
+          <Link href="/admin/briefings/new" className="btn inline-btn">New briefing</Link>
+        </div>
       </div>
 
       {pending.length > 0 && (
@@ -69,10 +77,20 @@ export default async function AdminBriefings() {
               {b.kind === "link" ? "Link" : "Article"} ·{" "}
               {b.published ? <>Published {b.published_at ? <LocalTime ms={b.published_at} /> : null}</> : "Draft"}
             </div>
+            {coverSrc(b) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={coverSrc(b)!} alt="" style={{ width: "100%", maxWidth: 160, height: 90, objectFit: "cover", borderRadius: 8, margin: "0.5rem 0" }} />
+            ) : null}
             <h3 style={{ fontSize: "1.5rem" }}>{b.title}</h3>
             {b.summary ? <p className="meta">{b.summary}</p> : null}
             <div className="btn-row">
               <Link href={`/admin/briefings/${b.id}/edit`} className="btn btn-ghost inline-btn">Edit</Link>
+              {b.kind === "link" && !b.cover_key ? (
+                <form action={fetchBriefingCover}>
+                  <input type="hidden" name="briefingId" value={b.id} />
+                  <button className="btn btn-ghost inline-btn" type="submit">{b.cover_url ? "Refresh cover" : "Fetch cover"}</button>
+                </form>
+              ) : null}
               <form action={setPublished}>
                 <input type="hidden" name="briefingId" value={b.id} />
                 <input type="hidden" name="published" value={b.published ? "0" : "1"} />

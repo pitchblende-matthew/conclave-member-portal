@@ -7,9 +7,38 @@ import { requireAdmin } from "@/lib/auth";
 import { storeImage, deleteImage } from "@/lib/media";
 import { notify } from "@/lib/notifications";
 import { emailSubmissionDecision } from "@/lib/email";
+import { fetchOgImage } from "@/lib/opengraph";
 import type { Briefing } from "@/lib/types";
 
 export type BriefingState = { ok?: boolean; error?: string };
+
+// Scrape the link's OpenGraph image into cover_url (best effort).
+async function applyOgCover(id: number, url: string): Promise<void> {
+  const og = await fetchOgImage(url);
+  if (og) await getDb().prepare("UPDATE briefings SET cover_url = ? WHERE id = ?").bind(og, id).run();
+}
+
+// Re-fetch the OG cover for one link briefing (admin button).
+export async function fetchBriefingCover(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = Number(formData.get("briefingId"));
+  if (!id) return;
+  const b = await getDb().prepare("SELECT url, kind FROM briefings WHERE id = ?").bind(id).first<{ url: string; kind: string }>();
+  if (b?.kind === "link" && b.url) await applyOgCover(id, b.url);
+  revalidatePath("/admin/briefings");
+  revalidatePath("/briefings");
+}
+
+// Backfill covers for every link briefing that has none (e.g. the seeded set).
+export async function fetchMissingBriefingCovers(): Promise<void> {
+  await requireAdmin();
+  const { results } = await getDb()
+    .prepare("SELECT id, url FROM briefings WHERE kind = 'link' AND cover_key = '' AND cover_url = '' AND url != ''")
+    .all<{ id: number; url: string }>();
+  await Promise.all(results.slice(0, 40).map((b) => applyOgCover(b.id, b.url)));
+  revalidatePath("/admin/briefings");
+  revalidatePath("/briefings");
+}
 
 // Approve a member-submitted briefing — this publishes it.
 export async function approveBriefing(formData: FormData): Promise<void> {
@@ -81,8 +110,11 @@ export async function createBriefing(_prev: BriefingState, formData: FormData): 
     .bind(f.kind, f.title, f.summary, f.body, f.url, admin.id, now, now)
     .run();
 
+  const id = Number(res.meta.last_row_id);
+  if (f.kind === "link") await applyOgCover(id, f.url);
+
   revalidatePath("/admin/briefings");
-  redirect(`/admin/briefings/${Number(res.meta.last_row_id)}/edit`);
+  redirect(`/admin/briefings/${id}/edit`);
 }
 
 export async function updateBriefing(_prev: BriefingState, formData: FormData): Promise<BriefingState> {

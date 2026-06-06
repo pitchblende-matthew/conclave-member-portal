@@ -29,7 +29,7 @@ export default async function Briefings() {
       <div className="grid" style={{ marginTop: "1.5rem" }}>
         {results.map((b) => {
           const isLink = b.kind === "link";
-          const cover = b.cover_key ? mediaUrl(b.cover_key) : null;
+          const cover = b.cover_key ? mediaUrl(b.cover_key) : (b.cover_url || null);
           const inner = (
             <>
               {cover ? (

@@ -83,6 +83,7 @@ export interface Briefing {
   body: string;
   url: string;
   cover_key: string;
+  cover_url: string;
   author_id: number | null;
   published: number;
   published_at: number | null;

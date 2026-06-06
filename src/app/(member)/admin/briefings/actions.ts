@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { storeImage, deleteImage } from "@/lib/media";
 import { notify } from "@/lib/notifications";
+import { emailSubmissionDecision } from "@/lib/email";
 import type { Briefing } from "@/lib/types";
 
 export type BriefingState = { ok?: boolean; error?: string };
@@ -15,13 +16,17 @@ export async function approveBriefing(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const id = Number(formData.get("briefingId"));
   if (!id) return;
-  const b = await getDb().prepare("SELECT submitted_by, published_at FROM briefings WHERE id = ?").bind(id).first<{ submitted_by: number | null; published_at: number | null }>();
+  const b = await getDb().prepare("SELECT submitted_by, title, published_at FROM briefings WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string; published_at: number | null }>();
   const now = Date.now();
   await getDb()
     .prepare("UPDATE briefings SET status = 'approved', published = 1, published_at = ?, updated_at = ? WHERE id = ?")
     .bind(b?.published_at ?? now, now, id)
     .run();
-  if (b?.submitted_by) await notify(b.submitted_by, "briefing_approved", { actorId: admin.id });
+  if (b?.submitted_by) {
+    await notify(b.submitted_by, "briefing_approved", { actorId: admin.id });
+    const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(b.submitted_by).first<{ email: string }>();
+    if (u?.email) await emailSubmissionDecision(u.email, "briefing", b.title, true);
+  }
   revalidatePath("/admin/briefings");
   revalidatePath("/briefings");
 }
@@ -31,9 +36,13 @@ export async function declineBriefing(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const id = Number(formData.get("briefingId"));
   if (!id) return;
-  const b = await getDb().prepare("SELECT submitted_by FROM briefings WHERE id = ?").bind(id).first<{ submitted_by: number | null }>();
+  const b = await getDb().prepare("SELECT submitted_by, title FROM briefings WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string }>();
   await getDb().prepare("UPDATE briefings SET status = 'declined', published = 0, updated_at = ? WHERE id = ?").bind(Date.now(), id).run();
-  if (b?.submitted_by) await notify(b.submitted_by, "briefing_declined", { actorId: admin.id });
+  if (b?.submitted_by) {
+    await notify(b.submitted_by, "briefing_declined", { actorId: admin.id });
+    const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(b.submitted_by).first<{ email: string }>();
+    if (u?.email) await emailSubmissionDecision(u.email, "briefing", b.title, false);
+  }
   revalidatePath("/admin/briefings");
 }
 

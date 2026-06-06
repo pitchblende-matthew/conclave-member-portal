@@ -15,8 +15,13 @@ export default async function Briefings() {
 
   return (
     <>
-      <div className="tag">Briefings</div>
-      <h1 style={{ fontSize: "2.6rem" }}>What we&apos;re <span className="em">reading</span></h1>
+      <div className="topline">
+        <div>
+          <div className="tag">Briefings</div>
+          <h1 style={{ fontSize: "2.6rem" }}>What we&apos;re <span className="em">reading</span></h1>
+        </div>
+        <Link href="/briefings/submit" className="btn inline-btn">Submit a briefing</Link>
+      </div>
       <p className="meta">Notes, essays, and links worth your time — curated for the network.</p>
 
       <div className="grid" style={{ marginTop: "1.5rem" }}>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { marketsIn, resolveArea } from "@/lib/region";
@@ -28,11 +29,12 @@ export default async function Events({
   const active = resolveArea(area, user.dma_slug);
   const markets = await marketsIn("events");
 
-  // When filtering to a market, still include network-wide and virtual events.
+  // Only approved events are shown. When filtering to a market, still include
+  // network-wide and virtual events.
   const { results: events } = await db
     .prepare(
       `SELECT * FROM events
-       ${active ? "WHERE dma_slug = ? OR dma_slug = '' OR is_virtual = 1" : ""}
+       WHERE status = 'approved'${active ? " AND (dma_slug = ? OR dma_slug = '' OR is_virtual = 1)" : ""}
        ORDER BY starts_at ASC`
     )
     .bind(...(active ? [active] : []))
@@ -51,8 +53,13 @@ export default async function Events({
 
   return (
     <>
-      <div className="tag">Events</div>
-      <h1 style={{ fontSize: "2.6rem" }}>What&apos;s happening</h1>
+      <div className="topline">
+        <div>
+          <div className="tag">Events</div>
+          <h1 style={{ fontSize: "2.6rem" }}>What&apos;s happening</h1>
+        </div>
+        <Link href="/events/submit" className="btn inline-btn">Submit an event</Link>
+      </div>
 
       <AreaFilter
         basePath="/events"

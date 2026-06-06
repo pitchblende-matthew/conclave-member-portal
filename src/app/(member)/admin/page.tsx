@@ -14,20 +14,22 @@ export default async function AdminHome() {
   const user = await requireUser();
   if (user.is_admin !== 1) redirect("/dashboard");
 
-  const [requests, members, companies, events, categories, briefings, invites] = await Promise.all([
+  const [requests, members, companies, events, pendingEvents, categories, briefings, pendingBriefings, invites] = await Promise.all([
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'approved'"),
     count("SELECT COUNT(*) AS n FROM companies"),
-    count("SELECT COUNT(*) AS n FROM events"),
+    count("SELECT COUNT(*) AS n FROM events WHERE status = 'approved'"),
+    count("SELECT COUNT(*) AS n FROM events WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM categories"),
-    count("SELECT COUNT(*) AS n FROM briefings"),
+    count("SELECT COUNT(*) AS n FROM briefings WHERE status = 'approved'"),
+    count("SELECT COUNT(*) AS n FROM briefings WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM invites WHERE used_by IS NULL"),
   ]);
 
   const sections = [
     { href: "/admin/requests", title: "Requests", value: requests, hint: "Approve or decline access requests" },
-    { href: "/admin/events", title: "Events", value: events, hint: "Create, edit, see attendees" },
-    { href: "/admin/briefings", title: "Briefings", value: briefings, hint: "Publish articles and links" },
+    { href: "/admin/events", title: "Events", value: events, hint: pendingEvents > 0 ? `${pendingEvents} submission${pendingEvents === 1 ? "" : "s"} to review` : "Create, edit, see attendees" },
+    { href: "/admin/briefings", title: "Briefings", value: briefings, hint: pendingBriefings > 0 ? `${pendingBriefings} submission${pendingBriefings === 1 ? "" : "s"} to review` : "Publish articles and links" },
     { href: "/admin/members", title: "Members", value: members, hint: "Promote admins, remove members" },
     { href: "/admin/companies", title: "Companies", value: companies, hint: "Edit or remove companies" },
     { href: "/admin/categories", title: "Categories", value: categories, hint: "Board categories" },

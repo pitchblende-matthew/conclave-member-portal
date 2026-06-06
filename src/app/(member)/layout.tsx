@@ -35,6 +35,30 @@ function toItem(n: NotifRow): BellItem {
       text = n.topic_title ? `${who} replied in “${n.topic_title}”` : `${who} replied to your topic`;
       href = n.topic_id ? `/board/${n.topic_id}` : "/board";
       break;
+    case "event_submitted":
+      text = `${who} submitted an event for review`;
+      href = "/admin/events";
+      break;
+    case "event_approved":
+      text = "Your event submission was approved";
+      href = "/events";
+      break;
+    case "event_declined":
+      text = "Your event submission wasn’t approved";
+      href = "/events";
+      break;
+    case "briefing_submitted":
+      text = `${who} submitted a briefing for review`;
+      href = "/admin/briefings";
+      break;
+    case "briefing_approved":
+      text = "Your briefing was approved and published";
+      href = "/briefings";
+      break;
+    case "briefing_declined":
+      text = "Your briefing submission wasn’t approved";
+      href = "/briefings";
+      break;
     default:
       text = "New activity";
   }
@@ -68,11 +92,11 @@ export default async function MemberLayout({ children }: { children: React.React
         <Link href="/dashboard" className="wordmark-link">
           <Wordmark size={1.5} />
         </Link>
-        <NotificationsBell items={notifs.map(toItem)} unread={unread} />
         <MemberNav
           isAdmin={user.is_admin === 1}
           logoutHref={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}
         />
+        <NotificationsBell items={notifs.map(toItem)} unread={unread} />
       </header>
       <main className="page">{children}</main>
       <footer className="footer">Private. By invitation.</footer>

@@ -5,9 +5,37 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { storeImage, deleteImage } from "@/lib/media";
+import { notify } from "@/lib/notifications";
 import type { Briefing } from "@/lib/types";
 
 export type BriefingState = { ok?: boolean; error?: string };
+
+// Approve a member-submitted briefing — this publishes it.
+export async function approveBriefing(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("briefingId"));
+  if (!id) return;
+  const b = await getDb().prepare("SELECT submitted_by, published_at FROM briefings WHERE id = ?").bind(id).first<{ submitted_by: number | null; published_at: number | null }>();
+  const now = Date.now();
+  await getDb()
+    .prepare("UPDATE briefings SET status = 'approved', published = 1, published_at = ?, updated_at = ? WHERE id = ?")
+    .bind(b?.published_at ?? now, now, id)
+    .run();
+  if (b?.submitted_by) await notify(b.submitted_by, "briefing_approved", { actorId: admin.id });
+  revalidatePath("/admin/briefings");
+  revalidatePath("/briefings");
+}
+
+// Decline a member-submitted briefing (stays unpublished, kept out of lists).
+export async function declineBriefing(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("briefingId"));
+  if (!id) return;
+  const b = await getDb().prepare("SELECT submitted_by FROM briefings WHERE id = ?").bind(id).first<{ submitted_by: number | null }>();
+  await getDb().prepare("UPDATE briefings SET status = 'declined', published = 0, updated_at = ? WHERE id = ?").bind(Date.now(), id).run();
+  if (b?.submitted_by) await notify(b.submitted_by, "briefing_declined", { actorId: admin.id });
+  revalidatePath("/admin/briefings");
+}
 
 function readFields(formData: FormData) {
   const field = (name: string) => String(formData.get(name) ?? "").trim();
@@ -121,7 +149,8 @@ export async function setPublished(formData: FormData): Promise<void> {
   if (publish) {
     const row = await getDb().prepare("SELECT published_at FROM briefings WHERE id = ?").bind(id).first<{ published_at: number | null }>();
     const publishedAt = row?.published_at ?? now;
-    await getDb().prepare("UPDATE briefings SET published = 1, published_at = ?, updated_at = ? WHERE id = ?").bind(publishedAt, now, id).run();
+    // Publishing also clears any pending-review state.
+    await getDb().prepare("UPDATE briefings SET published = 1, status = 'approved', published_at = ?, updated_at = ? WHERE id = ?").bind(publishedAt, now, id).run();
   } else {
     await getDb().prepare("UPDATE briefings SET published = 0, updated_at = ? WHERE id = ?").bind(now, id).run();
   }

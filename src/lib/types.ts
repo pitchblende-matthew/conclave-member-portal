@@ -84,6 +84,8 @@ export interface Briefing {
   author_id: number | null;
   published: number;
   published_at: number | null;
+  status: string; // pending | approved | declined
+  submitted_by: number | null;
   created_at: number;
   updated_at: number;
 }
@@ -100,6 +102,8 @@ export interface EventRow {
   dma_name: string;
   is_virtual: number;
   meeting_url: string;
+  status: string; // pending | approved | declined
+  submitted_by: number | null;
   starts_at: number;
   capacity: number;
   created_at: number;

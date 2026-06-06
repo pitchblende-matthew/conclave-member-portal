@@ -244,3 +244,23 @@ main.page { padding: 2.5rem 0 4rem; }
   margin: 0.25rem 0 0.5rem; font-size: 0.92rem; cursor: pointer;
 }
 .check-row input { width: auto; margin: 0; }
+
+/* Briefings */
+.briefing-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.briefing-cover { width: 100%; height: 168px; object-fit: cover; display: block; }
+.briefing-body { padding: 1.1rem 1.25rem 1.3rem; }
+.briefing-hero {
+  width: 100%; max-height: 420px; object-fit: cover; display: block;
+  border-radius: 10px; margin: 1.25rem 0;
+}
+.briefing-lede { font-size: 1.18rem; line-height: 1.6; margin: 0 0 1.25rem; }
+.briefing-prose p { margin: 0 0 1.1rem; line-height: 1.75; }
+.cover-preview {
+  width: 100%; max-width: 360px; height: 180px; object-fit: cover;
+  display: block; border-radius: 8px; margin: 0.5rem 0;
+}
+.cover-empty {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cream-deep); color: var(--sage-deep);
+  border: 1px dashed var(--line); font-size: 0.85rem;
+}

@@ -72,6 +72,21 @@ export interface Post {
   created_at: number;
 }
 
+export interface Briefing {
+  id: number;
+  kind: string; // 'article' | 'link'
+  title: string;
+  summary: string;
+  body: string;
+  url: string;
+  cover_key: string;
+  author_id: number | null;
+  published: number;
+  published_at: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface EventRow {
   id: number;
   title: string;

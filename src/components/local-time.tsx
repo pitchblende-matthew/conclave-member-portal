@@ -30,7 +30,9 @@ export default function LocalTime({ ms, mode = "datetime" }: { ms: number; mode?
   useEffect(() => {
     setText(fmt(ms, mode));
   }, [ms, mode]);
+  // Hover shows the canonical UTC time (deterministic, so no hydration issue).
+  const title = fmt(ms, "datetimeLong", "UTC");
   return (
-    <time dateTime={new Date(ms).toISOString()} suppressHydrationWarning>{text}</time>
+    <time dateTime={new Date(ms).toISOString()} title={title} suppressHydrationWarning>{text}</time>
   );
 }

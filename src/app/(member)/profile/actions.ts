@@ -70,3 +70,26 @@ export async function removeAvatar(_prev: ProfileState, _formData: FormData): Pr
   revalidatePath("/directory");
   return { ok: true };
 }
+
+export async function uploadCover(_prev: ProfileState, formData: FormData): Promise<ProfileState> {
+  const user = await requireUser();
+  const result = await storeImage(`covers/${user.id}`, formData.get("cover"));
+  if ("error" in result) return { error: result.error };
+
+  await getDb().prepare("UPDATE users SET cover_key = ? WHERE id = ?").bind(result.key, user.id).run();
+  if (user.cover_key && user.cover_key !== result.key) await deleteImage(user.cover_key);
+
+  revalidatePath("/profile");
+  revalidatePath(`/directory/${user.id}`);
+  return { ok: true };
+}
+
+export async function removeCover(_prev: ProfileState, _formData: FormData): Promise<ProfileState> {
+  const user = await requireUser();
+  if (user.cover_key) await deleteImage(user.cover_key);
+  await getDb().prepare("UPDATE users SET cover_key = '' WHERE id = ?").bind(user.id).run();
+
+  revalidatePath("/profile");
+  revalidatePath(`/directory/${user.id}`);
+  return { ok: true };
+}

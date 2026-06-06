@@ -41,6 +41,7 @@ export default async function EditCompany({ params }: { params: Promise<{ id: st
             zip: company.zip,
             description: company.description,
             logoUrl: company.logo_key ? mediaUrl(company.logo_key) : null,
+            coverUrl: company.cover_key ? mediaUrl(company.cover_key) : null,
           }}
         />
       </div>

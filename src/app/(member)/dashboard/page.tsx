@@ -5,6 +5,7 @@ import { mediaUrl } from "@/lib/media";
 import { connectionCounts } from "@/lib/connections";
 import Icon, { Sprig } from "@/components/icons";
 import Eyebrow from "@/components/eyebrow";
+import SectionDivider from "@/components/section-divider";
 import LocalTime from "@/components/local-time";
 import type { Briefing } from "@/lib/types";
 
@@ -105,6 +106,8 @@ export default async function Dashboard() {
         </Link>
       </div>
 
+      <SectionDivider />
+
       <div className="dash-cols">
         {/* Your events */}
         <section className="card">
@@ -155,8 +158,10 @@ export default async function Dashboard() {
         </section>
       </div>
 
+      <SectionDivider />
+
       {/* Latest briefings */}
-      <section style={{ marginTop: "1.75rem" }}>
+      <section style={{ marginTop: "0.5rem" }}>
         <div className="topline">
           <h2 className="sec-head" style={{ fontSize: "1.5rem" }}><Icon name="briefings" size={18} />Latest briefings</h2>
           <Link href="/briefings" className="meta">All briefings →</Link>

@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/avatar";
 import { US_STATES } from "@/lib/us-states";
-import { updateProfile, uploadAvatar, removeAvatar } from "./actions";
+import { updateProfile, uploadAvatar, removeAvatar, uploadCover, removeCover } from "./actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
 
 type Initial = {
@@ -22,6 +22,7 @@ type Initial = {
   bio: string;
   email: string;
   avatarUrl: string | null;
+  coverUrl: string | null;
 };
 
 type CompanyOption = { id: number; name: string };
@@ -47,21 +48,58 @@ export default function ProfileForm({
   const [rmState, rmAction, rmPending] = useActionState(removeAvatar, {});
   const [preview, setPreview] = useState<string | null>(null);
 
+  // Cover upload
+  const [covState, covAction, covPending] = useActionState(uploadCover, {});
+  const [covRmState, covRmAction, covRmPending] = useActionState(removeCover, {});
+  const [covPreview, setCovPreview] = useState<string | null>(null);
+
   // Details
   const [state, formAction, pending] = useActionState(submit, {});
 
-  // Refresh server data after a successful avatar change so the stored image shows.
+  // Refresh server data after a successful image change so the stored image shows.
   useEffect(() => {
-    if (upState?.ok || rmState?.ok) {
+    if (upState?.ok || rmState?.ok || covState?.ok || covRmState?.ok) {
       setPreview(null);
+      setCovPreview(null);
       router.refresh();
     }
-  }, [upState, rmState, router]);
+  }, [upState, rmState, covState, covRmState, router]);
 
   const shownAvatar = preview ?? initial.avatarUrl;
+  const shownCover = covPreview ?? initial.coverUrl;
 
   return (
     <>
+      <div className="cover-edit-row">
+        <div className="cover-edit" style={shownCover ? { backgroundImage: `url(${shownCover})` } : undefined}>
+          {!shownCover && <span className="meta">No cover image yet</span>}
+        </div>
+        <form action={covAction}>
+          <label htmlFor="cover" className="meta">Cover image — a wide JPG, PNG, or WebP, up to 5 MB</label>
+          <input
+            id="cover"
+            name="cover"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              setCovPreview(file ? URL.createObjectURL(file) : null);
+            }}
+          />
+          <div className="btn-row">
+            <button className="btn inline-btn" type="submit" disabled={covPending}>
+              {covPending ? "Uploading…" : "Upload cover"}
+            </button>
+            {initial.coverUrl && (
+              <button className="btn btn-ghost inline-btn" formAction={covRmAction} disabled={covRmPending}>
+                {covRmPending ? "Removing…" : "Remove"}
+              </button>
+            )}
+          </div>
+          {covState?.error && <div className="error">{covState.error}</div>}
+        </form>
+      </div>
+
       <div className="avatar-row">
         <Avatar src={shownAvatar} name={initial.name} size={88} />
         <div className="avatar-controls">

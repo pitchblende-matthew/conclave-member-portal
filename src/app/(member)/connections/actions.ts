@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { notify } from "@/lib/notifications";
 import type { Connection } from "@/lib/types";
 
 async function pairRow(a: number, b: number) {
@@ -37,8 +38,11 @@ export async function sendConnect(formData: FormData): Promise<void> {
       .prepare("INSERT INTO connections (requester_id, addressee_id, status, created_at) VALUES (?, ?, 'pending', ?)")
       .bind(me.id, other, now)
       .run();
+    await notify(other, "connection_request", { actorId: me.id });
   } else if (row.status === "pending" && row.addressee_id === me.id) {
     await db.prepare("UPDATE connections SET status = 'accepted', responded_at = ? WHERE id = ?").bind(now, row.id).run();
+    // They asked first, so accepting it connects us — let them know.
+    await notify(other, "connection_accepted", { actorId: me.id });
   }
   refresh(other);
 }
@@ -48,10 +52,12 @@ export async function acceptConnect(formData: FormData): Promise<void> {
   const me = await requireUser();
   const other = Number(formData.get("otherId"));
   if (!other) return;
-  await getDb()
+  const res = await getDb()
     .prepare("UPDATE connections SET status = 'accepted', responded_at = ? WHERE requester_id = ? AND addressee_id = ? AND status = 'pending'")
     .bind(Date.now(), other, me.id)
     .run();
+  // Notify the requester that I accepted (only if a pending row was actually updated).
+  if (res.meta.changes) await notify(other, "connection_accepted", { actorId: me.id });
   refresh(other);
 }
 

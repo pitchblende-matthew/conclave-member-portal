@@ -53,11 +53,16 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
   return (
     <>
       <p className="meta"><Link href="/board">← Board</Link></p>
-      {topic.category_name ? (
-        <Link href={`/board?category=${topic.category_slug}`} className="chip chip-static" style={{ textDecoration: "none" }}>
-          {topic.category_name}
-        </Link>
-      ) : null}
+      <span style={{ display: "inline-flex", gap: "0.4rem", flexWrap: "wrap" }}>
+        {topic.category_name ? (
+          <Link href={`/board?category=${topic.category_slug}`} className="chip chip-static" style={{ textDecoration: "none" }}>
+            {topic.category_name}
+          </Link>
+        ) : null}
+        {topic.dma_name ? (
+          <Link href="/board?scope=mine" className="market-tag" style={{ textDecoration: "none" }}>{topic.dma_name}</Link>
+        ) : null}
+      </span>
       <div className="topline" style={{ marginTop: "0.5rem" }}>
         <h1 style={{ fontSize: "2.4rem" }}>{topic.title}</h1>
         {canDeleteTopic && (

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Wordmark from "@/components/wordmark";
+import { US_STATES } from "@/lib/us-states";
 import { signup } from "./actions";
 
 function SignupForm() {
@@ -29,6 +30,28 @@ function SignupForm() {
         <input id="email" name="email" type="email" autoComplete="email" required />
         <label htmlFor="password">Password</label>
         <input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
+        <div className="field-grid">
+          <div>
+            <label htmlFor="city">City</label>
+            <input id="city" name="city" type="text" autoComplete="address-level2" required />
+          </div>
+          <div>
+            <label htmlFor="state">State</label>
+            <select id="state" name="state" defaultValue="" autoComplete="address-level1" required>
+              <option value="" disabled>Choose…</option>
+              {US_STATES.map((s) => (
+                <option key={s.abbr} value={s.abbr}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="zip">ZIP code</label>
+            <input id="zip" name="zip" type="text" inputMode="numeric" pattern="\d{5}" maxLength={5} autoComplete="postal-code" required />
+          </div>
+        </div>
+        <p className="note" style={{ marginTop: "-0.25rem" }}>
+          We use this to connect you with members and businesses in your media market.
+        </p>
         <label htmlFor="company">Company</label>
         <input id="company" name="company" type="text" autoComplete="organization" />
         <label htmlFor="role">Title</label>

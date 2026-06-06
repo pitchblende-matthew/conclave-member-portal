@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { storeImage, deleteImage } from "@/lib/media";
 import { findOrCreateCompany } from "@/lib/companies";
+import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 
 export type ProfileState = { ok?: boolean; error?: string };
 
@@ -14,23 +15,31 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
 
   const name = field("name");
   const role = field("role");
-  const location = field("location");
   const pronouns = field("pronouns");
   const phone = field("phone");
   const website = field("website");
   const linkedin = field("linkedin");
   const twitter = field("twitter");
   const bio = field("bio");
+
+  const regionError = validateRegion(field("city"), field("state"), field("zip"));
+  if (regionError) return { error: regionError };
+  const region = await regionFromForm(field("city"), field("state"), field("zip"));
   const companyId = await findOrCreateCompany(field("company_name"), user.id);
 
   await getDb()
     .prepare(
       `UPDATE users SET
-         name = ?, role = ?, location = ?, pronouns = ?,
+         name = ?, role = ?, pronouns = ?,
+         location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?,
          phone = ?, website = ?, linkedin = ?, twitter = ?, bio = ?, company_id = ?
        WHERE id = ?`
     )
-    .bind(name, role, location, pronouns, phone, website, linkedin, twitter, bio, companyId, user.id)
+    .bind(
+      name, role, pronouns,
+      locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
+      phone, website, linkedin, twitter, bio, companyId, user.id
+    )
     .run();
 
   revalidatePath("/profile");

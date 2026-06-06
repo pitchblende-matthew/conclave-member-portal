@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import RegionFields from "@/components/region-fields";
 import { createEvent, updateEvent } from "./actions";
 
 type Initial = {
@@ -8,6 +9,9 @@ type Initial = {
   title: string;
   description: string;
   location: string;
+  city: string;
+  state: string;
+  zip: string;
   startsAtMs: number | null;
   capacity: number;
 };
@@ -36,14 +40,18 @@ export default function EventForm({ initial }: { initial: Initial }) {
           <input id="starts_at" name="starts_at" type="datetime-local" defaultValue={toInputValue(initial.startsAtMs)} required />
         </div>
         <div>
-          <label htmlFor="location">Location</label>
-          <input id="location" name="location" defaultValue={initial.location} />
+          <label htmlFor="location">Venue / location</label>
+          <input id="location" name="location" defaultValue={initial.location} placeholder="e.g. The Foundry, or Online" />
         </div>
         <div>
           <label htmlFor="capacity">Capacity (0 = unlimited)</label>
           <input id="capacity" name="capacity" type="number" min={0} defaultValue={initial.capacity} />
         </div>
+        <RegionFields city={initial.city} state={initial.state} zip={initial.zip} />
       </div>
+      <p className="note" style={{ marginTop: "-0.25rem" }}>
+        City / State / ZIP set the event&apos;s media market for the &quot;near me&quot; filter. Leave blank for network-wide events.
+      </p>
 
       <label htmlFor="description">Description</label>
       <textarea id="description" name="description" defaultValue={initial.description} />

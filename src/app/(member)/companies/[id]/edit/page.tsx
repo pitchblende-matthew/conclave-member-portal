@@ -35,7 +35,9 @@ export default async function EditCompany({ params }: { params: Promise<{ id: st
             website: company.website,
             industry: company.industry,
             size: company.size,
-            location: company.location,
+            city: company.city,
+            state: company.state,
+            zip: company.zip,
             description: company.description,
             logoUrl: company.logo_key ? mediaUrl(company.logo_key) : null,
           }}

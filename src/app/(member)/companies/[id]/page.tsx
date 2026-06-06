@@ -41,6 +41,9 @@ export default async function CompanyProfile({ params }: { params: Promise<{ id:
             <p className="meta" style={{ margin: 0 }}>
               {[company.industry, company.size, company.location].filter(Boolean).join(" · ") || "—"}
             </p>
+            {company.dma_name ? (
+              <p style={{ margin: "0.5rem 0 0" }}><span className="market-tag">{company.dma_name}</span></p>
+            ) : null}
           </div>
           {canEdit && (
             <Link href={`/companies/${companyId}/edit`} className="btn btn-ghost inline-btn">Edit</Link>

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { hashPassword } from "@/lib/crypto";
 import { createSession } from "@/lib/auth";
+import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 
 export type SignupState = { error?: string };
 
@@ -20,9 +21,14 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
   const role = field("role");
   const linkedin = field("linkedin");
   const invite = field("invite");
+  const city = field("city");
+  const state = field("state");
+  const zip = field("zip");
 
   if (!email || !password) return { error: "Email and password are required." };
   if (password.length < 8) return { error: "Use a password of at least 8 characters." };
+  const regionError = validateRegion(city, state, zip);
+  if (regionError) return { error: regionError };
 
   const db = getDb();
   const existing = await db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
@@ -45,14 +51,18 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
   const approved = isFirstUser || inviteValid;
   const now = Date.now();
   const hash = await hashPassword(password);
+  const region = await regionFromForm(city, state, zip);
 
   const res = await db
     .prepare(
-      `INSERT INTO users (email, password_hash, name, company, role, linkedin, is_admin, status, approved_at, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (email, password_hash, name, company, role, linkedin,
+         location, city, state, zip, dma_slug, dma_name,
+         is_admin, status, approved_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       email, hash, name, company, role, linkedin,
+      locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       isFirstUser ? 1 : 0,
       approved ? "approved" : "pending",
       approved ? now : null,

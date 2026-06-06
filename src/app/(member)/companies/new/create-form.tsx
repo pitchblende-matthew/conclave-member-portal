@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import RegionFields from "@/components/region-fields";
 import { createCompany } from "../actions";
 
 export default function CreateCompanyForm() {
@@ -20,14 +21,14 @@ export default function CreateCompanyForm() {
           <input id="size" name="size" placeholder="e.g. 11–50" />
         </div>
         <div>
-          <label htmlFor="location">Location</label>
-          <input id="location" name="location" />
-        </div>
-        <div>
           <label htmlFor="website">Website</label>
           <input id="website" name="website" type="url" placeholder="https://" />
         </div>
+        <RegionFields />
       </div>
+      <p className="note" style={{ marginTop: "-0.25rem" }}>
+        Adding a ZIP places the company in its media market so members nearby can find it.
+      </p>
 
       <label htmlFor="description">Description</label>
       <textarea id="description" name="description" />

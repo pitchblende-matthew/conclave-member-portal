@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { regionFromForm } from "@/lib/region";
 
 export type EventState = { ok?: boolean; error?: string };
 
@@ -21,6 +22,9 @@ function readEvent(formData: FormData) {
     title: field("title"),
     description: field("description"),
     location: field("location"),
+    city: field("city"),
+    state: field("state"),
+    zip: field("zip"),
     startsAt: parseStartsAt(field("starts_at")),
     capacity: Number(formData.get("capacity") ?? 0) || 0,
   };
@@ -31,13 +35,18 @@ export async function createEvent(_prev: EventState, formData: FormData): Promis
   const e = readEvent(formData);
   if (!e.title) return { error: "Title is required." };
   if (e.startsAt === null) return { error: "A valid date and time is required." };
+  const region = await regionFromForm(e.city, e.state, e.zip);
 
   await getDb()
     .prepare(
-      `INSERT INTO events (title, description, location, starts_at, capacity, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO events (title, description, location, city, state, zip, dma_slug, dma_name, starts_at, capacity, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .bind(e.title, e.description, e.location, e.startsAt, e.capacity, Date.now())
+    .bind(
+      e.title, e.description, e.location,
+      region.city, region.state, region.zip, region.dma_slug, region.dma_name,
+      e.startsAt, e.capacity, Date.now()
+    )
     .run();
 
   revalidatePath("/admin/events");
@@ -51,13 +60,19 @@ export async function updateEvent(_prev: EventState, formData: FormData): Promis
   const e = readEvent(formData);
   if (!e.title) return { error: "Title is required." };
   if (e.startsAt === null) return { error: "A valid date and time is required." };
+  const region = await regionFromForm(e.city, e.state, e.zip);
 
   await getDb()
     .prepare(
-      `UPDATE events SET title = ?, description = ?, location = ?, starts_at = ?, capacity = ?
+      `UPDATE events SET title = ?, description = ?, location = ?,
+         city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?, starts_at = ?, capacity = ?
        WHERE id = ?`
     )
-    .bind(e.title, e.description, e.location, e.startsAt, e.capacity, id)
+    .bind(
+      e.title, e.description, e.location,
+      region.city, region.state, region.zip, region.dma_slug, region.dma_name,
+      e.startsAt, e.capacity, id
+    )
     .run();
 
   revalidatePath("/admin/events");

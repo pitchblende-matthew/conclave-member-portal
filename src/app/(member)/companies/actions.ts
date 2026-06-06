@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { storeImage, deleteImage } from "@/lib/media";
+import { regionFromForm, locationLabel } from "@/lib/region";
 import type { Company, User } from "@/lib/types";
 
 export type CompanyState = { ok?: boolean; error?: string };
@@ -16,7 +17,9 @@ function readFields(formData: FormData) {
     website: field("website"),
     industry: field("industry"),
     size: field("size"),
-    location: field("location"),
+    city: field("city"),
+    state: field("state"),
+    zip: field("zip"),
     description: field("description"),
   };
 }
@@ -30,13 +33,18 @@ export async function createCompany(_prev: CompanyState, formData: FormData): Pr
   const user = await requireUser();
   const f = readFields(formData);
   if (!f.name) return { error: "Company name is required." };
+  const region = await regionFromForm(f.city, f.state, f.zip);
 
   const res = await getDb()
     .prepare(
-      `INSERT INTO companies (name, website, industry, size, location, description, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO companies (name, website, industry, size, location, city, state, zip, dma_slug, dma_name, description, created_by, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .bind(f.name, f.website, f.industry, f.size, f.location, f.description, user.id, Date.now())
+    .bind(
+      f.name, f.website, f.industry, f.size,
+      locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
+      f.description, user.id, Date.now()
+    )
     .run();
 
   const companyId = Number(res.meta.last_row_id);
@@ -56,13 +64,19 @@ export async function updateCompany(_prev: CompanyState, formData: FormData): Pr
 
   const f = readFields(formData);
   if (!f.name) return { error: "Company name is required." };
+  const region = await regionFromForm(f.city, f.state, f.zip);
 
   await getDb()
     .prepare(
-      `UPDATE companies SET name = ?, website = ?, industry = ?, size = ?, location = ?, description = ?
+      `UPDATE companies SET name = ?, website = ?, industry = ?, size = ?,
+         location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?, description = ?
        WHERE id = ?`
     )
-    .bind(f.name, f.website, f.industry, f.size, f.location, f.description, companyId)
+    .bind(
+      f.name, f.website, f.industry, f.size,
+      locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
+      f.description, companyId
+    )
     .run();
 
   revalidatePath(`/companies/${companyId}`);

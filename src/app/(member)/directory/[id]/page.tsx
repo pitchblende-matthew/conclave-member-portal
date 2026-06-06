@@ -16,7 +16,7 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const member = await getDb()
     .prepare(
-      `SELECT u.id, u.name, u.email, u.role, u.location, u.bio, u.avatar_key,
+      `SELECT u.id, u.name, u.email, u.role, u.location, u.dma_name, u.bio, u.avatar_key,
               u.pronouns, u.phone, u.website, u.linkedin, u.twitter, u.company_id,
               COALESCE(c.name, NULLIF(u.company, '')) AS company_name
        FROM users u
@@ -57,6 +57,9 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
               {!member.role && !member.company_name ? "—" : ""}
             </p>
             {member.location ? <p className="meta" style={{ margin: 0 }}>{member.location}</p> : null}
+            {member.dma_name ? (
+              <p style={{ margin: "0.5rem 0 0" }}><span className="market-tag">{member.dma_name}</span></p>
+            ) : null}
           </div>
         </div>
 

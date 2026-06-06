@@ -13,14 +13,18 @@ export async function createTopic(_prev: BoardState, formData: FormData): Promis
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
   const categoryId = Number(formData.get("category_id")) || 0;
+  // Optionally scope the topic to the author's market.
+  const scoped = formData.get("scope_area") === "1" && !!user.dma_slug;
+  const dmaSlug = scoped ? user.dma_slug : "";
+  const dmaName = scoped ? user.dma_name : "";
   if (!title) return { error: "Give your topic a title." };
   if (!body) return { error: "Write something to start the discussion." };
 
   const db = getDb();
   const now = Date.now();
   const res = await db
-    .prepare("INSERT INTO topics (title, category_id, created_by, created_at, last_activity_at) VALUES (?, ?, ?, ?, ?)")
-    .bind(title, categoryId, user.id, now, now)
+    .prepare("INSERT INTO topics (title, category_id, dma_slug, dma_name, created_by, created_at, last_activity_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .bind(title, categoryId, dmaSlug, dmaName, user.id, now, now)
     .run();
   const topicId = Number(res.meta.last_row_id);
   await db

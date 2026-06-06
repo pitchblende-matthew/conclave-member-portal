@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import Icon, { type IconName } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +27,14 @@ export default async function AdminHome() {
     count("SELECT COUNT(*) AS n FROM invites WHERE used_by IS NULL"),
   ]);
 
-  const sections = [
-    { href: "/admin/requests", title: "Requests", value: requests, hint: "Approve or decline access requests" },
-    { href: "/admin/events", title: "Events", value: events, hint: pendingEvents > 0 ? `${pendingEvents} submission${pendingEvents === 1 ? "" : "s"} to review` : "Create, edit, see attendees" },
-    { href: "/admin/briefings", title: "Briefings", value: briefings, hint: pendingBriefings > 0 ? `${pendingBriefings} submission${pendingBriefings === 1 ? "" : "s"} to review` : "Publish articles and links" },
-    { href: "/admin/members", title: "Members", value: members, hint: "Promote admins, remove members" },
-    { href: "/admin/companies", title: "Companies", value: companies, hint: "Edit or remove companies" },
-    { href: "/admin/categories", title: "Categories", value: categories, hint: "Board categories" },
-    { href: "/admin/invites", title: "Invitations", value: invites, hint: "Unused invites · generate more" },
+  const sections: { href: string; title: string; value: number; hint: string; icon: IconName }[] = [
+    { href: "/admin/requests", title: "Requests", value: requests, hint: "Approve or decline access requests", icon: "requests" },
+    { href: "/admin/events", title: "Events", value: events, hint: pendingEvents > 0 ? `${pendingEvents} submission${pendingEvents === 1 ? "" : "s"} to review` : "Create, edit, see attendees", icon: "events" },
+    { href: "/admin/briefings", title: "Briefings", value: briefings, hint: pendingBriefings > 0 ? `${pendingBriefings} submission${pendingBriefings === 1 ? "" : "s"} to review` : "Publish articles and links", icon: "briefings" },
+    { href: "/admin/members", title: "Members", value: members, hint: "Promote admins, remove members", icon: "members" },
+    { href: "/admin/companies", title: "Companies", value: companies, hint: "Edit or remove companies", icon: "companies" },
+    { href: "/admin/categories", title: "Categories", value: categories, hint: "Board categories", icon: "categories" },
+    { href: "/admin/invites", title: "Invitations", value: invites, hint: "Unused invites · generate more", icon: "invites" },
   ];
 
   return (
@@ -44,12 +45,13 @@ export default async function AdminHome() {
 
       <div className="grid" style={{ marginTop: "1.5rem" }}>
         {sections.map((s) => (
-          <Link key={s.href} href={s.href} className="card member-card">
+          <Link key={s.href} href={s.href} className="card member-card admin-card">
             <div className="topline">
-              <h3 style={{ fontSize: "1.5rem", marginBottom: 0 }}>{s.title}</h3>
+              <span className="card-ico"><Icon name={s.icon} size={20} /></span>
               <span className="stat">{s.value}</span>
             </div>
-            <p className="meta" style={{ marginTop: "0.5rem" }}>{s.hint}</p>
+            <h3 style={{ fontSize: "1.5rem", margin: "0.6rem 0 0" }}>{s.title}</h3>
+            <p className="meta" style={{ marginTop: "0.25rem" }}>{s.hint}</p>
           </Link>
         ))}
       </div>

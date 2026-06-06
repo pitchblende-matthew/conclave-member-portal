@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import EmptyState from "@/components/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -110,9 +111,9 @@ export default async function Board({
           );
         })}
         {results.length === 0 && (
-          <p className="meta">
-            {scopeMine ? "No topics in your area yet — switch to Everywhere, or start one scoped to your area." : active ? "No topics in this category yet." : "No topics yet. Start the first conversation."}
-          </p>
+          <EmptyState title={scopeMine ? "No topics in your area yet" : active ? "No topics in this category yet" : "No topics yet"}>
+            <Link href="/board/new">Start the first conversation →</Link>
+          </EmptyState>
         )}
       </div>
     </>

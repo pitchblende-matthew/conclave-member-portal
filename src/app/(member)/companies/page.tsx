@@ -5,6 +5,7 @@ import { mediaUrl } from "@/lib/media";
 import { marketsIn, resolveArea } from "@/lib/region";
 import Avatar from "@/components/avatar";
 import AreaFilter from "@/components/area-filter";
+import EmptyState from "@/components/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -76,9 +77,9 @@ export default async function Companies({
           </Link>
         ))}
         {results.length === 0 && (
-          <p className="meta">
-            {active ? "No companies in this market yet — switch to All areas, or add one." : "No companies yet. Add the first one."}
-          </p>
+          <EmptyState title={active ? "No companies in this market yet" : "No companies yet"}>
+            <Link href="/companies/new">Add the first one →</Link>
+          </EmptyState>
         )}
       </div>
     </>

@@ -84,6 +84,7 @@ function readFields(formData: FormData) {
     summary: field("summary"),
     body: field("body"),
     url: field("url"),
+    categoryId: Number(formData.get("category_id")) || 0,
   };
 }
 
@@ -104,10 +105,10 @@ export async function createBriefing(_prev: BriefingState, formData: FormData): 
   const now = Date.now();
   const res = await getDb()
     .prepare(
-      `INSERT INTO briefings (kind, title, summary, body, url, author_id, published, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`
+      `INSERT INTO briefings (kind, title, summary, body, url, category_id, author_id, published, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`
     )
-    .bind(f.kind, f.title, f.summary, f.body, f.url, admin.id, now, now)
+    .bind(f.kind, f.title, f.summary, f.body, f.url, f.categoryId, admin.id, now, now)
     .run();
 
   const id = Number(res.meta.last_row_id);
@@ -127,10 +128,10 @@ export async function updateBriefing(_prev: BriefingState, formData: FormData): 
 
   await getDb()
     .prepare(
-      `UPDATE briefings SET kind = ?, title = ?, summary = ?, body = ?, url = ?, updated_at = ?
+      `UPDATE briefings SET kind = ?, title = ?, summary = ?, body = ?, url = ?, category_id = ?, updated_at = ?
        WHERE id = ?`
     )
-    .bind(f.kind, f.title, f.summary, f.body, f.url, Date.now(), id)
+    .bind(f.kind, f.title, f.summary, f.body, f.url, f.categoryId, Date.now(), id)
     .run();
 
   revalidatePath("/admin/briefings");

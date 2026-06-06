@@ -1,9 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import MarkdownEditor from "@/components/markdown-editor";
 import { submitBriefing } from "../actions";
 
-export default function SubmitBriefingForm() {
+type CategoryOption = { id: number; name: string };
+
+export default function SubmitBriefingForm({ categories }: { categories: CategoryOption[] }) {
   const [kind, setKind] = useState("article");
   const [state, formAction, pending] = useActionState(submitBriefing, {});
 
@@ -18,11 +21,22 @@ export default function SubmitBriefingForm() {
 
   return (
     <form action={formAction}>
-      <label htmlFor="kind">Type</label>
-      <select id="kind" name="kind" value={kind} onChange={(e) => setKind(e.target.value)}>
-        <option value="article">Article — written in the portal</option>
-        <option value="link">Link — points to an external page</option>
-      </select>
+      <div className="field-grid">
+        <div>
+          <label htmlFor="kind">Type</label>
+          <select id="kind" name="kind" value={kind} onChange={(e) => setKind(e.target.value)}>
+            <option value="article">Article — written in the portal</option>
+            <option value="link">Link — points to an external page</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="category_id">Category</label>
+          <select id="category_id" name="category_id" defaultValue="">
+            <option value="">Uncategorized</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+      </div>
 
       <label htmlFor="title">Title</label>
       <input id="title" name="title" required />
@@ -37,8 +51,8 @@ export default function SubmitBriefingForm() {
         </>
       ) : (
         <>
-          <label htmlFor="body">Body</label>
-          <textarea id="body" name="body" style={{ minHeight: 240 }} placeholder="Write the briefing. Blank lines separate paragraphs." />
+          <label>Body</label>
+          <MarkdownEditor name="body" minHeight={240} placeholder="Write the briefing…" />
         </>
       )}
 

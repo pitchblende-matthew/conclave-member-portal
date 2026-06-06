@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import MarkdownEditor from "@/components/markdown-editor";
 import { createTopic } from "../actions";
 
 type CategoryOption = { id: number; name: string };
@@ -23,8 +24,8 @@ export default function NewTopicForm({
           <option key={c.id} value={c.id}>{c.name}</option>
         ))}
       </select>
-      <label htmlFor="body">Opening message</label>
-      <textarea id="body" name="body" style={{ minHeight: 160 }} required />
+      <label>Opening message</label>
+      <MarkdownEditor name="body" minHeight={180} placeholder="Write your opening message…" />
       {myDmaName ? (
         <label className="check-row">
           <input type="checkbox" name="scope_area" value="1" />

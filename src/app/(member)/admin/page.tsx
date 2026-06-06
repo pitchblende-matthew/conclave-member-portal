@@ -15,13 +15,14 @@ export default async function AdminHome() {
   const user = await requireUser();
   if (user.is_admin !== 1) redirect("/dashboard");
 
-  const [requests, members, companies, events, pendingEvents, categories, briefings, pendingBriefings, invites] = await Promise.all([
+  const [requests, members, companies, events, pendingEvents, categories, briefingCategories, briefings, pendingBriefings, invites] = await Promise.all([
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'approved'"),
     count("SELECT COUNT(*) AS n FROM companies"),
     count("SELECT COUNT(*) AS n FROM events WHERE status = 'approved'"),
     count("SELECT COUNT(*) AS n FROM events WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM categories"),
+    count("SELECT COUNT(*) AS n FROM briefing_categories"),
     count("SELECT COUNT(*) AS n FROM briefings WHERE status = 'approved'"),
     count("SELECT COUNT(*) AS n FROM briefings WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM invites WHERE used_by IS NULL"),
@@ -34,6 +35,7 @@ export default async function AdminHome() {
     { href: "/admin/members", title: "Members", value: members, hint: "Promote admins, remove members", icon: "members" },
     { href: "/admin/companies", title: "Companies", value: companies, hint: "Edit or remove companies", icon: "companies" },
     { href: "/admin/categories", title: "Categories", value: categories, hint: "Board categories", icon: "categories" },
+    { href: "/admin/briefing-categories", title: "Briefing topics", value: briefingCategories, hint: "Briefing categories", icon: "briefings" },
     { href: "/admin/invites", title: "Invitations", value: invites, hint: "Unused invites · generate more", icon: "invites" },
   ];
 

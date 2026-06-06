@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import MarkdownEditor from "@/components/markdown-editor";
 import { createBriefing, updateBriefing } from "./actions";
 
 type Initial = {
@@ -10,9 +11,12 @@ type Initial = {
   summary: string;
   body: string;
   url: string;
+  categoryId: number;
 };
 
-export default function BriefingForm({ initial }: { initial: Initial }) {
+type CategoryOption = { id: number; name: string };
+
+export default function BriefingForm({ initial, categories }: { initial: Initial; categories: CategoryOption[] }) {
   const isEdit = typeof initial.id === "number";
   const [kind, setKind] = useState(initial.kind === "link" ? "link" : "article");
   const [state, formAction, pending] = useActionState(isEdit ? updateBriefing : createBriefing, {});
@@ -21,11 +25,22 @@ export default function BriefingForm({ initial }: { initial: Initial }) {
     <form action={formAction}>
       {isEdit && <input type="hidden" name="briefingId" value={initial.id} />}
 
-      <label htmlFor="kind">Type</label>
-      <select id="kind" name="kind" value={kind} onChange={(e) => setKind(e.target.value)}>
-        <option value="article">Article — written in the portal</option>
-        <option value="link">Link — points to an external page</option>
-      </select>
+      <div className="field-grid">
+        <div>
+          <label htmlFor="kind">Type</label>
+          <select id="kind" name="kind" value={kind} onChange={(e) => setKind(e.target.value)}>
+            <option value="article">Article — written in the portal</option>
+            <option value="link">Link — points to an external page</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="category_id">Category</label>
+          <select id="category_id" name="category_id" defaultValue={initial.categoryId || ""}>
+            <option value="">Uncategorized</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+      </div>
 
       <label htmlFor="title">Title</label>
       <input id="title" name="title" defaultValue={initial.title} required />
@@ -42,8 +57,8 @@ export default function BriefingForm({ initial }: { initial: Initial }) {
         </>
       ) : (
         <>
-          <label htmlFor="body">Body</label>
-          <textarea id="body" name="body" defaultValue={initial.body} style={{ minHeight: 260 }} placeholder="Write the briefing. Blank lines separate paragraphs." />
+          <label>Body</label>
+          <MarkdownEditor name="body" defaultValue={initial.body} minHeight={260} placeholder="Write the briefing…" />
           <input type="hidden" name="url" value={initial.url} />
         </>
       )}

@@ -31,7 +31,6 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
         <Link href="/board" className="nav-link" onClick={close}><Icon name="board" size={16} />Board</Link>
         <Link href="/events" className="nav-link" onClick={close}><Icon name="events" size={16} />Events</Link>
         <Link href="/briefings" className="nav-link" onClick={close}><Icon name="briefings" size={16} />Briefings</Link>
-        <Link href="/search" className="nav-link" onClick={close}><Icon name="search" size={16} />Search</Link>
 
         <div className={`nav-group${menu === "network" ? " open" : ""}`}>
           <button type="button" className="nav-link nav-group-btn" aria-expanded={menu === "network"} onClick={() => toggleMenu("network")}>
@@ -58,6 +57,11 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
             <a href={logoutHref} className="nav-drop-link"><Icon name="signout" size={16} />Sign out</a>
           </div>
         </div>
+
+        <Link href="/search" className="nav-link nav-search" aria-label="Search" onClick={close}>
+          <Icon name="search" size={18} />
+          <span className="nav-search-label">Search</span>
+        </Link>
       </nav>
     </>
   );

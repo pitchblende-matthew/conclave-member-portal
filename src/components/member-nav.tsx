@@ -7,7 +7,7 @@ import Icon from "@/components/icons";
 // Responsive member navigation: grouped menus on desktop (a "Network" and an
 // "Account" dropdown keep the bar uncluttered), and a single hamburger panel on
 // mobile where every link is shown expanded.
-export default function MemberNav({ isAdmin, logoutHref }: { isAdmin: boolean; logoutHref: string }) {
+export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: { isAdmin: boolean; logoutHref: string; unreadMessages?: number }) {
   const [open, setOpen] = useState(false); // mobile panel
   const [menu, setMenu] = useState<string | null>(null); // open desktop dropdown
 
@@ -41,6 +41,10 @@ export default function MemberNav({ isAdmin, logoutHref }: { isAdmin: boolean; l
             <Link href="/directory" className="nav-drop-link" onClick={close}><Icon name="members" size={16} />Members</Link>
             <Link href="/companies" className="nav-drop-link" onClick={close}><Icon name="companies" size={16} />Companies</Link>
             <Link href="/connections" className="nav-drop-link" onClick={close}><Icon name="connections" size={16} />Connections</Link>
+            <Link href="/messages" className="nav-drop-link" onClick={close}>
+              <Icon name="message" size={16} />Messages
+              {unreadMessages > 0 ? <span className="nav-badge">{unreadMessages > 9 ? "9+" : unreadMessages}</span> : null}
+            </Link>
           </div>
         </div>
 

@@ -48,8 +48,11 @@ export default async function Connections() {
           </div>
         </Link>
       </div>
-      <div style={{ marginTop: "0.85rem" }}>
+      <div style={{ marginTop: "0.85rem", display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
         <ConnectControls otherId={m.id} state={state} />
+        {state === "connected" && (
+          <Link href={`/messages/${m.id}`} className="btn btn-ghost inline-btn">Message</Link>
+        )}
       </div>
     </div>
   );

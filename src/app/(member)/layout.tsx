@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import Wordmark from "@/components/wordmark";
 import MemberNav from "@/components/member-nav";
 import NotificationsBell, { type BellItem } from "@/components/notifications-bell";
+import { unreadMessageCount } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ type NotifRow = {
   id: number;
   type: string;
   topic_id: number | null;
+  actor_id: number | null;
   read_at: number | null;
   created_at: number;
   actor_name: string | null;
@@ -59,6 +61,10 @@ function toItem(n: NotifRow): BellItem {
       text = "Your briefing submission wasn’t approved";
       href = "/briefings";
       break;
+    case "message":
+      text = `${who} sent you a message`;
+      href = n.actor_id ? `/messages/${n.actor_id}` : "/messages";
+      break;
     default:
       text = "New activity";
   }
@@ -74,7 +80,7 @@ export default async function MemberLayout({ children }: { children: React.React
   const db = getDb();
   const { results: notifs } = await db
     .prepare(
-      `SELECT n.id, n.type, n.topic_id, n.read_at, n.created_at,
+      `SELECT n.id, n.type, n.topic_id, n.actor_id, n.read_at, n.created_at,
               a.name AS actor_name, t.title AS topic_title
        FROM notifications n
        LEFT JOIN users a ON a.id = n.actor_id
@@ -85,6 +91,7 @@ export default async function MemberLayout({ children }: { children: React.React
     .bind(user.id)
     .all<NotifRow>();
   const unread = notifs.filter((n) => n.read_at === null).length;
+  const unreadMessages = await unreadMessageCount(user.id);
 
   return (
     <div className="shell">
@@ -94,6 +101,7 @@ export default async function MemberLayout({ children }: { children: React.React
         </Link>
         <MemberNav
           isAdmin={user.is_admin === 1}
+          unreadMessages={unreadMessages}
           logoutHref={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}
         />
         <NotificationsBell items={notifs.map(toItem)} unread={unread} />

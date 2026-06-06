@@ -4,6 +4,7 @@ export type NotificationType =
   | "connection_request"
   | "connection_accepted"
   | "topic_reply"
+  | "message"
   | "event_submitted"
   | "event_approved"
   | "event_declined"

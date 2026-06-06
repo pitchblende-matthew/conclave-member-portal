@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
 import { emailAdminsNewSubmission } from "@/lib/email";
+import { fetchOgImage } from "@/lib/opengraph";
 
 export type SubmitBriefingState = { ok?: boolean; error?: string };
 
@@ -22,13 +23,19 @@ export async function submitBriefing(_prev: SubmitBriefingState, formData: FormD
   if (kind === "article" && !field("body")) return { error: "Write the briefing body, or switch it to a link." };
 
   const now = Date.now();
-  await getDb()
+  const res = await getDb()
     .prepare(
       `INSERT INTO briefings (kind, title, summary, body, url, author_id, published, status, submitted_by, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, 0, 'pending', ?, ?, ?)`
     )
     .bind(kind, title, field("summary"), field("body"), url, user.id, user.id, now, now)
     .run();
+
+  // Pull the link's OpenGraph image so admins see a cover during review.
+  if (kind === "link") {
+    const og = await fetchOgImage(url);
+    if (og) await getDb().prepare("UPDATE briefings SET cover_url = ? WHERE id = ?").bind(og, Number(res.meta.last_row_id)).run();
+  }
 
   await notifyAdmins("briefing_submitted", { actorId: user.id });
   await emailAdminsNewSubmission("briefing", user.name, title);

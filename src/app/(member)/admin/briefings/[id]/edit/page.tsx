@@ -43,7 +43,7 @@ export default async function EditBriefing({ params }: { params: Promise<{ id: s
       </div>
 
       <div className="card" style={{ maxWidth: 680, marginTop: "1.5rem" }}>
-        <BriefingCover id={b.id} coverUrl={b.cover_key ? mediaUrl(b.cover_key) : null} />
+        <BriefingCover id={b.id} coverUrl={b.cover_key ? mediaUrl(b.cover_key) : (b.cover_url || null)} />
       </div>
 
       <div className="card" style={{ maxWidth: 680, marginTop: "1.5rem" }}>

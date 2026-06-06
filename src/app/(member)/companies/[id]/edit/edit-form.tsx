@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/avatar";
+import RegionFields from "@/components/region-fields";
 import { updateCompany, uploadCompanyLogo, removeCompanyLogo } from "../../actions";
 
 type Initial = {
@@ -11,7 +12,9 @@ type Initial = {
   website: string;
   industry: string;
   size: string;
-  location: string;
+  city: string;
+  state: string;
+  zip: string;
   description: string;
   logoUrl: string | null;
 };
@@ -80,13 +83,10 @@ export default function EditCompanyForm({ initial }: { initial: Initial }) {
             <input id="size" name="size" defaultValue={initial.size} placeholder="e.g. 11–50" />
           </div>
           <div>
-            <label htmlFor="location">Location</label>
-            <input id="location" name="location" defaultValue={initial.location} />
-          </div>
-          <div>
             <label htmlFor="website">Website</label>
             <input id="website" name="website" type="url" defaultValue={initial.website} placeholder="https://" />
           </div>
+          <RegionFields city={initial.city} state={initial.state} zip={initial.zip} />
         </div>
 
         <label htmlFor="description">Description</label>

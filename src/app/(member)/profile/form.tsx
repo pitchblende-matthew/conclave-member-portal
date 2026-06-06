@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/avatar";
+import { US_STATES } from "@/lib/us-states";
 import { updateProfile, uploadAvatar, removeAvatar } from "./actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
 
@@ -10,7 +11,9 @@ type Initial = {
   name: string;
   companyName: string;
   role: string;
-  location: string;
+  city: string;
+  state: string;
+  zip: string;
   pronouns: string;
   phone: string;
   website: string;
@@ -126,8 +129,22 @@ export default function ProfileForm({
             </p>
           </div>
           <div>
-            <label htmlFor="location">Location</label>
-            <input id="location" name="location" defaultValue={initial.location} />
+            <label htmlFor="city">City</label>
+            <input id="city" name="city" defaultValue={initial.city} autoComplete="address-level2" required />
+          </div>
+          <div>
+            <label htmlFor="state">State</label>
+            <select id="state" name="state" defaultValue={initial.state} autoComplete="address-level1" required>
+              <option value="" disabled>Choose…</option>
+              {US_STATES.map((s) => (
+                <option key={s.abbr} value={s.abbr}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="zip">ZIP code</label>
+            <input id="zip" name="zip" inputMode="numeric" pattern="\d{5}" maxLength={5} defaultValue={initial.zip} autoComplete="postal-code" required />
+            <p className="note" style={{ marginTop: "0.35rem" }}>Sets your media market for area filters.</p>
           </div>
           <div>
             <label htmlFor="phone">Phone</label>

@@ -6,6 +6,11 @@ export interface User {
   company: string;
   role: string;
   location: string;
+  city: string;
+  state: string;
+  zip: string;
+  dma_slug: string;
+  dma_name: string;
   bio: string;
   avatar_key: string;
   pronouns: string;
@@ -30,6 +35,11 @@ export interface Company {
   industry: string;
   size: string;
   location: string;
+  city: string;
+  state: string;
+  zip: string;
+  dma_slug: string;
+  dma_name: string;
   description: string;
   created_by: number | null;
   created_at: number;
@@ -39,6 +49,8 @@ export interface Topic {
   id: number;
   title: string;
   category_id: number;
+  dma_slug: string;
+  dma_name: string;
   created_by: number;
   created_at: number;
   last_activity_at: number;
@@ -65,6 +77,11 @@ export interface EventRow {
   title: string;
   description: string;
   location: string;
+  city: string;
+  state: string;
+  zip: string;
+  dma_slug: string;
+  dma_name: string;
   starts_at: number;
   capacity: number;
   created_at: number;

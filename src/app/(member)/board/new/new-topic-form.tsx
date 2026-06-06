@@ -5,7 +5,13 @@ import { createTopic } from "../actions";
 
 type CategoryOption = { id: number; name: string };
 
-export default function NewTopicForm({ categories }: { categories: CategoryOption[] }) {
+export default function NewTopicForm({
+  categories,
+  myDmaName,
+}: {
+  categories: CategoryOption[];
+  myDmaName: string | null;
+}) {
   const [state, formAction, pending] = useActionState(createTopic, {});
   return (
     <form action={formAction}>
@@ -19,6 +25,12 @@ export default function NewTopicForm({ categories }: { categories: CategoryOptio
       </select>
       <label htmlFor="body">Opening message</label>
       <textarea id="body" name="body" style={{ minHeight: 160 }} required />
+      {myDmaName ? (
+        <label className="check-row">
+          <input type="checkbox" name="scope_area" value="1" />
+          <span>Scope this topic to my area — <strong>{myDmaName}</strong></span>
+        </label>
+      ) : null}
       {state?.error && <div className="error">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Posting…" : "Start topic"}

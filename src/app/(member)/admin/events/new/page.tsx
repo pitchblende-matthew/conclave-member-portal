@@ -15,7 +15,7 @@ export default async function NewEvent() {
       <div className="tag">Admin · New event</div>
       <h1 style={{ fontSize: "2.6rem" }}>Create an event</h1>
       <div className="card" style={{ maxWidth: 640, marginTop: "1.5rem" }}>
-        <EventForm initial={{ title: "", description: "", location: "", startsAtMs: null, capacity: 0 }} />
+        <EventForm initial={{ title: "", description: "", location: "", city: "", state: "", zip: "", startsAtMs: null, capacity: 0 }} />
       </div>
     </>
   );

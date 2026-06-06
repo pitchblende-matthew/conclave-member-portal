@@ -23,12 +23,13 @@ export async function submitBriefing(_prev: SubmitBriefingState, formData: FormD
   if (kind === "article" && !field("body")) return { error: "Write the briefing body, or switch it to a link." };
 
   const now = Date.now();
+  const categoryId = Number(formData.get("category_id")) || 0;
   const res = await getDb()
     .prepare(
-      `INSERT INTO briefings (kind, title, summary, body, url, author_id, published, status, submitted_by, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 0, 'pending', ?, ?, ?)`
+      `INSERT INTO briefings (kind, title, summary, body, url, category_id, author_id, published, status, submitted_by, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'pending', ?, ?, ?)`
     )
-    .bind(kind, title, field("summary"), field("body"), url, user.id, user.id, now, now)
+    .bind(kind, title, field("summary"), field("body"), url, categoryId, user.id, user.id, now, now)
     .run();
 
   // Pull the link's OpenGraph image so admins see a cover during review.

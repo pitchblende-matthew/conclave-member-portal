@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import LocalTime from "@/components/local-time";
+import { renderMarkdown } from "@/lib/markdown";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +24,6 @@ export default async function BriefingReader({ params }: { params: Promise<{ id:
     ? await getDb().prepare("SELECT name FROM users WHERE id = ?").bind(b.author_id).first<{ name: string }>()
     : null;
 
-  const paragraphs = b.body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
-
   return (
     <article style={{ maxWidth: 720, margin: "0 auto" }}>
       <p className="meta"><Link href="/briefings">← Briefings</Link></p>
@@ -42,11 +41,9 @@ export default async function BriefingReader({ params }: { params: Promise<{ id:
 
       {b.summary ? <p className="briefing-lede">{b.summary}</p> : null}
 
-      <div className="briefing-prose">
-        {paragraphs.length > 0
-          ? paragraphs.map((p, i) => <p key={i}>{p}</p>)
-          : <p className="meta">No content yet.</p>}
-      </div>
+      {b.body.trim()
+        ? <div className="briefing-prose prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(b.body) }} />
+        : <p className="meta">No content yet.</p>}
     </article>
   );
 }

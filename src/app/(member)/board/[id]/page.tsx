@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import LocalTime from "@/components/local-time";
+import { renderMarkdown } from "@/lib/markdown";
 import Avatar from "@/components/avatar";
 import ConfirmSubmit from "@/components/confirm-submit";
 import ReplyForm from "./reply-form";
@@ -97,7 +98,7 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
                   </form>
                 )}
               </div>
-              <p className="post-body">{p.body}</p>
+              <div className="post-body prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(p.body) }} />
             </div>
           );
         })}

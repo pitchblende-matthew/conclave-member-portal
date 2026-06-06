@@ -17,8 +17,12 @@ export default async function EditBriefing({ params }: { params: Promise<{ id: s
   const user = await requireUser();
   if (user.is_admin !== 1) redirect("/dashboard");
 
-  const b = await getDb().prepare("SELECT * FROM briefings WHERE id = ?").bind(briefingId).first<Briefing>();
+  const db = getDb();
+  const b = await db.prepare("SELECT * FROM briefings WHERE id = ?").bind(briefingId).first<Briefing>();
   if (!b) notFound();
+  const { results: categories } = await db
+    .prepare("SELECT id, name FROM briefing_categories ORDER BY sort_order, name COLLATE NOCASE")
+    .all<{ id: number; name: string }>();
 
   return (
     <>
@@ -48,7 +52,8 @@ export default async function EditBriefing({ params }: { params: Promise<{ id: s
 
       <div className="card" style={{ maxWidth: 680, marginTop: "1.5rem" }}>
         <BriefingForm
-          initial={{ id: b.id, kind: b.kind, title: b.title, summary: b.summary, body: b.body, url: b.url }}
+          categories={categories}
+          initial={{ id: b.id, kind: b.kind, title: b.title, summary: b.summary, body: b.body, url: b.url, categoryId: b.category_id }}
         />
       </div>
     </>

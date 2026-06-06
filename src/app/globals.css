@@ -455,3 +455,34 @@ body { overflow-wrap: break-word; }
 .divider { display: flex; align-items: center; gap: 1rem; margin: 2rem 0 1.25rem; }
 .divider-line { flex: 1; height: 1px; background: var(--line); }
 .divider-sprig { color: var(--sage-soft); flex: none; }
+
+/* Markdown editor */
+.md-editor { border: 1px solid var(--line); border-radius: 8px; background: var(--cream); overflow: hidden; }
+.md-toolbar { display: flex; align-items: center; gap: 0.2rem; padding: 0.35rem 0.45rem; border-bottom: 1px solid var(--line); background: var(--paper); flex-wrap: wrap; }
+.md-btn {
+  background: none; border: 1px solid transparent; border-radius: 6px; min-width: 30px; height: 30px;
+  padding: 0 0.5rem; cursor: pointer; color: var(--ink); font: inherit; font-size: 0.85rem;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.md-btn:hover { background: var(--cream-deep); }
+.md-spacer { flex: 1; }
+.md-tab { background: none; border: none; cursor: pointer; font: inherit; font-size: 0.78rem; color: var(--muted); padding: 0.3rem 0.55rem; border-radius: 6px; }
+.md-tab.active { color: var(--sage-deep); background: var(--cream-deep); }
+.md-editor textarea { border: none; border-radius: 0; background: var(--cream); margin: 0; }
+.md-editor textarea:focus { box-shadow: none; }
+.md-preview { padding: 0.7rem 0.85rem; background: var(--cream); }
+.md-editor .note { margin: 0; padding: 0.4rem 0.7rem; background: var(--paper); border-top: 1px solid var(--line); font-size: 0.72rem; }
+
+/* Rendered Markdown (briefings, board posts, editor preview) */
+.prose { white-space: normal; }
+.post-body.prose { white-space: normal; }
+.prose p { margin: 0 0 0.9rem; line-height: 1.7; }
+.prose h2 { font-size: 1.5rem; margin: 1.2rem 0 0.5rem; }
+.prose h3 { font-size: 1.25rem; margin: 1.1rem 0 0.4rem; }
+.prose ul, .prose ol { margin: 0 0 0.9rem 1.25rem; padding: 0; }
+.prose li { margin: 0.2rem 0; line-height: 1.6; }
+.prose blockquote { margin: 0 0 0.9rem; padding: 0.3rem 0 0.3rem 1rem; border-left: 3px solid var(--sage-soft); color: var(--sage-deep); }
+.prose a { color: var(--sage-deep); text-decoration: underline; }
+.prose code { background: var(--cream-deep); padding: 0.1rem 0.35rem; border-radius: 4px; font-family: "JetBrains Mono", monospace; font-size: 0.85em; }
+.prose strong { font-weight: 600; }
+.prose > :last-child { margin-bottom: 0; }

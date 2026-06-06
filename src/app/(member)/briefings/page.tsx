@@ -9,11 +9,31 @@ import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function Briefings() {
+type Row = Briefing & { category_name: string | null };
+
+export default async function Briefings({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
   await requireUser();
-  const { results } = await getDb()
-    .prepare("SELECT * FROM briefings WHERE published = 1 ORDER BY published_at DESC, id DESC")
-    .all<Briefing>();
+  const { category } = await searchParams;
+  const db = getDb();
+
+  const { results: categories } = await db
+    .prepare("SELECT id, name, slug FROM briefing_categories ORDER BY sort_order, name COLLATE NOCASE")
+    .all<{ id: number; name: string; slug: string }>();
+  const active = categories.find((c) => c.slug === category) ?? null;
+
+  const { results } = await db
+    .prepare(
+      `SELECT b.*, c.name AS category_name
+       FROM briefings b LEFT JOIN briefing_categories c ON c.id = b.category_id
+       WHERE b.published = 1${active ? " AND b.category_id = ?" : ""}
+       ORDER BY b.published_at DESC, b.id DESC`
+    )
+    .bind(...(active ? [active.id] : []))
+    .all<Row>();
 
   return (
     <>
@@ -26,6 +46,15 @@ export default async function Briefings() {
       </div>
       <p className="meta">Notes, essays, and links worth your time — curated for the network.</p>
 
+      <nav className="chip-row" style={{ marginTop: "1.25rem" }}>
+        <Link href="/briefings" className={`chip${!active ? " chip-active" : ""}`}>All</Link>
+        {categories.map((c) => (
+          <Link key={c.id} href={`/briefings?category=${c.slug}`} className={`chip${active?.slug === c.slug ? " chip-active" : ""}`}>
+            {c.name}
+          </Link>
+        ))}
+      </nav>
+
       <div className="grid" style={{ marginTop: "1.5rem" }}>
         {results.map((b) => {
           const isLink = b.kind === "link";
@@ -37,7 +66,10 @@ export default async function Briefings() {
                 <img src={cover} alt="" className="briefing-cover" />
               ) : null}
               <div className="briefing-body">
-                <span className="market-tag">{isLink ? "Link ↗" : "Article"}</span>
+                <span style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                  <span className="market-tag">{isLink ? "Link ↗" : "Article"}</span>
+                  {b.category_name ? <span className="chip chip-static">{b.category_name}</span> : null}
+                </span>
                 <h3 style={{ fontSize: "1.4rem", margin: "0.5rem 0 0.25rem" }}>{b.title}</h3>
                 {b.summary ? <p className="meta" style={{ margin: 0 }}>{b.summary}</p> : null}
                 <p className="meta" style={{ marginTop: "0.6rem", fontSize: "0.78rem" }}>
@@ -57,7 +89,7 @@ export default async function Briefings() {
           );
         })}
         {results.length === 0 && (
-          <EmptyState title="No briefings yet">
+          <EmptyState title={active ? "Nothing in this category yet" : "No briefings yet"}>
             <Link href="/briefings/submit">Submit one for review →</Link>
           </EmptyState>
         )}

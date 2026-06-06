@@ -497,3 +497,29 @@ body { overflow-wrap: break-word; }
 .search-form input { flex: 1; padding-left: 2.35rem; }
 .search-ico { position: absolute; left: 0.72rem; top: 50%; transform: translateY(-50%); color: var(--sage); display: inline-flex; pointer-events: none; }
 .search-form .inline-btn { flex: none; }
+
+/* Nav badge (Messages) */
+.nav-badge {
+  display: inline-block; margin-left: 0.4rem; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px; background: var(--sage); color: var(--cream);
+  font-family: "JetBrains Mono", monospace; font-size: 0.56rem; line-height: 16px; text-align: center;
+}
+
+/* Messages */
+.convo-row { display: flex; align-items: center; gap: 0.85rem; }
+.convo-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.convo-time { white-space: nowrap; font-size: 0.72rem; }
+.convo-snippet { margin: 0.1rem 0 0; color: var(--muted); font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.convo-snippet.unread { color: var(--ink); font-weight: 500; }
+.msg-thread { display: flex; flex-direction: column; gap: 0.5rem; margin: 1.25rem 0; }
+.msg-bubble {
+  max-width: 75%; align-self: flex-start; background: var(--paper); border: 1px solid var(--line);
+  border-radius: 12px; padding: 0.6rem 0.8rem; display: flex; flex-direction: column; gap: 0.2rem;
+}
+.msg-bubble.mine { align-self: flex-end; background: var(--sage); color: var(--cream); border-color: var(--sage); }
+.msg-body { white-space: pre-wrap; word-break: break-word; font-size: 0.95rem; }
+.msg-time { font-size: 0.65rem; opacity: 0.7; }
+.msg-bubble.mine .msg-time { color: var(--cream); }
+.msg-composer { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.msg-composer textarea { min-height: 60px; }
+.msg-composer .inline-btn { align-self: flex-end; }

@@ -131,6 +131,15 @@ export async function emailAccessDeclined(to: string, name: string): Promise<voi
   });
 }
 
+export async function emailNewMessage(to: string, name: string, fromName: string): Promise<void> {
+  await sendEmail({
+    to,
+    subject: `${fromName} sent you a message on Conclave`,
+    html: layout("New message", `<p>${greeting(name)}</p><p><strong>${esc(fromName)}</strong> sent you a direct message on Conclave.</p>`, { label: "Read message", href: siteUrl("/messages") }),
+    text: `${fromName} sent you a message on Conclave. Read it: ${siteUrl("/messages")}`,
+  });
+}
+
 export async function emailConnectionRequest(to: string, name: string, fromName: string): Promise<void> {
   await sendEmail({
     to,

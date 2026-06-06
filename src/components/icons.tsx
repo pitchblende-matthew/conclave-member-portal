@@ -3,7 +3,7 @@ import * as React from "react";
 export type IconName =
   | "dashboard" | "board" | "events" | "briefings" | "members" | "companies"
   | "connections" | "profile" | "admin" | "signout" | "bell" | "pin"
-  | "requests" | "categories" | "invites" | "arrow" | "plus" | "sparkle" | "search";
+  | "requests" | "categories" | "invites" | "arrow" | "plus" | "sparkle" | "search" | "message";
 
 // Thin-line icons (Feather-style) drawn in currentColor to match the wordmark.
 const P: Record<IconName, React.ReactNode> = {
@@ -26,6 +26,7 @@ const P: Record<IconName, React.ReactNode> = {
   plus: (<><path d="M12 5v14M5 12h14" /></>),
   sparkle: (<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10z" />),
   search: (<><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>),
+  message: (<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z" />),
 };
 
 export default function Icon({

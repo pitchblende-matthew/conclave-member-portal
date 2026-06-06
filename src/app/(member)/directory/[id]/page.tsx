@@ -77,8 +77,11 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
         ) : null}
 
         {connState !== "self" && (
-          <div style={{ marginTop: "1.25rem" }}>
+          <div style={{ marginTop: "1.25rem", display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
             <ConnectControls otherId={member.id!} state={connState} />
+            {connState === "connected" && (
+              <Link href={`/messages/${member.id}`} className="btn btn-ghost inline-btn">Message</Link>
+            )}
           </div>
         )}
 

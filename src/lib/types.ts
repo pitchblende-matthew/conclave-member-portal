@@ -121,3 +121,12 @@ export interface Connection {
   created_at: number;
   responded_at: number | null;
 }
+
+export interface Message {
+  id: number;
+  sender_id: number;
+  recipient_id: number;
+  body: string;
+  created_at: number;
+  read_at: number | null;
+}

@@ -116,7 +116,16 @@ export default async function MemberLayout({ children }: { children: React.React
         <NotificationsBell items={notifs.map(toItem)} unread={unread} />
       </header>
       <main id="main" className="page" tabIndex={-1}>{children}</main>
-      <footer className="footer">Private. By invitation.</footer>
+      <footer className="footer">
+        {/* Plain anchors (not next/link) so these resolve to the marketing site at the
+            domain root rather than under the portal's /portal base path. */}
+        <nav className="footer-nav" aria-label="The Conclave">
+          <a href="/">The Conclave</a>
+          <a href="/about">About</a>
+          <a href="mailto:hello@jointheconclave.com">Contact</a>
+        </nav>
+        <span className="footer-tag">Private. By invitation.</span>
+      </footer>
     </div>
   );
 }

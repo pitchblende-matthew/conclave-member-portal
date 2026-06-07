@@ -35,6 +35,7 @@ export interface Company {
   cover_key: string;
   website: string;
   industry: string;
+  industry_id: number;
   size: string;
   location: string;
   city: string;

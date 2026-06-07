@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
+import { listIndustries } from "@/lib/industries";
 import EditCompanyForm from "./edit-form";
 import type { Company } from "@/lib/types";
 
@@ -22,6 +23,8 @@ export default async function EditCompany({ params }: { params: Promise<{ id: st
   // Members of the company, or admins, may edit.
   if (user.is_admin !== 1 && user.company_id !== companyId) redirect(`/companies/${companyId}`);
 
+  const industries = await listIndustries();
+
   return (
     <>
       <p className="meta"><Link href={`/companies/${companyId}`}>← {company.name}</Link></p>
@@ -34,7 +37,7 @@ export default async function EditCompany({ params }: { params: Promise<{ id: st
             name: company.name,
             website: company.website,
             linkedin: company.linkedin,
-            industry: company.industry,
+            industry_id: company.industry_id,
             size: company.size,
             city: company.city,
             state: company.state,
@@ -43,6 +46,7 @@ export default async function EditCompany({ params }: { params: Promise<{ id: st
             logoUrl: company.logo_key ? mediaUrl(company.logo_key) : null,
             coverUrl: company.cover_key ? mediaUrl(company.cover_key) : null,
           }}
+          industries={industries}
         />
       </div>
     </>

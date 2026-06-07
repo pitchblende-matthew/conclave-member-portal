@@ -16,13 +16,21 @@ function readFields(formData: FormData) {
     name: field("name"),
     website: field("website"),
     linkedin: field("linkedin"),
-    industry: field("industry"),
+    industry_id: Number(formData.get("industry_id")) || 0,
     size: field("size"),
     city: field("city"),
     state: field("state"),
     zip: field("zip"),
     description: field("description"),
   };
+}
+
+// Resolve an industry id to its display name (kept in the `industry` text column
+// so existing card/detail displays and search keep working).
+async function industryName(id: number): Promise<string> {
+  if (!id) return "";
+  const row = await getDb().prepare("SELECT name FROM industries WHERE id = ?").bind(id).first<{ name: string }>();
+  return row?.name ?? "";
 }
 
 // A user may edit a company if they belong to it, or they're an admin.
@@ -35,14 +43,15 @@ export async function createCompany(_prev: CompanyState, formData: FormData): Pr
   const f = readFields(formData);
   if (!f.name) return { error: "Company name is required." };
   const region = await regionFromForm(f.city, f.state, f.zip);
+  const industry = await industryName(f.industry_id);
 
   const res = await getDb()
     .prepare(
-      `INSERT INTO companies (name, website, linkedin, industry, size, location, city, state, zip, dma_slug, dma_name, description, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO companies (name, website, linkedin, industry, industry_id, size, location, city, state, zip, dma_slug, dma_name, description, created_by, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
-      f.name, f.website, f.linkedin, f.industry, f.size,
+      f.name, f.website, f.linkedin, industry, f.industry_id, f.size,
       locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       f.description, user.id, Date.now()
     )
@@ -66,15 +75,16 @@ export async function updateCompany(_prev: CompanyState, formData: FormData): Pr
   const f = readFields(formData);
   if (!f.name) return { error: "Company name is required." };
   const region = await regionFromForm(f.city, f.state, f.zip);
+  const industry = await industryName(f.industry_id);
 
   await getDb()
     .prepare(
-      `UPDATE companies SET name = ?, website = ?, linkedin = ?, industry = ?, size = ?,
+      `UPDATE companies SET name = ?, website = ?, linkedin = ?, industry = ?, industry_id = ?, size = ?,
          location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?, description = ?
        WHERE id = ?`
     )
     .bind(
-      f.name, f.website, f.linkedin, f.industry, f.size,
+      f.name, f.website, f.linkedin, industry, f.industry_id, f.size,
       locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       f.description, companyId
     )

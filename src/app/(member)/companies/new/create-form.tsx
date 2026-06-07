@@ -3,8 +3,9 @@
 import { useActionState } from "react";
 import RegionFields from "@/components/region-fields";
 import { createCompany } from "../actions";
+import type { Industry } from "@/lib/industries";
 
-export default function CreateCompanyForm() {
+export default function CreateCompanyForm({ industries }: { industries: Industry[] }) {
   const [state, formAction, pending] = useActionState(createCompany, {});
   return (
     <form action={formAction}>
@@ -13,8 +14,13 @@ export default function CreateCompanyForm() {
 
       <div className="field-grid">
         <div>
-          <label htmlFor="industry">Industry</label>
-          <input id="industry" name="industry" />
+          <label htmlFor="industry_id">Industry</label>
+          <select id="industry_id" name="industry_id" defaultValue="">
+            <option value="">Select…</option>
+            {industries.map((i) => (
+              <option key={i.id} value={i.id}>{i.name}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label htmlFor="size">Size</label>

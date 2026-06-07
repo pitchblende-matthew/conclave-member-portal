@@ -19,7 +19,7 @@ export default function LoginPage() {
           <input id="email" name="email" type="email" autoComplete="email" required />
           <label htmlFor="password">Password</label>
           <input id="password" name="password" type="password" autoComplete="current-password" required />
-          {state?.error && <div className="error">{state.error}</div>}
+          {state?.error && <div className="error" role="alert">{state.error}</div>}
           <button className="btn" type="submit" disabled={pending}>
             {pending ? "Signing in…" : "Sign in"}
           </button>

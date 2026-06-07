@@ -64,7 +64,7 @@ export default function BriefingForm({ initial, categories }: { initial: Initial
       )}
 
       {state?.ok && <div className="note">Saved.</div>}
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Saving…" : isEdit ? "Save changes" : "Create draft"}
       </button>

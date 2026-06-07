@@ -96,7 +96,7 @@ export default function ProfileForm({
               </button>
             )}
           </div>
-          {covState?.error && <div className="error">{covState.error}</div>}
+          {covState?.error && <div className="error" role="alert">{covState.error}</div>}
         </form>
       </div>
 
@@ -125,7 +125,7 @@ export default function ProfileForm({
                 </button>
               )}
             </div>
-            {upState?.error && <div className="error">{upState.error}</div>}
+            {upState?.error && <div className="error" role="alert">{upState.error}</div>}
           </form>
         </div>
       </div>
@@ -206,7 +206,7 @@ export default function ProfileForm({
         <textarea id="bio" name="bio" defaultValue={initial.bio} />
 
         {!onboarding && state?.ok && <div className="note">Saved.</div>}
-        {state?.error && <div className="error">{state.error}</div>}
+        {state?.error && <div className="error" role="alert">{state.error}</div>}
         <button className="btn" type="submit" disabled={pending}>
           {pending ? "Saving…" : onboarding ? "Finish & enter" : "Save changes"}
         </button>

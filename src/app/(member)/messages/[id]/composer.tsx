@@ -20,7 +20,7 @@ export default function MessageComposer({ otherId }: { otherId: number }) {
     <form action={action} ref={ref} className="msg-composer card">
       <input type="hidden" name="otherId" value={otherId} />
       <textarea name="body" placeholder="Write a message…" rows={2} required />
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn inline-btn" type="submit" disabled={pending}>
         {pending ? "Sending…" : "Send"}
       </button>

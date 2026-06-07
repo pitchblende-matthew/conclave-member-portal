@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
             <form action={formAction}>
               <label htmlFor="email">Email</label>
               <input id="email" name="email" type="email" autoComplete="email" required />
-              {state?.error && <div className="error">{state.error}</div>}
+              {state?.error && <div className="error" role="alert">{state.error}</div>}
               <button className="btn" type="submit" disabled={pending}>
                 {pending ? "Sending…" : "Send reset link"}
               </button>

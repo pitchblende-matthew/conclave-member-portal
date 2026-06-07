@@ -48,7 +48,7 @@ export default function BriefingCover({ id, coverUrl }: { id: number; coverUrl: 
           </button>
         )}
       </div>
-      {upState?.error && <div className="error">{upState.error}</div>}
+      {upState?.error && <div className="error" role="alert">{upState.error}</div>}
     </form>
   );
 }

@@ -36,7 +36,7 @@ export default function ReportButton({
         </button>
         <button type="button" className="link-danger" onClick={() => setOpen(false)}>Cancel</button>
       </div>
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
     </form>
   );
 }

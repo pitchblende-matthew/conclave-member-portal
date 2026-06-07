@@ -192,6 +192,18 @@ export async function emailAdminsNewRequest(applicantName: string): Promise<void
   }
 }
 
+export async function emailAdminsInviteRequest(name: string, email: string): Promise<void> {
+  const tos = await adminEmails();
+  for (const to of tos) {
+    await sendEmail({
+      to,
+      subject: "New invitation request",
+      html: layout("New invitation request", `<p><strong>${esc(name || "Someone")}</strong> requested an invitation to Conclave.</p><p>Email: ${esc(email)}</p>`, { label: "View requests", href: siteUrl("/admin/invite-requests") }),
+      text: `${name || "Someone"} (${email}) requested an invitation. ${siteUrl("/admin/invite-requests")}`,
+    });
+  }
+}
+
 export async function emailAdminsNewReport(reporterName: string, targetType: string): Promise<void> {
   const tos = await adminEmails();
   for (const to of tos) {

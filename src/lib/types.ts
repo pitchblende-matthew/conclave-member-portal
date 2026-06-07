@@ -142,3 +142,12 @@ export interface Message {
   created_at: number;
   read_at: number | null;
 }
+
+export interface InviteRequest {
+  id: number;
+  name: string;
+  email: string;
+  note: string;
+  status: string; // new | handled | dismissed
+  created_at: number;
+}

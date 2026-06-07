@@ -69,6 +69,10 @@ function toItem(n: NotifRow): BellItem {
       text = `${who} reported content`;
       href = "/admin/reports";
       break;
+    case "invite_request":
+      text = "New invitation request from the site";
+      href = "/admin/invite-requests";
+      break;
     default:
       text = "New activity";
   }

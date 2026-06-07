@@ -8,8 +8,8 @@ import Icon from "@/components/icons";
 export const dynamic = "force-dynamic";
 
 export default async function Functions() {
-  await requireUser();
-  const functions = await functionsWithCounts();
+  const user = await requireUser();
+  const functions = await functionsWithCounts(user);
   const withMembers = functions.filter((f) => f.n > 0);
 
   return (

@@ -26,6 +26,7 @@ export async function completeOnboarding(_prev: ProfileState, formData: FormData
          name = ?, role = ?, function_id = ?, seniority_id = ?, pronouns = ?,
          location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?,
          phone = ?, website = ?, linkedin = ?, twitter = ?, bio = ?, company_id = ?,
+         discover_region_only = ?, discover_peers_only = ?,
          onboarded = 1
        WHERE id = ?`
     )
@@ -33,7 +34,8 @@ export async function completeOnboarding(_prev: ProfileState, formData: FormData
       field("name"), field("role"), Number(formData.get("function_id")) || 0, Number(formData.get("seniority_id")) || 0, field("pronouns"),
       locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       field("phone"), field("website"), field("linkedin"), field("twitter"),
-      field("bio"), companyId, user.id
+      field("bio"), companyId,
+      formData.get("discover_region_only") ? 1 : 0, formData.get("discover_peers_only") ? 1 : 0, user.id
     )
     .run();
 

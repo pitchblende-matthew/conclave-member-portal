@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import { marketsIn, resolveArea } from "@/lib/region";
 import { functionsWithCounts, senioritiesWithCounts } from "@/lib/member-taxonomy";
+import { visibleMembersClause } from "@/lib/discovery";
 import Avatar from "@/components/avatar";
 import AreaFilter from "@/components/area-filter";
 import EmptyState from "@/components/empty-state";
@@ -23,17 +24,21 @@ export default async function Directory({
   const { area, function: fnParam, seniority: senParam, page: pageParam } = await searchParams;
   const active = resolveArea(area, user.dma_slug);
   const markets = await marketsIn("users");
-  const [functions, seniorities] = await Promise.all([functionsWithCounts(), senioritiesWithCounts()]);
+  const [functions, seniorities] = await Promise.all([functionsWithCounts(user), senioritiesWithCounts(user)]);
   const activeFn = fnParam ? functions.find((f) => f.slug === fnParam) ?? null : null;
   const activeSen = senParam ? seniorities.find((s) => s.slug === senParam) ?? null : null;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  // Compose the market + function + seniority filters.
+  // Compose the market + function + seniority filters, then limit to members the
+  // viewer is allowed to discover.
   const conds: string[] = ["u.status = 'approved'"];
   const binds: (string | number)[] = [];
   if (active) { conds.push("u.dma_slug = ?"); binds.push(active); }
   if (activeFn) { conds.push("u.function_id = ?"); binds.push(activeFn.id); }
   if (activeSen) { conds.push("u.seniority_id = ?"); binds.push(activeSen.id); }
+  const vis = visibleMembersClause(user);
+  conds.push(vis.sql);
+  binds.push(...vis.binds);
 
   const { results: rows } = await getDb()
     .prepare(

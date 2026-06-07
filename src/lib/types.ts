@@ -23,6 +23,8 @@ export interface User {
   twitter: string;
   company_id: number;
   is_admin: number;
+  discover_region_only: number;
+  discover_peers_only: number;
   status: string; // pending | approved | declined
   onboarded: number;
   approved_at: number | null;

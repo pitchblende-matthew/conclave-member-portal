@@ -24,6 +24,8 @@ type Initial = {
   twitter: string;
   bio: string;
   email: string;
+  discoverRegionOnly: boolean;
+  discoverPeersOnly: boolean;
   avatarUrl: string | null;
   coverUrl: string | null;
 };
@@ -229,6 +231,23 @@ export default function ProfileForm({
 
         <label htmlFor="bio">Short bio</label>
         <textarea id="bio" name="bio" defaultValue={initial.bio} />
+
+        <fieldset className="discover-box">
+          <legend>Discoverability <span className="meta">(optional)</span></legend>
+          <label className="check-row">
+            <input type="checkbox" name="discover_region_only" defaultChecked={initial.discoverRegionOnly} />
+            Only members in my market can discover me
+          </label>
+          <label className="check-row">
+            <input type="checkbox" name="discover_peers_only" defaultChecked={initial.discoverPeersOnly} />
+            Only members who share my function or seniority can discover me
+          </label>
+          <p className="note" style={{ marginTop: "0.4rem" }}>
+            ⚠︎ Turning either on <strong>limits where you appear</strong> — you may be left out of the
+            directory, the by-function browse, and member search for anyone outside your selection.
+            Members can still reach your profile from things you post.
+          </p>
+        </fieldset>
 
         {!onboarding && state?.ok && <div className="note">Saved.</div>}
         {state?.error && <div className="error" role="alert">{state.error}</div>}

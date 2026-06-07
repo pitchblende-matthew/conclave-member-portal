@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { visibleMembersClause } from "@/lib/discovery";
 import { mediaUrl } from "@/lib/media";
 import Avatar from "@/components/avatar";
 import Eyebrow from "@/components/eyebrow";
@@ -14,7 +15,7 @@ type BriefingHit = { id: number; kind: string; title: string; summary: string; u
 type TopicHit = { id: number; title: string; category_name: string | null };
 
 export default async function Search({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  await requireUser();
+  const user = await requireUser();
   const { q: rawQ } = await searchParams;
   const q = (rawQ ?? "").trim().slice(0, 100);
   const db = getDb();
@@ -26,14 +27,16 @@ export default async function Search({ searchParams }: { searchParams: Promise<{
   let topics: TopicHit[] = [];
 
   if (q) {
+    const vis = visibleMembersClause(user);
     members = (await db
       .prepare(
         `SELECT u.id, u.name, u.role, u.avatar_key, COALESCE(c.name, NULLIF(u.company,'')) AS company_name
          FROM users u LEFT JOIN companies c ON c.id = u.company_id
          WHERE u.status = 'approved' AND (u.name LIKE ? OR u.role LIKE ? OR u.company LIKE ? OR c.name LIKE ? OR u.bio LIKE ?)
+           AND ${vis.sql}
          ORDER BY u.name COLLATE NOCASE LIMIT 8`
       )
-      .bind(like, like, like, like, like)
+      .bind(like, like, like, like, like, ...vis.binds)
       .all<MemberHit>()).results;
 
     companies = (await db

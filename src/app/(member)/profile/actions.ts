@@ -15,6 +15,8 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
 
   const name = field("name");
   const role = field("role");
+  const functionId = Number(formData.get("function_id")) || 0;
+  const seniorityId = Number(formData.get("seniority_id")) || 0;
   const pronouns = field("pronouns");
   const phone = field("phone");
   const website = field("website");
@@ -30,13 +32,13 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
   await getDb()
     .prepare(
       `UPDATE users SET
-         name = ?, role = ?, pronouns = ?,
+         name = ?, role = ?, function_id = ?, seniority_id = ?, pronouns = ?,
          location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?,
          phone = ?, website = ?, linkedin = ?, twitter = ?, bio = ?, company_id = ?
        WHERE id = ?`
     )
     .bind(
-      name, role, pronouns,
+      name, role, functionId, seniorityId, pronouns,
       locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       phone, website, linkedin, twitter, bio, companyId, user.id
     )

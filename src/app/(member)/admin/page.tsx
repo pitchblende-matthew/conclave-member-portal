@@ -15,7 +15,7 @@ export default async function AdminHome() {
   const user = await requireUser();
   if (user.is_admin !== 1) redirect("/dashboard");
 
-  const [requests, members, companies, events, pendingEvents, categories, briefingCategories, briefings, pendingBriefings, invites, openReports, inviteRequests, industries] = await Promise.all([
+  const [requests, members, companies, events, pendingEvents, categories, briefingCategories, briefings, pendingBriefings, invites, openReports, inviteRequests, industries, functions, seniorities] = await Promise.all([
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'approved'"),
     count("SELECT COUNT(*) AS n FROM companies"),
@@ -29,6 +29,8 @@ export default async function AdminHome() {
     count("SELECT COUNT(*) AS n FROM reports WHERE status = 'open'"),
     count("SELECT COUNT(*) AS n FROM invite_requests WHERE status = 'new'"),
     count("SELECT COUNT(*) AS n FROM industries"),
+    count("SELECT COUNT(*) AS n FROM functions"),
+    count("SELECT COUNT(*) AS n FROM seniorities"),
   ]);
 
   const sections: { href: string; title: string; value: number; hint: string; icon: IconName }[] = [
@@ -39,6 +41,8 @@ export default async function AdminHome() {
     { href: "/admin/members", title: "Members", value: members, hint: "Promote admins, remove members", icon: "members" },
     { href: "/admin/companies", title: "Companies", value: companies, hint: "Edit or remove companies", icon: "companies" },
     { href: "/admin/industries", title: "Industries", value: industries, hint: "Organize companies by sector", icon: "categories" },
+    { href: "/admin/functions", title: "Functions", value: functions, hint: "Organize members by discipline", icon: "members" },
+    { href: "/admin/seniorities", title: "Seniority", value: seniorities, hint: "Member seniority levels", icon: "members" },
     { href: "/admin/categories", title: "Categories", value: categories, hint: "Board categories", icon: "categories" },
     { href: "/admin/briefing-categories", title: "Briefing topics", value: briefingCategories, hint: "Briefing categories", icon: "briefings" },
     { href: "/admin/invites", title: "Invitations", value: invites, hint: "Unused invites · generate more", icon: "invites" },

@@ -5,6 +5,8 @@ export interface User {
   name: string;
   company: string;
   role: string;
+  function_id: number;
+  seniority_id: number;
   location: string;
   city: string;
   state: string;

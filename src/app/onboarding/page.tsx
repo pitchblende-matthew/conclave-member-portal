@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
+import { listFunctions, listSeniorities } from "@/lib/member-taxonomy";
 import ProfileForm from "@/app/(member)/profile/form";
 import Wordmark from "@/components/wordmark";
 
@@ -16,6 +17,7 @@ export default async function Onboarding() {
   const { results: companies } = await getDb()
     .prepare("SELECT id, name FROM companies ORDER BY name COLLATE NOCASE")
     .all<{ id: number; name: string }>();
+  const [functions, seniorities] = await Promise.all([listFunctions(), listSeniorities()]);
 
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -31,11 +33,15 @@ export default async function Onboarding() {
       <div className="card" style={{ marginTop: "1.5rem" }}>
         <ProfileForm
           companies={companies}
+          functions={functions}
+          seniorities={seniorities}
           mode="onboarding"
           initial={{
             name: user.name,
             companyName: user.company,
             role: user.role,
+            function_id: user.function_id,
+            seniority_id: user.seniority_id,
             city: user.city,
             state: user.state,
             zip: user.zip,

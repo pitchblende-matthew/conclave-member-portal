@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
+import { listFunctions, listSeniorities } from "@/lib/member-taxonomy";
 import ProfileForm from "./form";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,7 @@ export default async function Profile() {
   const { results: companies } = await getDb()
     .prepare("SELECT id, name FROM companies ORDER BY name COLLATE NOCASE")
     .all<{ id: number; name: string }>();
+  const [functions, seniorities] = await Promise.all([listFunctions(), listSeniorities()]);
   const companyName = companies.find((c) => c.id === user.company_id)?.name ?? user.company ?? "";
   return (
     <>
@@ -19,10 +21,14 @@ export default async function Profile() {
       <div className="card" style={{ maxWidth: 640, marginTop: "1.5rem" }}>
         <ProfileForm
           companies={companies}
+          functions={functions}
+          seniorities={seniorities}
           initial={{
             name: user.name,
             companyName,
             role: user.role,
+            function_id: user.function_id,
+            seniority_id: user.seniority_id,
             city: user.city,
             state: user.state,
             zip: user.zip,

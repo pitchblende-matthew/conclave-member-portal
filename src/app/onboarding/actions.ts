@@ -23,14 +23,14 @@ export async function completeOnboarding(_prev: ProfileState, formData: FormData
   await getDb()
     .prepare(
       `UPDATE users SET
-         name = ?, role = ?, pronouns = ?,
+         name = ?, role = ?, function_id = ?, seniority_id = ?, pronouns = ?,
          location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?,
          phone = ?, website = ?, linkedin = ?, twitter = ?, bio = ?, company_id = ?,
          onboarded = 1
        WHERE id = ?`
     )
     .bind(
-      field("name"), field("role"), field("pronouns"),
+      field("name"), field("role"), Number(formData.get("function_id")) || 0, Number(formData.get("seniority_id")) || 0, field("pronouns"),
       locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       field("phone"), field("website"), field("linkedin"), field("twitter"),
       field("bio"), companyId, user.id

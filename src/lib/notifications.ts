@@ -5,6 +5,7 @@ export type NotificationType =
   | "connection_accepted"
   | "topic_reply"
   | "message"
+  | "content_reported"
   | "event_submitted"
   | "event_approved"
   | "event_declined"

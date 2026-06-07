@@ -192,6 +192,18 @@ export async function emailAdminsNewRequest(applicantName: string): Promise<void
   }
 }
 
+export async function emailAdminsNewReport(reporterName: string, targetType: string): Promise<void> {
+  const tos = await adminEmails();
+  for (const to of tos) {
+    await sendEmail({
+      to,
+      subject: "New content report on Conclave",
+      html: layout("Content reported", `<p><strong>${esc(reporterName || "A member")}</strong> reported a ${esc(targetType)} for review.</p>`, { label: "Open moderation queue", href: siteUrl("/admin/reports") }),
+      text: `${reporterName || "A member"} reported a ${targetType}. Review: ${siteUrl("/admin/reports")}`,
+    });
+  }
+}
+
 export async function emailAdminsNewSubmission(kind: "event" | "briefing", submitterName: string, title: string): Promise<void> {
   const tos = await adminEmails();
   const where = kind === "event" ? "/admin/events" : "/admin/briefings";

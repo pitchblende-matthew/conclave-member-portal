@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
 import { emailConnectionRequest } from "@/lib/email";
+import { rateLimited } from "@/lib/rate-limit";
 import type { Connection } from "@/lib/types";
 
 async function pairRow(a: number, b: number) {
@@ -30,6 +31,8 @@ export async function sendConnect(formData: FormData): Promise<void> {
   const me = await requireUser();
   const other = Number(formData.get("otherId"));
   if (!other || other === me.id) return;
+  // Silently drop if they're firing off requests too fast.
+  if (await rateLimited(`conn:${me.id}`, 30, 60 * 60 * 1000)) return;
 
   const db = getDb();
   const now = Date.now();

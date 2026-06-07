@@ -8,6 +8,7 @@ import { renderMarkdown } from "@/lib/markdown";
 import Avatar from "@/components/avatar";
 import ConfirmSubmit from "@/components/confirm-submit";
 import ReplyForm from "./reply-form";
+import ReportButton from "@/components/report-button";
 import { deletePost, deleteTopic } from "../actions";
 import type { Topic } from "@/lib/types";
 
@@ -66,14 +67,17 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
       </span>
       <div className="topline" style={{ marginTop: "0.5rem" }}>
         <h1 style={{ fontSize: "2.4rem" }}>{topic.title}</h1>
-        {canDeleteTopic && (
-          <form action={deleteTopic}>
-            <input type="hidden" name="topicId" value={topic.id} />
-            <ConfirmSubmit className="btn btn-ghost inline-btn" message="Delete this topic and all its replies?">
-              Delete topic
-            </ConfirmSubmit>
-          </form>
-        )}
+        <div className="btn-row" style={{ alignItems: "center" }}>
+          {topic.created_by !== user.id && <ReportButton targetType="topic" targetId={topic.id} />}
+          {canDeleteTopic && (
+            <form action={deleteTopic}>
+              <input type="hidden" name="topicId" value={topic.id} />
+              <ConfirmSubmit className="btn btn-ghost inline-btn" message="Delete this topic and all its replies?">
+                Delete topic
+              </ConfirmSubmit>
+            </form>
+          )}
+        </div>
       </div>
 
       <div style={{ marginTop: "1.25rem" }}>
@@ -91,12 +95,15 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
                   </div>
                 </Link>
                 {/* The opening post is removed via "Delete topic" to avoid orphaning it. */}
-                {canDeletePost && i !== 0 && (
-                  <form action={deletePost}>
-                    <input type="hidden" name="postId" value={p.id} />
-                    <ConfirmSubmit className="link-danger" message="Delete this reply?">Delete</ConfirmSubmit>
-                  </form>
-                )}
+                <div className="btn-row" style={{ alignItems: "center" }}>
+                  {i !== 0 && p.user_id !== user.id && <ReportButton targetType="post" targetId={p.id} />}
+                  {canDeletePost && i !== 0 && (
+                    <form action={deletePost}>
+                      <input type="hidden" name="postId" value={p.id} />
+                      <ConfirmSubmit className="link-danger" message="Delete this reply?">Delete</ConfirmSubmit>
+                    </form>
+                  )}
+                </div>
               </div>
               <div className="post-body prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(p.body) }} />
             </div>

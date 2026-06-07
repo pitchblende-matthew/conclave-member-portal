@@ -122,6 +122,18 @@ export interface Connection {
   responded_at: number | null;
 }
 
+export interface Report {
+  id: number;
+  reporter_id: number;
+  target_type: string; // topic | post | member
+  target_id: number;
+  reason: string;
+  status: string; // open | resolved | dismissed
+  created_at: number;
+  resolved_by: number | null;
+  resolved_at: number | null;
+}
+
 export interface Message {
   id: number;
   sender_id: number;

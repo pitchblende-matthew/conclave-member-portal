@@ -72,7 +72,9 @@ export default async function Search({ searchParams }: { searchParams: Promise<{
       <Eyebrow icon="search">Search</Eyebrow>
       <h1 style={{ fontSize: "2.6rem" }}>Find <span className="em">anything</span></h1>
 
-      <form className="search-form" method="get" action="/search">
+      {/* No `action` so the GET submits to the current URL (which already includes
+          the Webflow Cloud mount/basePath); an absolute action would drop it and 404. */}
+      <form className="search-form" method="get">
         <span className="search-ico"><Icon name="search" size={18} /></span>
         <input name="q" defaultValue={q} placeholder="Members, companies, briefings, topics…" autoFocus aria-label="Search" />
         <button className="btn inline-btn" type="submit">Search</button>

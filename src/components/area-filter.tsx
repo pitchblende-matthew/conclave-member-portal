@@ -35,7 +35,9 @@ export default function AreaFilter({
         </Link>
       </nav>
       {markets.length > 0 && (
-        <form className="area-jump" method="get" action={basePath}>
+        // No `action` — the GET submits to the current URL (preserving the mount/
+        // basePath). An absolute action would drop the basePath and 404.
+        <form className="area-jump" method="get">
           {Object.entries(hidden).map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}

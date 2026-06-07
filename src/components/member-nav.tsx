@@ -47,9 +47,23 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
         onKeyDown={(e) => { if (e.key === "Escape") { setMenu(null); setOpen(false); } }}
       >
         <Link {...linkProps("/dashboard")}><Icon name="dashboard" size={16} />Dashboard</Link>
-        <Link {...linkProps("/board")}><Icon name="board" size={16} />Board</Link>
-        <Link {...linkProps("/events")}><Icon name="events" size={16} />Events</Link>
-        <Link {...linkProps("/briefings")}><Icon name="briefings" size={16} />Briefings</Link>
+
+        <div className={`nav-group${menu === "community" ? " open" : ""}`}>
+          <button
+            type="button"
+            className={`nav-link nav-group-btn${groupActive(["/board", "/events", "/briefings"]) ? " active" : ""}`}
+            aria-expanded={menu === "community"}
+            aria-haspopup="true"
+            onClick={() => toggleMenu("community")}
+          >
+            <Icon name="board" size={16} />Community <span className="caret" aria-hidden>▾</span>
+          </button>
+          <div className="nav-dropdown">
+            <Link href="/board" className="nav-drop-link" onClick={close}><Icon name="board" size={16} />Board</Link>
+            <Link href="/events" className="nav-drop-link" onClick={close}><Icon name="events" size={16} />Events</Link>
+            <Link href="/briefings" className="nav-drop-link" onClick={close}><Icon name="briefings" size={16} />Briefings</Link>
+          </div>
+        </div>
 
         <div className={`nav-group${menu === "network" ? " open" : ""}`}>
           <button

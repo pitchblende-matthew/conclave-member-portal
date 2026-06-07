@@ -71,7 +71,7 @@ function toItem(n: NotifRow): BellItem {
       break;
     case "invite_request":
       text = "New invitation request from the site";
-      href = "/admin/invite-requests";
+      href = "/admin/requests";
       break;
     default:
       text = "New activity";

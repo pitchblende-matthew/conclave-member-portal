@@ -4,11 +4,11 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import LocalTime from "@/components/local-time";
 import ConfirmSubmit from "@/components/confirm-submit";
-import { approveMember, declineMember } from "../actions";
+import { approveMember, declineMember, markInviteHandled, deleteInviteRequest } from "../actions";
 
 export const dynamic = "force-dynamic";
 
-type Row = {
+type UserRow = {
   id: number;
   name: string;
   email: string;
@@ -19,67 +19,130 @@ type Row = {
   created_at: number;
 };
 
+type InviteRow = {
+  id: number;
+  name: string;
+  email: string;
+  note: string;
+  status: string;
+  created_at: number;
+};
+
+type Item =
+  | ({ kind: "application"; active: boolean } & UserRow)
+  | ({ kind: "invite"; active: boolean } & InviteRow);
+
 export default async function AdminRequests() {
   const me = await requireUser();
   if (me.is_admin !== 1) redirect("/dashboard");
 
-  const { results } = await getDb()
-    .prepare(
-      `SELECT id, name, email, company, role, linkedin, status, created_at
-       FROM users
-       WHERE status IN ('pending', 'declined')
-       ORDER BY (status = 'pending') DESC, created_at DESC`
-    )
-    .all<Row>();
+  const db = getDb();
+  const [{ results: users }, { results: invites }] = await Promise.all([
+    db
+      .prepare(
+        `SELECT id, name, email, company, role, linkedin, status, created_at
+         FROM users
+         WHERE status IN ('pending', 'declined')`
+      )
+      .all<UserRow>(),
+    db
+      .prepare(
+        `SELECT id, name, email, note, status, created_at
+         FROM invite_requests
+         WHERE status != 'dismissed'`
+      )
+      .all<InviteRow>(),
+  ]);
 
-  const pending = results.filter((r) => r.status === "pending");
+  // Two different sources, one queue: account applications awaiting approval and
+  // invitation requests from the marketing site. Active (unhandled) items float up,
+  // then newest first.
+  const items: Item[] = [
+    ...users.map((u) => ({ ...u, kind: "application" as const, active: u.status === "pending" })),
+    ...invites.map((i) => ({ ...i, kind: "invite" as const, active: i.status === "new" })),
+  ].sort((a, b) => Number(b.active) - Number(a.active) || b.created_at - a.created_at);
+
+  const pendingCount = items.filter((i) => i.active).length;
 
   return (
     <>
       <p className="meta"><Link href="/admin">← Admin</Link></p>
-      <div className="tag">Admin · Access requests</div>
+      <div className="tag">Admin · Requests</div>
       <h1 style={{ fontSize: "2.6rem" }}>Requests</h1>
-      <p className="meta">{pending.length} awaiting review</p>
+      <p className="meta">{pendingCount} awaiting review · applications &amp; invitation requests</p>
 
       <div style={{ marginTop: "1.5rem" }}>
-        {results.map((r) => (
-          <div key={r.id} className="card">
-            <div className="tag">
-              {r.status === "pending" ? <>Requested <LocalTime ms={r.created_at} /></> : "Declined"}
+        {items.map((item) =>
+          item.kind === "application" ? (
+            <div key={`u${item.id}`} className="card">
+              <div className="tag">
+                {item.status === "pending" ? (
+                  <>Application · Requested <LocalTime ms={item.created_at} /></>
+                ) : (
+                  "Application · Declined"
+                )}
+              </div>
+              <h3 style={{ fontSize: "1.4rem", marginBottom: "0.25rem" }}>{item.name || "—"}</h3>
+              <p className="meta" style={{ margin: 0 }}>
+                {[item.role, item.company].filter(Boolean).join(" · ") || "—"}
+              </p>
+              <p className="meta" style={{ margin: "0.25rem 0 0" }}>
+                <a href={`mailto:${item.email}`}>{item.email}</a>
+                {item.linkedin ? <> · <a href={item.linkedin} target="_blank" rel="noreferrer">LinkedIn</a></> : null}
+              </p>
+              {item.status === "pending" && (
+                <div className="btn-row" style={{ marginTop: "1rem" }}>
+                  <form action={approveMember}>
+                    <input type="hidden" name="userId" value={item.id} />
+                    <button className="btn inline-btn" type="submit">Approve</button>
+                  </form>
+                  <form action={declineMember}>
+                    <input type="hidden" name="userId" value={item.id} />
+                    <ConfirmSubmit className="btn btn-ghost inline-btn" message={`Decline ${item.name || item.email}?`}>
+                      Decline
+                    </ConfirmSubmit>
+                  </form>
+                </div>
+              )}
+              {item.status === "declined" && (
+                <div className="btn-row" style={{ marginTop: "1rem" }}>
+                  <form action={approveMember}>
+                    <input type="hidden" name="userId" value={item.id} />
+                    <button className="btn btn-ghost inline-btn" type="submit">Approve after all</button>
+                  </form>
+                </div>
+              )}
             </div>
-            <h3 style={{ fontSize: "1.4rem", marginBottom: "0.25rem" }}>{r.name || "—"}</h3>
-            <p className="meta" style={{ margin: 0 }}>
-              {[r.role, r.company].filter(Boolean).join(" · ") || "—"}
-            </p>
-            <p className="meta" style={{ margin: "0.25rem 0 0" }}>
-              <a href={`mailto:${r.email}`}>{r.email}</a>
-              {r.linkedin ? <> · <a href={r.linkedin} target="_blank" rel="noreferrer">LinkedIn</a></> : null}
-            </p>
-            {r.status === "pending" && (
-              <div className="btn-row" style={{ marginTop: "1rem" }}>
-                <form action={approveMember}>
-                  <input type="hidden" name="userId" value={r.id} />
-                  <button className="btn inline-btn" type="submit">Approve</button>
-                </form>
-                <form action={declineMember}>
-                  <input type="hidden" name="userId" value={r.id} />
-                  <ConfirmSubmit className="btn btn-ghost inline-btn" message={`Decline ${r.name || r.email}?`}>
-                    Decline
+          ) : (
+            <div key={`i${item.id}`} className="card">
+              <div className="tag">
+                {item.status === "new" ? (
+                  <>Invitation request · <LocalTime ms={item.created_at} /></>
+                ) : (
+                  "Invitation request · Handled"
+                )}
+              </div>
+              <h3 style={{ fontSize: "1.4rem", marginBottom: "0.2rem" }}>{item.name || "—"}</h3>
+              <p className="meta" style={{ margin: 0 }}><a href={`mailto:${item.email}`}>{item.email}</a></p>
+              {item.note ? <p style={{ marginTop: "0.5rem", whiteSpace: "pre-wrap" }}>{item.note}</p> : null}
+              <div className="btn-row" style={{ marginTop: "0.85rem" }}>
+                {item.status === "new" && (
+                  <form action={markInviteHandled}>
+                    <input type="hidden" name="requestId" value={item.id} />
+                    <button className="btn btn-ghost inline-btn" type="submit">Mark handled</button>
+                  </form>
+                )}
+                <form action={deleteInviteRequest}>
+                  <input type="hidden" name="requestId" value={item.id} />
+                  <ConfirmSubmit className="btn btn-ghost inline-btn" message={`Delete the request from ${item.email}?`}>
+                    Delete
                   </ConfirmSubmit>
                 </form>
               </div>
-            )}
-            {r.status === "declined" && (
-              <div className="btn-row" style={{ marginTop: "1rem" }}>
-                <form action={approveMember}>
-                  <input type="hidden" name="userId" value={r.id} />
-                  <button className="btn btn-ghost inline-btn" type="submit">Approve after all</button>
-                </form>
-              </div>
-            )}
-          </div>
-        ))}
-        {results.length === 0 && <p className="meta">No requests right now.</p>}
+            </div>
+          )
+        )}
+        {items.length === 0 && <p className="meta">No requests right now.</p>}
       </div>
     </>
   );

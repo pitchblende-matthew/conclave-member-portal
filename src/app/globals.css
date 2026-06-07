@@ -321,12 +321,16 @@ main.page { padding: 2.5rem 0 4rem; }
   display: grid; gap: 1rem; margin-top: 1.5rem;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
 }
-.dash-list { list-style: none; padding: 0; margin: 0.85rem 0 0; display: flex; flex-direction: column; gap: 0.85rem; }
-.dash-list li { display: flex; gap: 0.75rem; align-items: baseline; font-size: 0.95rem; line-height: 1.4; }
+.dash-list { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-direction: column; }
+.dash-list li { display: flex; gap: 0.9rem; align-items: baseline; font-size: 0.95rem; line-height: 1.45; padding: 0.85rem 0; border-top: 1px solid var(--line); }
+.dash-list li:first-child { border-top: none; padding-top: 0.4rem; }
 .dash-date {
-  font-family: "JetBrains Mono", monospace; font-size: 0.68rem; color: var(--sage);
-  white-space: nowrap; min-width: 52px; text-transform: uppercase; letter-spacing: 0.06em;
+  font-family: "JetBrains Mono", monospace; font-size: 0.68rem; color: var(--sage-deep);
+  white-space: nowrap; min-width: 58px; text-transform: uppercase; letter-spacing: 0.06em;
 }
+.dash-row { display: block; width: 100%; text-decoration: none; color: inherit; }
+.dash-title { font-weight: 500; color: var(--ink); }
+.dash-sub { display: block; margin-top: 0.35rem; font-size: 0.78rem; color: #555; }
 
 /* Briefings */
 .briefing-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }

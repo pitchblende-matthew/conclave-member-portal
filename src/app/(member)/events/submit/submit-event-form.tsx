@@ -2,9 +2,12 @@
 
 import { useActionState, useState } from "react";
 import RegionFields from "@/components/region-fields";
+import TagPicker from "@/components/tag-picker";
+import type { Industry } from "@/lib/industries";
+import type { Taxon } from "@/lib/member-taxonomy";
 import { submitEvent } from "../actions";
 
-export default function SubmitEventForm() {
+export default function SubmitEventForm({ industries, functions }: { industries: Industry[]; functions: Taxon[] }) {
   const [virtual, setVirtual] = useState(false);
   const [state, formAction, pending] = useActionState(submitEvent, {});
 
@@ -56,6 +59,7 @@ export default function SubmitEventForm() {
       <label htmlFor="description">Description</label>
       <textarea id="description" name="description" />
 
+      <TagPicker industries={industries} functions={functions} />
       {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Submitting…" : "Submit for review"}

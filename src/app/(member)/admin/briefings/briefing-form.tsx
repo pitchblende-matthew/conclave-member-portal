@@ -2,6 +2,9 @@
 
 import { useActionState, useState } from "react";
 import MarkdownEditor from "@/components/markdown-editor";
+import TagPicker from "@/components/tag-picker";
+import type { Industry } from "@/lib/industries";
+import type { Taxon } from "@/lib/member-taxonomy";
 import { createBriefing, updateBriefing } from "./actions";
 
 type Initial = {
@@ -12,11 +15,13 @@ type Initial = {
   body: string;
   url: string;
   categoryId: number;
+  industryIds?: number[];
+  functionIds?: number[];
 };
 
 type CategoryOption = { id: number; name: string };
 
-export default function BriefingForm({ initial, categories }: { initial: Initial; categories: CategoryOption[] }) {
+export default function BriefingForm({ initial, categories, industries, functions }: { initial: Initial; categories: CategoryOption[]; industries: Industry[]; functions: Taxon[] }) {
   const isEdit = typeof initial.id === "number";
   const [kind, setKind] = useState(initial.kind === "link" ? "link" : "article");
   const [state, formAction, pending] = useActionState(isEdit ? updateBriefing : createBriefing, {});
@@ -64,6 +69,7 @@ export default function BriefingForm({ initial, categories }: { initial: Initial
       )}
 
       {state?.ok && <div className="note">Saved.</div>}
+      <TagPicker industries={industries} functions={functions} selectedIndustry={initial.industryIds ?? []} selectedFunction={initial.functionIds ?? []} />
       {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Saving…" : isEdit ? "Save changes" : "Create draft"}

@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth";
 import { regionFromForm } from "@/lib/region";
 import { notify } from "@/lib/notifications";
 import { emailSubmissionDecision } from "@/lib/email";
+import { readTagIds, setContentTags } from "@/lib/content-tags";
 
 export type EventState = { ok?: boolean; error?: string };
 
@@ -44,7 +45,7 @@ export async function createEvent(_prev: EventState, formData: FormData): Promis
     ? { city: "", state: "", zip: "", dma_slug: "", dma_name: "" }
     : await regionFromForm(e.city, e.state, e.zip);
 
-  await getDb()
+  const res = await getDb()
     .prepare(
       `INSERT INTO events (title, description, location, city, state, zip, dma_slug, dma_name, is_virtual, meeting_url, starts_at, capacity, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -56,6 +57,9 @@ export async function createEvent(_prev: EventState, formData: FormData): Promis
       e.startsAt, e.capacity, Date.now()
     )
     .run();
+
+  const tags = readTagIds(formData);
+  await setContentTags("event", Number(res.meta.last_row_id), tags.industry, tags.function);
 
   revalidatePath("/admin/events");
   revalidatePath("/events");
@@ -85,6 +89,9 @@ export async function updateEvent(_prev: EventState, formData: FormData): Promis
       e.startsAt, e.capacity, id
     )
     .run();
+
+  const tags = readTagIds(formData);
+  await setContentTags("event", id, tags.industry, tags.function);
 
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${id}`);

@@ -2,6 +2,9 @@
 
 import { useActionState, useState } from "react";
 import RegionFields from "@/components/region-fields";
+import TagPicker from "@/components/tag-picker";
+import type { Industry } from "@/lib/industries";
+import type { Taxon } from "@/lib/member-taxonomy";
 import { createEvent, updateEvent } from "./actions";
 
 type Initial = {
@@ -16,6 +19,8 @@ type Initial = {
   meetingUrl: string;
   startsAtMs: number | null;
   capacity: number;
+  industryIds?: number[];
+  functionIds?: number[];
 };
 
 // ms -> "YYYY-MM-DDTHH:mm" in UTC (matches the server's parse on save).
@@ -26,7 +31,7 @@ function toInputValue(ms: number | null): string {
   return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}T${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
 }
 
-export default function EventForm({ initial }: { initial: Initial }) {
+export default function EventForm({ initial, industries, functions }: { initial: Initial; industries: Industry[]; functions: Taxon[] }) {
   const isEdit = typeof initial.id === "number";
   const [virtual, setVirtual] = useState(initial.isVirtual);
   const [state, formAction, pending] = useActionState(isEdit ? updateEvent : createEvent, {});
@@ -77,6 +82,7 @@ export default function EventForm({ initial }: { initial: Initial }) {
       <label htmlFor="description">Description</label>
       <textarea id="description" name="description" defaultValue={initial.description} />
 
+      <TagPicker industries={industries} functions={functions} selectedIndustry={initial.industryIds ?? []} selectedFunction={initial.functionIds ?? []} />
       {state?.ok && <div className="note">Saved.</div>}
       {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>

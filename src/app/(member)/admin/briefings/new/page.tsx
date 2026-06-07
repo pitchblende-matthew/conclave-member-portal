@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { listIndustries } from "@/lib/industries";
+import { listFunctions } from "@/lib/member-taxonomy";
 import BriefingForm from "../briefing-form";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +14,7 @@ export default async function NewBriefing() {
   const { results: categories } = await getDb()
     .prepare("SELECT id, name FROM briefing_categories ORDER BY sort_order, name COLLATE NOCASE")
     .all<{ id: number; name: string }>();
+  const [industries, functions] = await Promise.all([listIndustries(), listFunctions()]);
 
   return (
     <>
@@ -19,7 +22,7 @@ export default async function NewBriefing() {
       <div className="tag">Admin · New briefing</div>
       <h1 style={{ fontSize: "2.6rem" }}>Create a briefing</h1>
       <div className="card" style={{ maxWidth: 680, marginTop: "1.5rem" }}>
-        <BriefingForm categories={categories} initial={{ kind: "article", title: "", summary: "", body: "", url: "", categoryId: 0 }} />
+        <BriefingForm categories={categories} industries={industries} functions={functions} initial={{ kind: "article", title: "", summary: "", body: "", url: "", categoryId: 0 }} />
       </div>
     </>
   );

@@ -2,11 +2,14 @@
 
 import { useActionState, useState } from "react";
 import MarkdownEditor from "@/components/markdown-editor";
+import TagPicker from "@/components/tag-picker";
+import type { Industry } from "@/lib/industries";
+import type { Taxon } from "@/lib/member-taxonomy";
 import { submitBriefing } from "../actions";
 
 type CategoryOption = { id: number; name: string };
 
-export default function SubmitBriefingForm({ categories }: { categories: CategoryOption[] }) {
+export default function SubmitBriefingForm({ categories, industries, functions }: { categories: CategoryOption[]; industries: Industry[]; functions: Taxon[] }) {
   const [kind, setKind] = useState("article");
   const [state, formAction, pending] = useActionState(submitBriefing, {});
 
@@ -56,6 +59,7 @@ export default function SubmitBriefingForm({ categories }: { categories: Categor
         </>
       )}
 
+      <TagPicker industries={industries} functions={functions} />
       {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Submitting…" : "Submit for review"}

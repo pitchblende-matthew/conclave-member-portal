@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
+import { rateLimited } from "@/lib/rate-limit";
 import type { Post, Topic } from "@/lib/types";
 
 export type BoardState = { ok?: boolean; error?: string };
@@ -20,6 +21,7 @@ export async function createTopic(_prev: BoardState, formData: FormData): Promis
   const dmaName = scoped ? user.dma_name : "";
   if (!title) return { error: "Give your topic a title." };
   if (!body) return { error: "Write something to start the discussion." };
+  if (await rateLimited(`post:${user.id}`, 12, 60_000)) return { error: "You're posting too fast — please wait a moment." };
 
   const db = getDb();
   const now = Date.now();
@@ -43,6 +45,7 @@ export async function createReply(_prev: BoardState, formData: FormData): Promis
   const body = String(formData.get("body") ?? "").trim();
   if (!topicId) return { error: "Unknown topic." };
   if (!body) return { error: "Write a reply first." };
+  if (await rateLimited(`post:${user.id}`, 12, 60_000)) return { error: "You're posting too fast — please wait a moment." };
 
   const db = getDb();
   const now = Date.now();

@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { connectionState } from "@/lib/connections";
 import { notify } from "@/lib/notifications";
 import { emailNewMessage } from "@/lib/email";
+import { rateLimited } from "@/lib/rate-limit";
 
 export type MessageState = { ok?: boolean; error?: string };
 
@@ -20,6 +21,9 @@ export async function sendMessage(_prev: MessageState, formData: FormData): Prom
 
   if ((await connectionState(me.id, other)) !== "connected") {
     return { error: "You can only message your connections." };
+  }
+  if (await rateLimited(`msg:${me.id}`, 30, 60_000)) {
+    return { error: "You're sending messages too fast — please slow down." };
   }
 
   const db = getDb();

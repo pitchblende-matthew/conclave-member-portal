@@ -527,3 +527,7 @@ body { overflow-wrap: break-word; }
 /* Compact icon-only Search at the end of the nav (label shows on mobile) */
 .nav-search-label { display: none; }
 @media (max-width: 768px) { .nav-search-label { display: inline; } }
+
+/* Report control */
+.report-form { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; max-width: 380px; }
+.report-form input { margin: 0; }

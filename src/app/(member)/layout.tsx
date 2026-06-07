@@ -65,6 +65,10 @@ function toItem(n: NotifRow): BellItem {
       text = `${who} sent you a message`;
       href = n.actor_id ? `/messages/${n.actor_id}` : "/messages";
       break;
+    case "content_reported":
+      text = `${who} reported content`;
+      href = "/admin/reports";
+      break;
     default:
       text = "New activity";
   }

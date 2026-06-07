@@ -1,11 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getDb } from "@/lib/db";
 import { hashPassword } from "@/lib/crypto";
 import { createSession } from "@/lib/auth";
 import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 import { emailWelcome, emailAccessPending, emailAdminsNewRequest } from "@/lib/email";
+import { rateLimited } from "@/lib/rate-limit";
 
 export type SignupState = { error?: string };
 
@@ -28,6 +30,13 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
 
   if (!email || !password) return { error: "Email and password are required." };
   if (password.length < 8) return { error: "Use a password of at least 8 characters." };
+
+  // Throttle sign-up attempts per source IP to limit spam/abuse.
+  const hdrs = await headers();
+  const ip = (hdrs.get("cf-connecting-ip") || hdrs.get("x-forwarded-for") || "unknown").split(",")[0].trim();
+  if (await rateLimited(`signup:${ip}`, 5, 60 * 60 * 1000)) {
+    return { error: "Too many sign-up attempts from your network. Please try again later." };
+  }
   const regionError = validateRegion(city, state, zip);
   if (regionError) return { error: regionError };
 

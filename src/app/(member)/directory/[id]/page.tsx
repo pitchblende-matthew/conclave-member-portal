@@ -6,6 +6,7 @@ import { mediaUrl } from "@/lib/media";
 import { connectionState } from "@/lib/connections";
 import Avatar from "@/components/avatar";
 import ConnectControls from "@/components/connect-controls";
+import ReportButton from "@/components/report-button";
 import { Sprig } from "@/components/icons";
 import type { User } from "@/lib/types";
 
@@ -106,6 +107,12 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
               </a>
             ))}
           </div>
+        )}
+
+        {connState !== "self" && (
+          <p style={{ marginTop: "1.25rem", marginBottom: 0 }}>
+            <ReportButton targetType="member" targetId={member.id!} label="Report this member" />
+          </p>
         )}
       </div>
     </>

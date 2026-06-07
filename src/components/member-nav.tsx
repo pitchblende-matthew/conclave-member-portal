@@ -68,7 +68,7 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
         <div className={`nav-group${menu === "network" ? " open" : ""}`}>
           <button
             type="button"
-            className={`nav-link nav-group-btn${groupActive(["/directory", "/functions", "/companies", "/industries", "/connections", "/messages"]) ? " active" : ""}`}
+            className={`nav-link nav-group-btn${groupActive(["/directory", "/discover", "/functions", "/companies", "/industries", "/connections", "/messages"]) ? " active" : ""}`}
             aria-expanded={menu === "network"}
             aria-haspopup="true"
             onClick={() => toggleMenu("network")}
@@ -77,6 +77,7 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
           </button>
           <div className="nav-dropdown">
             <Link href="/directory" className="nav-drop-link" onClick={close}><Icon name="members" size={16} />Members</Link>
+            <Link href="/discover" className="nav-drop-link" onClick={close}><Icon name="connections" size={16} />Discover</Link>
             <Link href="/functions" className="nav-drop-link" onClick={close}><Icon name="categories" size={16} />Functions</Link>
             <Link href="/companies" className="nav-drop-link" onClick={close}><Icon name="companies" size={16} />Companies</Link>
             <Link href="/industries" className="nav-drop-link" onClick={close}><Icon name="categories" size={16} />Industries</Link>

@@ -9,6 +9,9 @@ import Avatar from "@/components/avatar";
 import ConfirmSubmit from "@/components/confirm-submit";
 import ReplyForm from "./reply-form";
 import ReportButton from "@/components/report-button";
+import ReactButton from "@/components/react-button";
+import BookmarkButton from "@/components/bookmark-button";
+import { reactionCounts, myFlags } from "@/lib/engagement";
 import { deletePost, deleteTopic } from "../actions";
 import type { Topic } from "@/lib/types";
 
@@ -52,6 +55,15 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
 
   const canDeleteTopic = user.is_admin === 1 || topic.created_by === user.id;
 
+  const postIds = posts.map((p) => p.id);
+  const [reactCounts, myReacts, savedTopics] = await Promise.all([
+    reactionCounts("post", postIds),
+    myFlags(user.id, "react", "post", postIds),
+    myFlags(user.id, "save", "topic", [topicId]),
+  ]);
+  const topicSaved = savedTopics.has(topicId);
+  const path = `/board/${topicId}`;
+
   return (
     <>
       <p className="meta"><Link href="/board">← Board</Link></p>
@@ -68,6 +80,7 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
       <div className="topline" style={{ marginTop: "0.5rem" }}>
         <h1 style={{ fontSize: "2.4rem" }}>{topic.title}</h1>
         <div className="btn-row" style={{ alignItems: "center" }}>
+          <BookmarkButton contentType="topic" contentId={topic.id} saved={topicSaved} path={path} />
           {topic.created_by !== user.id && <ReportButton targetType="topic" targetId={topic.id} />}
           {canDeleteTopic && (
             <form action={deleteTopic}>
@@ -96,6 +109,7 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
                 </Link>
                 {/* The opening post is removed via "Delete topic" to avoid orphaning it. */}
                 <div className="btn-row" style={{ alignItems: "center" }}>
+                  <ReactButton contentType="post" contentId={p.id} count={reactCounts.get(p.id) ?? 0} reacted={myReacts.has(p.id)} path={path} />
                   {i !== 0 && p.user_id !== user.id && <ReportButton targetType="post" targetId={p.id} />}
                   {canDeletePost && i !== 0 && (
                     <form action={deletePost}>

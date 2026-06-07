@@ -5,6 +5,9 @@ import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import LocalTime from "@/components/local-time";
 import { renderMarkdown } from "@/lib/markdown";
+import ReactButton from "@/components/react-button";
+import BookmarkButton from "@/components/bookmark-button";
+import { reactionCounts, myFlags } from "@/lib/engagement";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +26,13 @@ export default async function BriefingReader({ params }: { params: Promise<{ id:
   const author = b.author_id
     ? await getDb().prepare("SELECT name FROM users WHERE id = ?").bind(b.author_id).first<{ name: string }>()
     : null;
+
+  const [rc, myReact, mySave] = await Promise.all([
+    reactionCounts("briefing", [b.id]),
+    myFlags(user.id, "react", "briefing", [b.id]),
+    myFlags(user.id, "save", "briefing", [b.id]),
+  ]);
+  const path = `/briefings/${b.id}`;
 
   return (
     <article style={{ maxWidth: 720, margin: "0 auto" }}>
@@ -44,6 +54,11 @@ export default async function BriefingReader({ params }: { params: Promise<{ id:
       {b.body.trim()
         ? <div className="briefing-prose prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(b.body) }} />
         : <p className="meta">No content yet.</p>}
+
+      <div className="btn-row" style={{ marginTop: "1.75rem", alignItems: "center" }}>
+        <ReactButton contentType="briefing" contentId={b.id} count={rc.get(b.id) ?? 0} reacted={myReact.has(b.id)} path={path} />
+        <BookmarkButton contentType="briefing" contentId={b.id} saved={mySave.has(b.id)} path={path} />
+      </div>
     </article>
   );
 }

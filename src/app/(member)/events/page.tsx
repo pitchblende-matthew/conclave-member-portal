@@ -7,6 +7,8 @@ import { tagsInUse, tagsForItems, tagFilterClause } from "@/lib/content-tags";
 import AreaFilter from "@/components/area-filter";
 import EmptyState from "@/components/empty-state";
 import LocalTime from "@/components/local-time";
+import BookmarkButton from "@/components/bookmark-button";
+import { myFlags } from "@/lib/engagement";
 import type { EventRow } from "@/lib/types";
 import { toggleRsvp } from "./actions";
 
@@ -39,6 +41,7 @@ export default async function Events({
     .bind(...binds)
     .all<EventRow>();
   const tagMap = await tagsForItems("event", events.map((e) => e.id));
+  const savedEvents = await myFlags(user.id, "save", "event", events.map((e) => e.id));
 
   // Industry/function chip links preserve the active market + other tag.
   const tagHref = (over: { industry?: string | null; function?: string | null }) => {
@@ -131,6 +134,7 @@ export default async function Events({
                 {isGoing && ev.is_virtual === 1 && ev.meeting_url ? (
                   <a className="btn inline-btn" href={ev.meeting_url} target="_blank" rel="noreferrer">Join online ↗</a>
                 ) : null}
+                <BookmarkButton contentType="event" contentId={ev.id} saved={savedEvents.has(ev.id)} path="/events" />
               </div>
             </div>
           );

@@ -84,6 +84,26 @@ export async function declineMember(formData: FormData): Promise<void> {
   revalidatePath("/admin");
 }
 
+// Mark an invitation request from the marketing site as handled (kept on record).
+export async function markInviteHandled(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = Number(formData.get("requestId"));
+  if (!id) return;
+  await getDb().prepare("UPDATE invite_requests SET status = 'handled' WHERE id = ?").bind(id).run();
+  revalidatePath("/admin/requests");
+  revalidatePath("/admin");
+}
+
+// Delete an invitation request outright.
+export async function deleteInviteRequest(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = Number(formData.get("requestId"));
+  if (!id) return;
+  await getDb().prepare("DELETE FROM invite_requests WHERE id = ?").bind(id).run();
+  revalidatePath("/admin/requests");
+  revalidatePath("/admin");
+}
+
 // Promote or demote a member. Admins can't demote themselves (avoids lockout).
 export async function setAdmin(formData: FormData): Promise<void> {
   const me = await requireAdmin();

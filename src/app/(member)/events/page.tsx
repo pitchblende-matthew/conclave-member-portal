@@ -73,9 +73,9 @@ export default async function Events({
                 {ev.is_virtual === 1 ? <span className="market-tag" style={{ marginLeft: "0.6rem" }}>Virtual</span> : null}
                 {ev.dma_name ? <span className="market-tag" style={{ marginLeft: "0.6rem" }}>{ev.dma_name}</span> : null}
               </div>
-              <h3 style={{ fontSize: "1.7rem" }}>{ev.title}</h3>
-              <p>{ev.description}</p>
-              <p className="meta">
+              <h3 style={{ fontSize: "1.7rem", margin: "0.4rem 0 0.5rem" }}>{ev.title}</h3>
+              <p style={{ margin: "0 0 0.65rem" }}>{ev.description}</p>
+              <p className="card-detail">
                 {attending} attending{ev.capacity ? ` · ${ev.capacity} seats` : ""}
               </p>
               <div className="btn-row">

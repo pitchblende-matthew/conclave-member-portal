@@ -122,7 +122,7 @@ export default async function Board({
                   {t.category_name ? <span className="chip chip-static">{t.category_name}</span> : null}
                 </span>
               </div>
-              <p className="meta" style={{ margin: "0.4rem 0 0" }}>
+              <p className="card-detail">
                 {t.author || "Member"} · {replies} {replies === 1 ? "reply" : "replies"} · last activity <LocalTime ms={t.last_activity_at} />
               </p>
             </Link>

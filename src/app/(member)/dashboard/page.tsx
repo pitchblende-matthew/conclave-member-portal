@@ -120,7 +120,7 @@ export default async function Dashboard() {
               {myEvents.map((e) => (
                 <li key={e.id}>
                   <span className="dash-date"><LocalTime ms={e.starts_at} mode="dayshort" /></span>
-                  <span>
+                  <span className="dash-title">
                     {e.title}
                     {e.is_virtual ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>Virtual</span> : e.dma_name ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>{e.dma_name}</span> : null}
                   </span>
@@ -142,10 +142,12 @@ export default async function Dashboard() {
             <ul className="dash-list">
               {topics.map((t) => (
                 <li key={t.id}>
-                  <Link href={`/board/${t.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-                    {t.title}
-                    {t.dma_name ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>{t.dma_name}</span> : null}
-                    <span className="meta" style={{ display: "block", fontSize: "0.78rem" }}>
+                  <Link href={`/board/${t.id}`} className="dash-row">
+                    <span className="dash-title">
+                      {t.title}
+                      {t.dma_name ? <span className="market-tag" style={{ marginLeft: "0.5rem" }}>{t.dma_name}</span> : null}
+                    </span>
+                    <span className="dash-sub">
                       {t.category_name ? `${t.category_name} · ` : ""}{Math.max(0, t.replies)} repl{t.replies === 1 ? "y" : "ies"} · <LocalTime ms={t.last_activity_at} />
                     </span>
                   </Link>

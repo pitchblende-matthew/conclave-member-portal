@@ -8,6 +8,7 @@ import { storeImage, deleteImage } from "@/lib/media";
 import { notify } from "@/lib/notifications";
 import { emailSubmissionDecision } from "@/lib/email";
 import { fetchOgImage } from "@/lib/opengraph";
+import { readTagIds, setContentTags } from "@/lib/content-tags";
 import type { Briefing } from "@/lib/types";
 
 export type BriefingState = { ok?: boolean; error?: string };
@@ -112,6 +113,8 @@ export async function createBriefing(_prev: BriefingState, formData: FormData): 
     .run();
 
   const id = Number(res.meta.last_row_id);
+  const tags = readTagIds(formData);
+  await setContentTags("briefing", id, tags.industry, tags.function);
   if (f.kind === "link") await applyOgCover(id, f.url);
 
   revalidatePath("/admin/briefings");
@@ -133,6 +136,9 @@ export async function updateBriefing(_prev: BriefingState, formData: FormData): 
     )
     .bind(f.kind, f.title, f.summary, f.body, f.url, f.categoryId, Date.now(), id)
     .run();
+
+  const tags = readTagIds(formData);
+  await setContentTags("briefing", id, tags.industry, tags.function);
 
   revalidatePath("/admin/briefings");
   revalidatePath(`/admin/briefings/${id}/edit`);

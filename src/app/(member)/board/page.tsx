@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import LocalTime from "@/components/local-time";
 import EmptyState from "@/components/empty-state";
 import Pager from "@/components/pager";
+import { tagsInUse, tagsForItems, tagFilterClause } from "@/lib/content-tags";
 
 export const dynamic = "force-dynamic";
 const PAGE_SIZE = 25;
@@ -32,25 +33,30 @@ type TopicRow = {
 export default async function Board({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; scope?: string; page?: string }>;
+  searchParams: Promise<{ category?: string; scope?: string; industry?: string; function?: string; page?: string }>;
 }) {
   const user = await requireUser();
-  const { category, scope, page: pageParam } = await searchParams;
+  const { category, scope, industry, function: fnParam, page: pageParam } = await searchParams;
   const db = getDb();
   const page = Math.max(1, Number(pageParam) || 1);
 
   const { results: categories } = await db
     .prepare("SELECT id, name, slug FROM categories ORDER BY sort_order, name COLLATE NOCASE")
     .all<{ id: number; name: string; slug: string }>();
+  const { industries: tagIndustries, functions: tagFunctions } = await tagsInUse("topic");
 
   const active = categories.find((c) => c.slug === category) ?? null;
   const scopeMine = scope === "mine" && !!user.dma_slug;
+  const activeIndustry = industry ? tagIndustries.find((i) => i.slug === industry) ?? null : null;
+  const activeFunction = fnParam ? tagFunctions.find((f) => f.slug === fnParam) ?? null : null;
 
-  // Build the filter from whichever of category / area scope is active.
+  // Build the filter from whichever of category / area scope / tags are active.
   const conds: string[] = [];
   const binds: (string | number)[] = [];
   if (active) { conds.push("t.category_id = ?"); binds.push(active.id); }
   if (scopeMine) { conds.push("t.dma_slug = ?"); binds.push(user.dma_slug); }
+  if (activeIndustry) { const c = tagFilterClause("topic", "t", "industry", activeIndustry.id); conds.push(c.sql); binds.push(...c.binds); }
+  if (activeFunction) { const c = tagFilterClause("topic", "t", "function", activeFunction.id); conds.push(c.sql); binds.push(...c.binds); }
   const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
 
   const { results: rows } = await db
@@ -69,17 +75,24 @@ export default async function Board({
     .all<TopicRow>();
   const hasNext = rows.length > PAGE_SIZE;
   const results = rows.slice(0, PAGE_SIZE);
+  const tagMap = await tagsForItems("topic", results.map((r) => r.id));
   const pagerParams: Record<string, string> = {};
   if (active) pagerParams.category = active.slug;
   if (scopeMine) pagerParams.scope = "mine";
+  if (activeIndustry) pagerParams.industry = activeIndustry.slug;
+  if (activeFunction) pagerParams.function = activeFunction.slug;
 
-  // Links that preserve the other active filter.
-  const href = (next: { category?: string | null; scope?: string | null }) => {
+  // Links that preserve the other active filters.
+  const href = (next: { category?: string | null; scope?: string | null; industry?: string | null; function?: string | null }) => {
     const sp = new URLSearchParams();
     const cat = next.category === undefined ? active?.slug : next.category;
     const sc = next.scope === undefined ? (scopeMine ? "mine" : null) : next.scope;
+    const ind = next.industry === undefined ? activeIndustry?.slug : next.industry;
+    const fn = next.function === undefined ? activeFunction?.slug : next.function;
     if (cat) sp.set("category", cat);
     if (sc) sp.set("scope", sc);
+    if (ind) sp.set("industry", ind);
+    if (fn) sp.set("function", fn);
     const s = sp.toString();
     return s ? `/board?${s}` : "/board";
   };
@@ -110,6 +123,21 @@ export default async function Board({
         </nav>
       ) : null}
 
+      {tagIndustries.length > 0 && (
+        <nav className="chip-row" style={{ marginTop: "0.6rem" }} aria-label="Filter by industry">
+          {tagIndustries.map((i) => (
+            <Link key={i.id} href={href({ industry: activeIndustry?.slug === i.slug ? null : i.slug })} className={`chip${activeIndustry?.slug === i.slug ? " chip-active" : ""}`}>{i.name}</Link>
+          ))}
+        </nav>
+      )}
+      {tagFunctions.length > 0 && (
+        <nav className="chip-row" style={{ marginTop: "0.6rem" }} aria-label="Filter by function">
+          {tagFunctions.map((f) => (
+            <Link key={f.id} href={href({ function: activeFunction?.slug === f.slug ? null : f.slug })} className={`chip${activeFunction?.slug === f.slug ? " chip-active" : ""}`}>{f.name}</Link>
+          ))}
+        </nav>
+      )}
+
       <div style={{ marginTop: "1.25rem" }}>
         {results.map((t) => {
           const replies = Math.max(0, t.reply_count - 1); // first post is the opener
@@ -125,6 +153,11 @@ export default async function Board({
               <p className="card-detail">
                 {t.author || "Member"} · {replies} {replies === 1 ? "reply" : "replies"} · last activity <LocalTime ms={t.last_activity_at} />
               </p>
+              {tagMap.get(t.id)?.length ? (
+                <div className="content-tags">
+                  {tagMap.get(t.id)!.map((name, k) => <span key={k} className="market-tag">{name}</span>)}
+                </div>
+              ) : null}
             </Link>
           );
         })}

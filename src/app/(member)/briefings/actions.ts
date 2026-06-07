@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
 import { emailAdminsNewSubmission } from "@/lib/email";
 import { fetchOgImage } from "@/lib/opengraph";
+import { readTagIds, setContentTags } from "@/lib/content-tags";
 
 export type SubmitBriefingState = { ok?: boolean; error?: string };
 
@@ -32,10 +33,14 @@ export async function submitBriefing(_prev: SubmitBriefingState, formData: FormD
     .bind(kind, title, field("summary"), field("body"), url, categoryId, user.id, user.id, now, now)
     .run();
 
+  const briefingId = Number(res.meta.last_row_id);
+  const tags = readTagIds(formData);
+  await setContentTags("briefing", briefingId, tags.industry, tags.function);
+
   // Pull the link's OpenGraph image so admins see a cover during review.
   if (kind === "link") {
     const og = await fetchOgImage(url);
-    if (og) await getDb().prepare("UPDATE briefings SET cover_url = ? WHERE id = ?").bind(og, Number(res.meta.last_row_id)).run();
+    if (og) await getDb().prepare("UPDATE briefings SET cover_url = ? WHERE id = ?").bind(og, briefingId).run();
   }
 
   await notifyAdmins("briefing_submitted", { actorId: user.id });

@@ -3,6 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
+import { listIndustries } from "@/lib/industries";
+import { listFunctions } from "@/lib/member-taxonomy";
+import { getContentTagIds } from "@/lib/content-tags";
 import LocalTime from "@/components/local-time";
 import BriefingForm from "../../briefing-form";
 import BriefingCover from "../../briefing-cover";
@@ -23,6 +26,11 @@ export default async function EditBriefing({ params }: { params: Promise<{ id: s
   const { results: categories } = await db
     .prepare("SELECT id, name FROM briefing_categories ORDER BY sort_order, name COLLATE NOCASE")
     .all<{ id: number; name: string }>();
+  const [industries, functions, tagIds] = await Promise.all([
+    listIndustries(),
+    listFunctions(),
+    getContentTagIds("briefing", briefingId),
+  ]);
 
   return (
     <>
@@ -53,7 +61,9 @@ export default async function EditBriefing({ params }: { params: Promise<{ id: s
       <div className="card" style={{ maxWidth: 680, marginTop: "1.5rem" }}>
         <BriefingForm
           categories={categories}
-          initial={{ id: b.id, kind: b.kind, title: b.title, summary: b.summary, body: b.body, url: b.url, categoryId: b.category_id }}
+          industries={industries}
+          functions={functions}
+          initial={{ id: b.id, kind: b.kind, title: b.title, summary: b.summary, body: b.body, url: b.url, categoryId: b.category_id, industryIds: tagIds.industry, functionIds: tagIds.function }}
         />
       </div>
     </>

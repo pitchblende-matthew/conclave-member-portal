@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { listIndustries } from "@/lib/industries";
+import { listFunctions } from "@/lib/member-taxonomy";
 import SubmitEventForm from "./submit-event-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function SubmitEvent() {
   await requireUser();
+  const [industries, functions] = await Promise.all([listIndustries(), listFunctions()]);
   return (
     <>
       <p className="meta"><Link href="/events">← Events</Link></p>
@@ -15,7 +18,7 @@ export default async function SubmitEvent() {
         Share something the network should know about. An admin reviews submissions before they go on the calendar.
       </p>
       <div className="card" style={{ maxWidth: 640, marginTop: "1.5rem" }}>
-        <SubmitEventForm />
+        <SubmitEventForm industries={industries} functions={functions} />
       </div>
     </>
   );

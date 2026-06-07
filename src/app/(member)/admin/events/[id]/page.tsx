@@ -3,6 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
+import { listIndustries } from "@/lib/industries";
+import { listFunctions } from "@/lib/member-taxonomy";
+import { getContentTagIds } from "@/lib/content-tags";
 import Avatar from "@/components/avatar";
 import EventForm from "../event-form";
 import type { EventRow, User } from "@/lib/types";
@@ -29,6 +32,12 @@ export default async function EditEvent({ params }: { params: Promise<{ id: stri
     .bind(eventId)
     .all<Partial<User>>();
 
+  const [industries, functions, tagIds] = await Promise.all([
+    listIndustries(),
+    listFunctions(),
+    getContentTagIds("event", eventId),
+  ]);
+
   return (
     <>
       <p className="meta"><Link href="/admin/events">← Events</Link></p>
@@ -36,6 +45,8 @@ export default async function EditEvent({ params }: { params: Promise<{ id: stri
       <h1 style={{ fontSize: "2.6rem" }}>{ev.title}</h1>
       <div className="card" style={{ maxWidth: 640, marginTop: "1.5rem" }}>
         <EventForm
+          industries={industries}
+          functions={functions}
           initial={{
             id: ev.id,
             title: ev.title,
@@ -48,6 +59,8 @@ export default async function EditEvent({ params }: { params: Promise<{ id: stri
             meetingUrl: ev.meeting_url,
             startsAtMs: ev.starts_at,
             capacity: ev.capacity,
+            industryIds: tagIds.industry,
+            functionIds: tagIds.function,
           }}
         />
       </div>

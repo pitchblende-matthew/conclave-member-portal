@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { regionFromForm } from "@/lib/region";
 import { notifyAdmins } from "@/lib/notifications";
 import { emailAdminsNewSubmission } from "@/lib/email";
+import { readTagIds, setContentTags } from "@/lib/content-tags";
 
 export type SubmitState = { ok?: boolean; error?: string };
 
@@ -24,7 +25,7 @@ export async function submitEvent(_prev: SubmitState, formData: FormData): Promi
     ? { city: "", state: "", zip: "", dma_slug: "", dma_name: "" }
     : await regionFromForm(field("city"), field("state"), field("zip"));
 
-  await getDb()
+  const res = await getDb()
     .prepare(
       `INSERT INTO events (title, description, location, city, state, zip, dma_slug, dma_name,
          is_virtual, meeting_url, status, submitted_by, starts_at, capacity, created_at)
@@ -37,6 +38,9 @@ export async function submitEvent(_prev: SubmitState, formData: FormData): Promi
       user.id, startsAt, Number(formData.get("capacity") ?? 0) || 0, Date.now()
     )
     .run();
+
+  const tags = readTagIds(formData);
+  await setContentTags("event", Number(res.meta.last_row_id), tags.industry, tags.function);
 
   await notifyAdmins("event_submitted", { actorId: user.id });
   await emailAdminsNewSubmission("event", user.name, title);

@@ -3,6 +3,7 @@ import Eyebrow from "@/components/eyebrow";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { marketsIn, resolveArea } from "@/lib/region";
+import { tagsInUse, tagsForItems, tagFilterClause } from "@/lib/content-tags";
 import AreaFilter from "@/components/area-filter";
 import EmptyState from "@/components/empty-state";
 import LocalTime from "@/components/local-time";
@@ -14,24 +15,42 @@ export const dynamic = "force-dynamic";
 export default async function Events({
   searchParams,
 }: {
-  searchParams: Promise<{ area?: string }>;
+  searchParams: Promise<{ area?: string; industry?: string; function?: string }>;
 }) {
   const user = await requireUser();
   const db = getDb();
-  const { area } = await searchParams;
+  const { area, industry, function: fnParam } = await searchParams;
   const active = resolveArea(area, user.dma_slug);
   const markets = await marketsIn("events");
+  const { industries: tagIndustries, functions: tagFunctions } = await tagsInUse("event");
+  const activeIndustry = industry ? tagIndustries.find((i) => i.slug === industry) ?? null : null;
+  const activeFunction = fnParam ? tagFunctions.find((f) => f.slug === fnParam) ?? null : null;
 
   // Only approved events are shown. When filtering to a market, still include
   // network-wide and virtual events.
+  const conds: string[] = ["status = 'approved'"];
+  const binds: (string | number)[] = [];
+  if (active) { conds.push("(dma_slug = ? OR dma_slug = '' OR is_virtual = 1)"); binds.push(active); }
+  if (activeIndustry) { const c = tagFilterClause("event", "events", "industry", activeIndustry.id); conds.push(c.sql); binds.push(...c.binds); }
+  if (activeFunction) { const c = tagFilterClause("event", "events", "function", activeFunction.id); conds.push(c.sql); binds.push(...c.binds); }
+
   const { results: events } = await db
-    .prepare(
-      `SELECT * FROM events
-       WHERE status = 'approved'${active ? " AND (dma_slug = ? OR dma_slug = '' OR is_virtual = 1)" : ""}
-       ORDER BY starts_at ASC`
-    )
-    .bind(...(active ? [active] : []))
+    .prepare(`SELECT * FROM events WHERE ${conds.join(" AND ")} ORDER BY starts_at ASC`)
+    .bind(...binds)
     .all<EventRow>();
+  const tagMap = await tagsForItems("event", events.map((e) => e.id));
+
+  // Industry/function chip links preserve the active market + other tag.
+  const tagHref = (over: { industry?: string | null; function?: string | null }) => {
+    const sp = new URLSearchParams();
+    if (area) sp.set("area", area);
+    const ind = over.industry === undefined ? activeIndustry?.slug : over.industry;
+    const fn = over.function === undefined ? activeFunction?.slug : over.function;
+    if (ind) sp.set("industry", ind);
+    if (fn) sp.set("function", fn);
+    const s = sp.toString();
+    return s ? `/events?${s}` : "/events";
+  };
 
   const { results: myRsvps } = await db
     .prepare("SELECT event_id FROM rsvps WHERE user_id = ?")
@@ -60,7 +79,26 @@ export default async function Events({
         myDma={user.dma_slug ? { slug: user.dma_slug, name: user.dma_name } : null}
         markets={markets}
         label="events"
+        hidden={{
+          ...(activeIndustry ? { industry: activeIndustry.slug } : {}),
+          ...(activeFunction ? { function: activeFunction.slug } : {}),
+        }}
       />
+
+      {tagIndustries.length > 0 && (
+        <nav className="chip-row" style={{ marginTop: "0.6rem" }} aria-label="Filter by industry">
+          {tagIndustries.map((i) => (
+            <Link key={i.id} href={tagHref({ industry: activeIndustry?.slug === i.slug ? null : i.slug })} className={`chip${activeIndustry?.slug === i.slug ? " chip-active" : ""}`}>{i.name}</Link>
+          ))}
+        </nav>
+      )}
+      {tagFunctions.length > 0 && (
+        <nav className="chip-row" style={{ marginTop: "0.6rem" }} aria-label="Filter by function">
+          {tagFunctions.map((f) => (
+            <Link key={f.id} href={tagHref({ function: activeFunction?.slug === f.slug ? null : f.slug })} className={`chip${activeFunction?.slug === f.slug ? " chip-active" : ""}`}>{f.name}</Link>
+          ))}
+        </nav>
+      )}
 
       <div style={{ marginTop: "1.5rem" }}>
         {events.map((ev) => {
@@ -78,6 +116,11 @@ export default async function Events({
               <p className="card-detail">
                 {attending} attending{ev.capacity ? ` · ${ev.capacity} seats` : ""}
               </p>
+              {tagMap.get(ev.id)?.length ? (
+                <div className="content-tags">
+                  {tagMap.get(ev.id)!.map((name, k) => <span key={k} className="market-tag">{name}</span>)}
+                </div>
+              ) : null}
               <div className="btn-row">
                 <form action={toggleRsvp}>
                   <input type="hidden" name="eventId" value={ev.id} />

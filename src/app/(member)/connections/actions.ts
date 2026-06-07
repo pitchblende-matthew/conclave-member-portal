@@ -21,6 +21,7 @@ async function pairRow(a: number, b: number) {
 function refresh(otherId: number) {
   revalidatePath("/connections");
   revalidatePath("/dashboard");
+  revalidatePath("/discover");
   revalidatePath("/directory");
   revalidatePath(`/directory/${otherId}`);
 }

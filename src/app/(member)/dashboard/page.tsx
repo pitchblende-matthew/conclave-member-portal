@@ -3,9 +3,11 @@ import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
 import { connectionCounts } from "@/lib/connections";
+import { suggestedMembers } from "@/lib/suggestions";
 import Icon, { Sprig } from "@/components/icons";
 import Eyebrow from "@/components/eyebrow";
 import SectionDivider from "@/components/section-divider";
+import SuggestedMemberCard from "@/components/suggested-member-card";
 import LocalTime from "@/components/local-time";
 import type { Briefing } from "@/lib/types";
 
@@ -62,6 +64,7 @@ export default async function Dashboard() {
     .all<{ id: number; title: string; last_activity_at: number; dma_name: string; category_name: string | null; replies: number }>();
 
   const marketLabel = hasDma ? user.dma_name : "the network";
+  const suggestions = await suggestedMembers(user, 4);
 
   return (
     <>
@@ -105,6 +108,21 @@ export default async function Dashboard() {
           </p>
         </Link>
       </div>
+
+      {suggestions.length > 0 && (
+        <>
+          <SectionDivider />
+          <section>
+            <div className="topline">
+              <h2 className="sec-head" style={{ fontSize: "1.5rem" }}><Icon name="connections" size={18} />Members you should meet</h2>
+              <Link href="/discover" className="meta">See more →</Link>
+            </div>
+            <div className="suggest-grid">
+              {suggestions.map((m) => <SuggestedMemberCard key={m.id} m={m} />)}
+            </div>
+          </section>
+        </>
+      )}
 
       <SectionDivider />
 

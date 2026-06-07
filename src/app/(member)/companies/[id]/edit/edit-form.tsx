@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/avatar";
 import RegionFields from "@/components/region-fields";
+import type { Industry } from "@/lib/industries";
 import { updateCompany, uploadCompanyLogo, removeCompanyLogo, uploadCompanyCover, removeCompanyCover } from "../../actions";
 
 type Initial = {
@@ -11,7 +12,7 @@ type Initial = {
   name: string;
   website: string;
   linkedin: string;
-  industry: string;
+  industry_id: number;
   size: string;
   city: string;
   state: string;
@@ -21,7 +22,7 @@ type Initial = {
   coverUrl: string | null;
 };
 
-export default function EditCompanyForm({ initial }: { initial: Initial }) {
+export default function EditCompanyForm({ initial, industries }: { initial: Initial; industries: Industry[] }) {
   const router = useRouter();
   const [logoState, logoAction, logoPending] = useActionState(uploadCompanyLogo, {});
   const [rmState, rmAction, rmPending] = useActionState(removeCompanyLogo, {});
@@ -113,8 +114,13 @@ export default function EditCompanyForm({ initial }: { initial: Initial }) {
 
         <div className="field-grid">
           <div>
-            <label htmlFor="industry">Industry</label>
-            <input id="industry" name="industry" defaultValue={initial.industry} />
+            <label htmlFor="industry_id">Industry</label>
+            <select id="industry_id" name="industry_id" defaultValue={String(initial.industry_id || "")}>
+              <option value="">Select…</option>
+              {industries.map((i) => (
+                <option key={i.id} value={i.id}>{i.name}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label htmlFor="size">Size</label>

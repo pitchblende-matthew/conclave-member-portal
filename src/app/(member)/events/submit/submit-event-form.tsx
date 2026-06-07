@@ -56,7 +56,7 @@ export default function SubmitEventForm() {
       <label htmlFor="description">Description</label>
       <textarea id="description" name="description" />
 
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Submitting…" : "Submit for review"}
       </button>

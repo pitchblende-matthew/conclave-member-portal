@@ -37,7 +37,7 @@ export default function CreateCompanyForm() {
       <label htmlFor="description">Description</label>
       <textarea id="description" name="description" />
 
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Creating…" : "Create company"}
       </button>

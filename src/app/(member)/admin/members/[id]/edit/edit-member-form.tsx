@@ -76,7 +76,7 @@ export default function EditMemberForm({ initial, companies }: { initial: Initia
       <textarea id="bio" name="bio" defaultValue={initial.bio} />
 
       {state?.ok && <div className="note">Saved.</div>}
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Saving…" : "Save member"}
       </button>

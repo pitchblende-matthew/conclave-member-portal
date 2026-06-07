@@ -71,7 +71,7 @@ export default function EditCompanyForm({ initial }: { initial: Initial }) {
               </button>
             )}
           </div>
-          {covState?.error && <div className="error">{covState.error}</div>}
+          {covState?.error && <div className="error" role="alert">{covState.error}</div>}
         </form>
       </div>
 
@@ -101,7 +101,7 @@ export default function EditCompanyForm({ initial }: { initial: Initial }) {
                 </button>
               )}
             </div>
-            {logoState?.error && <div className="error">{logoState.error}</div>}
+            {logoState?.error && <div className="error" role="alert">{logoState.error}</div>}
           </form>
         </div>
       </div>
@@ -135,7 +135,7 @@ export default function EditCompanyForm({ initial }: { initial: Initial }) {
         <textarea id="description" name="description" defaultValue={initial.description} />
 
         {state?.ok && <div className="note">Saved.</div>}
-        {state?.error && <div className="error">{state.error}</div>}
+        {state?.error && <div className="error" role="alert">{state.error}</div>}
         <button className="btn" type="submit" disabled={pending}>
           {pending ? "Saving…" : "Save changes"}
         </button>

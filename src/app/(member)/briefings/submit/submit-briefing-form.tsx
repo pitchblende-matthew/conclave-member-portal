@@ -56,7 +56,7 @@ export default function SubmitBriefingForm({ categories }: { categories: Categor
         </>
       )}
 
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Submitting…" : "Submit for review"}
       </button>

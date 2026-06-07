@@ -33,7 +33,7 @@ function ResetForm() {
           <input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
           <label htmlFor="confirm">Confirm password</label>
           <input id="confirm" name="confirm" type="password" autoComplete="new-password" required minLength={8} />
-          {state?.error && <div className="error">{state.error}</div>}
+          {state?.error && <div className="error" role="alert">{state.error}</div>}
           <button className="btn" type="submit" disabled={pending}>
             {pending ? "Updating…" : "Update password"}
           </button>

@@ -64,7 +64,7 @@ function SignupForm() {
             <input id="invite" name="invite" type="text" placeholder="Skips the review if you have one" />
           </>
         )}
-        {state?.error && <div className="error">{state.error}</div>}
+        {state?.error && <div className="error" role="alert">{state.error}</div>}
         <button className="btn" type="submit" disabled={pending}>
           {pending ? "Submitting…" : "Request access"}
         </button>

@@ -32,7 +32,7 @@ export default function NewTopicForm({
           <span>Scope this topic to my area — <strong>{myDmaName}</strong></span>
         </label>
       ) : null}
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn" type="submit" disabled={pending}>
         {pending ? "Posting…" : "Start topic"}
       </button>

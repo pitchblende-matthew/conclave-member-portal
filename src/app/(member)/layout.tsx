@@ -99,8 +99,9 @@ export default async function MemberLayout({ children }: { children: React.React
 
   return (
     <div className="shell">
+      <a href="#main" className="skip-link">Skip to content</a>
       <header className="topbar">
-        <Link href="/dashboard" className="wordmark-link">
+        <Link href="/dashboard" className="wordmark-link" aria-label="Conclave — dashboard">
           <Wordmark size={1.5} />
         </Link>
         <MemberNav
@@ -110,7 +111,7 @@ export default async function MemberLayout({ children }: { children: React.React
         />
         <NotificationsBell items={notifs.map(toItem)} unread={unread} />
       </header>
-      <main className="page">{children}</main>
+      <main id="main" className="page" tabIndex={-1}>{children}</main>
       <footer className="footer">Private. By invitation.</footer>
     </div>
   );

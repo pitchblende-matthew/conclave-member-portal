@@ -59,17 +59,17 @@ export default function MarkdownEditor({
 
   return (
     <div className="md-editor">
-      <div className="md-toolbar">
-        <button type="button" className="md-btn" title="Bold" onClick={() => wrap("**")}><b>B</b></button>
-        <button type="button" className="md-btn" title="Italic" onClick={() => wrap("_")}><i>I</i></button>
-        <button type="button" className="md-btn" title="Heading" onClick={() => prefixLines("### ")}>H</button>
-        <button type="button" className="md-btn" title="Bulleted list" onClick={() => prefixLines("- ")}>&bull;</button>
-        <button type="button" className="md-btn" title="Numbered list" onClick={() => prefixLines("1. ")}>1.</button>
-        <button type="button" className="md-btn" title="Quote" onClick={() => prefixLines("> ")}>&ldquo;</button>
-        <button type="button" className="md-btn" title="Link" onClick={() => wrap("[", "](https://)", "label")}>Link</button>
+      <div className="md-toolbar" role="toolbar" aria-label="Text formatting">
+        <button type="button" className="md-btn" title="Bold" aria-label="Bold" onClick={() => wrap("**")}><b aria-hidden>B</b></button>
+        <button type="button" className="md-btn" title="Italic" aria-label="Italic" onClick={() => wrap("_")}><i aria-hidden>I</i></button>
+        <button type="button" className="md-btn" title="Heading" aria-label="Heading" onClick={() => prefixLines("### ")}>H</button>
+        <button type="button" className="md-btn" title="Bulleted list" aria-label="Bulleted list" onClick={() => prefixLines("- ")}><span aria-hidden>&bull;</span></button>
+        <button type="button" className="md-btn" title="Numbered list" aria-label="Numbered list" onClick={() => prefixLines("1. ")}>1.</button>
+        <button type="button" className="md-btn" title="Quote" aria-label="Quote" onClick={() => prefixLines("> ")}><span aria-hidden>&ldquo;</span></button>
+        <button type="button" className="md-btn" title="Link" aria-label="Insert link" onClick={() => wrap("[", "](https://)", "label")}>Link</button>
         <span className="md-spacer" />
-        <button type="button" className={`md-tab${tab === "write" ? " active" : ""}`} onClick={() => setTab("write")}>Write</button>
-        <button type="button" className={`md-tab${tab === "preview" ? " active" : ""}`} onClick={() => setTab("preview")}>Preview</button>
+        <button type="button" className={`md-tab${tab === "write" ? " active" : ""}`} aria-pressed={tab === "write"} onClick={() => setTab("write")}>Write</button>
+        <button type="button" className={`md-tab${tab === "preview" ? " active" : ""}`} aria-pressed={tab === "preview"} onClick={() => setTab("preview")}>Preview</button>
       </div>
 
       <textarea
@@ -78,6 +78,7 @@ export default function MarkdownEditor({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
+        aria-label={placeholder || "Markdown text"}
         style={{ minHeight, display: tab === "write" ? "block" : "none" }}
       />
       {tab === "preview" && (

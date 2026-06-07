@@ -24,7 +24,7 @@ export default function ReplyForm({ topicId }: { topicId: number }) {
       <input type="hidden" name="topicId" value={topicId} />
       <label>Add a reply</label>
       <MarkdownEditor key={editorKey} name="body" minHeight={120} placeholder="Write a reply…" />
-      {state?.error && <div className="error">{state.error}</div>}
+      {state?.error && <div className="error" role="alert">{state.error}</div>}
       <button className="btn inline-btn" type="submit" disabled={pending} style={{ marginTop: "0.75rem" }}>
         {pending ? "Posting…" : "Post reply"}
       </button>

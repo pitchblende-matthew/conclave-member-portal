@@ -92,7 +92,7 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
         <div className={`nav-group${menu === "account" ? " open" : ""}`}>
           <button
             type="button"
-            className={`nav-link nav-group-btn${groupActive(["/profile", "/admin"]) ? " active" : ""}`}
+            className={`nav-link nav-group-btn${groupActive(["/profile", "/saved", "/admin"]) ? " active" : ""}`}
             aria-expanded={menu === "account"}
             aria-haspopup="true"
             onClick={() => toggleMenu("account")}
@@ -101,6 +101,7 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
           </button>
           <div className="nav-dropdown">
             <Link href="/profile" className="nav-drop-link" onClick={close}><Icon name="profile" size={16} />Profile</Link>
+            <Link href="/saved" className="nav-drop-link" onClick={close}><Icon name="pin" size={16} />Saved</Link>
             {isAdmin && <Link href="/admin" className="nav-drop-link" onClick={close}><Icon name="admin" size={16} />Admin</Link>}
             <a href={logoutHref} className="nav-drop-link"><Icon name="signout" size={16} />Sign out</a>
           </div>

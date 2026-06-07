@@ -15,7 +15,7 @@ export default async function AdminHome() {
   const user = await requireUser();
   if (user.is_admin !== 1) redirect("/dashboard");
 
-  const [requests, members, companies, events, pendingEvents, categories, briefingCategories, briefings, pendingBriefings, invites, openReports] = await Promise.all([
+  const [requests, members, companies, events, pendingEvents, categories, briefingCategories, briefings, pendingBriefings, invites, openReports, inviteRequests] = await Promise.all([
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'approved'"),
     count("SELECT COUNT(*) AS n FROM companies"),
@@ -27,10 +27,12 @@ export default async function AdminHome() {
     count("SELECT COUNT(*) AS n FROM briefings WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM invites WHERE used_by IS NULL"),
     count("SELECT COUNT(*) AS n FROM reports WHERE status = 'open'"),
+    count("SELECT COUNT(*) AS n FROM invite_requests WHERE status = 'new'"),
   ]);
 
   const sections: { href: string; title: string; value: number; hint: string; icon: IconName }[] = [
     { href: "/admin/requests", title: "Requests", value: requests, hint: "Approve or decline access requests", icon: "requests" },
+    { href: "/admin/invite-requests", title: "Invite requests", value: inviteRequests, hint: inviteRequests > 0 ? `${inviteRequests} new from the site` : "Leads from the marketing form", icon: "invites" },
     { href: "/admin/reports", title: "Reports", value: openReports, hint: openReports > 0 ? `${openReports} open to review` : "Member content reports", icon: "requests" },
     { href: "/admin/events", title: "Events", value: events, hint: pendingEvents > 0 ? `${pendingEvents} submission${pendingEvents === 1 ? "" : "s"} to review` : "Create, edit, see attendees", icon: "events" },
     { href: "/admin/briefings", title: "Briefings", value: briefings, hint: pendingBriefings > 0 ? `${pendingBriefings} submission${pendingBriefings === 1 ? "" : "s"} to review` : "Publish articles and links", icon: "briefings" },

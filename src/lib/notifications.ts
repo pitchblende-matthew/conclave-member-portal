@@ -6,6 +6,7 @@ export type NotificationType =
   | "topic_reply"
   | "message"
   | "content_reported"
+  | "invite_request"
   | "event_submitted"
   | "event_approved"
   | "event_declined"

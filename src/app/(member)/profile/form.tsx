@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/avatar";
 import { US_STATES } from "@/lib/us-states";
+import type { Taxon } from "@/lib/member-taxonomy";
 import { updateProfile, uploadAvatar, removeAvatar, uploadCover, removeCover } from "./actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
 
@@ -11,6 +12,8 @@ type Initial = {
   name: string;
   companyName: string;
   role: string;
+  function_id: number;
+  seniority_id: number;
   city: string;
   state: string;
   zip: string;
@@ -30,10 +33,14 @@ type CompanyOption = { id: number; name: string };
 export default function ProfileForm({
   initial,
   companies,
+  functions,
+  seniorities,
   mode = "profile",
 }: {
   initial: Initial;
   companies: CompanyOption[];
+  functions: Taxon[];
+  seniorities: Taxon[];
   mode?: "profile" | "onboarding";
 }) {
   const router = useRouter();
@@ -145,7 +152,25 @@ export default function ProfileForm({
           </div>
           <div>
             <label htmlFor="role">Role / title</label>
-            <input id="role" name="role" defaultValue={initial.role} />
+            <input id="role" name="role" defaultValue={initial.role} placeholder="e.g. Head of Demand Gen" />
+          </div>
+          <div>
+            <label htmlFor="function_id">Function</label>
+            <select id="function_id" name="function_id" defaultValue={String(initial.function_id || "")}>
+              <option value="">Select…</option>
+              {functions.map((f) => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="seniority_id">Seniority</label>
+            <select id="seniority_id" name="seniority_id" defaultValue={String(initial.seniority_id || "")}>
+              <option value="">Select…</option>
+              {seniorities.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label htmlFor="company_name">Company</label>

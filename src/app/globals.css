@@ -208,6 +208,8 @@ main.page { padding: 2.5rem 0 4rem; }
 }
 .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .meta { color: var(--muted); font-size: 0.85rem; }
+/* Secondary detail line on list cards (board/events) — darker than .meta for contrast. */
+.card-detail { color: #555; font-size: 0.85rem; margin: 0.55rem 0 0; }
 .tag {
   display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 0.65rem;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage);

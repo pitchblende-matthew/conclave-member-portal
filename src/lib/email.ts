@@ -65,20 +65,25 @@ export async function sendEmail({ to, subject, html, text }: SendArgs): Promise<
   }
 }
 
-// On-brand wrapper (inline styles for email-client compatibility).
+// On-brand wrapper (inline styles for email-client compatibility). Colours track
+// the "Hearth" v2 palette; the header carries the bracketed Conclave logo (same
+// asset the portal header uses, so email and app read as one brand).
+const LOGO_URL =
+  "https://cdn.prod.website-files.com/6a1629364bb647e65a025817/6a256014a18d5d024dbc45bc_conclave-bracketed-1600.png";
+
 function layout(heading: string, bodyHtml: string, cta?: { label: string; href: string }): string {
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#f5f1e8;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1e8;padding:32px 12px;">
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#f2ede4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2ede4;padding:32px 12px;">
     <tr><td align="center">
-      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#fffdf8;border:1px solid #e8e1cf;border-radius:14px;">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#fbf8f1;border:1px solid #e7ded0;border-radius:14px;">
         <tr><td style="padding:30px 32px;">
-          <div style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#6e7a5e;">Conclave</div>
-          <h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:26px;line-height:1.2;margin:10px 0 16px;color:#14140f;">${heading}</h1>
+          <img src="${LOGO_URL}" alt="Conclave" width="158" style="width:158px;max-width:62%;height:auto;display:block;border:0;margin-bottom:20px;" />
+          <h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:26px;line-height:1.2;margin:0 0 16px;color:#2c3a31;">${heading}</h1>
           <div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#33322b;">${bodyHtml}</div>
-          ${cta ? `<div style="margin:26px 0 4px;"><a href="${cta.href}" style="display:inline-block;background:#14140f;color:#f5f1e8;text-decoration:none;padding:12px 22px;border-radius:8px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:0.05em;text-transform:uppercase;">${esc(cta.label)}</a></div>` : ""}
+          ${cta ? `<div style="margin:26px 0 4px;"><a href="${cta.href}" style="display:inline-block;background:#2c3a31;color:#f2ede4;text-decoration:none;padding:12px 22px;border-radius:8px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:0.05em;text-transform:uppercase;">${esc(cta.label)}</a></div>` : ""}
         </td></tr>
       </table>
-      <div style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#6b695f;margin-top:16px;">Private. By invitation.</div>
+      <div style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#7c7a52;margin-top:16px;">Private. By invitation.</div>
     </td></tr>
   </table></body></html>`;
 }

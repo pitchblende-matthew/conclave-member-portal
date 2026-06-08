@@ -15,6 +15,7 @@ type UserRow = {
   company: string;
   role: string;
   linkedin: string;
+  apply_note: string;
   status: string;
   created_at: number;
 };
@@ -40,7 +41,7 @@ export default async function AdminRequests() {
   const [{ results: users }, { results: invites }] = await Promise.all([
     db
       .prepare(
-        `SELECT id, name, email, company, role, linkedin, status, created_at
+        `SELECT id, name, email, company, role, linkedin, apply_note, status, created_at
          FROM users
          WHERE status IN ('pending', 'declined')`
       )
@@ -90,6 +91,7 @@ export default async function AdminRequests() {
                 <a href={`mailto:${item.email}`}>{item.email}</a>
                 {item.linkedin ? <> · <a href={item.linkedin} target="_blank" rel="noreferrer">LinkedIn</a></> : null}
               </p>
+              {item.apply_note ? <p style={{ marginTop: "0.5rem", whiteSpace: "pre-wrap" }}>{item.apply_note}</p> : null}
               {item.status === "pending" && (
                 <div className="btn-row" style={{ marginTop: "1rem" }}>
                   <form action={approveMember}>

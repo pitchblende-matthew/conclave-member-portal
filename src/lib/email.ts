@@ -122,6 +122,17 @@ export async function emailAccessApproved(to: string, name: string): Promise<voi
   });
 }
 
+// Approval for an application created without a password (e.g. via the
+// marketing form): the member sets a password through the link, then signs in.
+export async function emailAccessApprovedSetPassword(to: string, name: string, link: string): Promise<void> {
+  await sendEmail({
+    to,
+    subject: "Your Conclave membership is approved",
+    html: layout("You're approved", `<p>${greeting(name)}</p><p>Welcome to Conclave. Set a password to sign in and finish setting up your profile.</p>`, { label: "Set your password", href: link }),
+    text: `Your Conclave membership is approved. Set your password to sign in: ${link}`,
+  });
+}
+
 export async function emailAccessDeclined(to: string, name: string): Promise<void> {
   await sendEmail({
     to,

@@ -1,8 +1,8 @@
 import { getDb } from "@/lib/db";
 import { corsHeaders, corsPreflight } from "@/lib/cors";
 import { rateLimited } from "@/lib/rate-limit";
-import { notifyAdmins } from "@/lib/notifications";
-import { emailAdminsInviteRequest } from "@/lib/email";
+import { hashPassword, generateToken } from "@/lib/crypto";
+import { emailAccessPending, emailAdminsNewRequest } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +12,11 @@ export function OPTIONS() {
   return corsPreflight();
 }
 
-// Public endpoint for the marketing site's "request an invitation" form.
-// Accepts form-encoded or JSON. Rate-limited per IP. Records a lead for admins.
+// Public endpoint for the marketing site's access form. Accepts form-encoded or
+// JSON, rate-limited per IP. Creates a pending account application — the same
+// queue admins use for sign-ups — rather than a separate invitation request, so
+// there's a single intake workflow. The applicant sets a password via a link
+// once an admin approves them.
 export async function POST(req: Request) {
   let name = "";
   let email = "";
@@ -47,15 +50,22 @@ export async function POST(req: Request) {
   }
 
   const db = getDb();
-  // Skip obvious duplicates still awaiting review.
-  const dup = await db.prepare("SELECT id FROM invite_requests WHERE email = ? AND status = 'new'").bind(email).first();
-  if (!dup) {
+  // Email is unique; if an account already exists (applied, invited, or a
+  // member) we silently no-op so the form can't probe who's registered.
+  const existing = await db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
+  if (!existing) {
+    // No password yet — store an unusable placeholder and flag the account so
+    // approval sends a "set your password" link.
+    const placeholder = await hashPassword(generateToken(32));
     await db
-      .prepare("INSERT INTO invite_requests (name, email, note, status, created_at) VALUES (?, ?, ?, 'new', ?)")
-      .bind(name.trim().slice(0, 200), email, note.trim().slice(0, 1000), Date.now())
+      .prepare(
+        `INSERT INTO users (email, password_hash, name, apply_note, needs_password, status, created_at)
+         VALUES (?, ?, ?, ?, 1, 'pending', ?)`
+      )
+      .bind(email, placeholder, name.trim().slice(0, 200), note.trim().slice(0, 1000), Date.now())
       .run();
-    await notifyAdmins("invite_request");
-    await emailAdminsInviteRequest(name.trim(), email);
+    await emailAccessPending(email, name.trim());
+    await emailAdminsNewRequest(name.trim());
   }
 
   return Response.json({ ok: true }, { headers: corsHeaders });

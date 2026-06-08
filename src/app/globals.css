@@ -1,13 +1,25 @@
 :root {
-  --cream: #f5f1e8;
-  --cream-deep: #e8e1cf;
-  --paper: #fffdf8;
-  --ink: #14140f;
-  --sage: #6e7a5e;
-  --sage-deep: #4c5440;
-  --sage-soft: #9aa088;
-  --muted: #6b695f;
-  --line: rgba(20, 20, 15, 0.12);
+  /* Conclave "The Hearth" v2 brand palette */
+  --green-900: #2c3a31; /* primary text, dark surfaces */
+  --green-700: #45564b; /* borders, secondary UI, links */
+  --green-500: #5c7165; /* brand hue, accents, italic emphasis */
+  --green-300: #9aae9d; /* tints, dividers */
+  --clay: #b26a4c;      /* warm accent — flame, signal badges, rare CTA (never a large fill) */
+  --clay-deep: #985838; /* clay, hover/pressed */
+  --olive: #7c7a52;     /* eyebrows, captions, byline metadata */
+  --parchment: #f2ede4; /* default background */
+
+  /* Role aliases — the rest of the app references these, so remapping them to
+     the brand values rolls the identity across every surface. */
+  --cream: #f2ede4;
+  --cream-deep: #e7ded0;
+  --paper: #fbf8f1;
+  --ink: #2c3a31;
+  --sage: #5c7165;
+  --sage-deep: #45564b;
+  --sage-soft: #9aae9d;
+  --muted: #6f6e60;
+  --line: rgba(44, 58, 49, 0.14);
 }
 
 * { box-sizing: border-box; }
@@ -31,6 +43,7 @@ h1, h2, h3 {
 }
 
 a { color: var(--sage-deep); }
+::selection { background: rgba(178, 106, 76, 0.20); color: var(--ink); }
 
 .shell { max-width: 1040px; margin: 0 auto; padding: 0 1.5rem; }
 
@@ -55,7 +68,7 @@ a { color: var(--sage-deep); }
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--sage);
+  color: var(--olive);
   margin-bottom: 1rem;
 }
 .auth-card h1 { font-size: 2.4rem; }
@@ -74,7 +87,7 @@ textarea { min-height: 110px; resize: vertical; }
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--sage);
-  box-shadow: 0 0 0 3px rgba(110, 122, 94, 0.16);
+  box-shadow: 0 0 0 3px rgba(92, 113, 101, 0.18);
 }
 
 /* Olive-sage italic emphasis, echoing the marketing display type */
@@ -169,7 +182,7 @@ input:focus, textarea:focus, select:focus {
 .bell-icon { width: 22px; height: 22px; display: block; }
 .bell-badge {
   position: absolute; top: -3px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px;
-  border-radius: 999px; background: var(--sage); color: var(--cream); border: 1.5px solid var(--cream);
+  border-radius: 999px; background: var(--clay); color: #fff; border: 1.5px solid var(--cream);
   font-family: "JetBrains Mono", monospace; font-size: 0.56rem;
   display: flex; align-items: center; justify-content: center; line-height: 1;
 }
@@ -181,7 +194,7 @@ input:focus, textarea:focus, select:focus {
 }
 .bell-head {
   padding: 0.7rem 0.9rem; font-family: "JetBrains Mono", monospace; font-size: 0.65rem;
-  letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage); border-bottom: 1px solid var(--line);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); border-bottom: 1px solid var(--line);
 }
 .bell-item {
   display: flex; flex-direction: column; gap: 0.2rem; padding: 0.7rem 0.9rem;
@@ -212,7 +225,7 @@ main.page { padding: 2.5rem 0 4rem; }
 .card-detail { color: #555; font-size: 0.85rem; margin: 0.55rem 0 0; }
 .tag {
   display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 0.65rem;
-  letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive);
 }
 .footer { border-top: 1px solid var(--line); padding: 1.5rem 0; color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; flex-wrap: wrap; }
 .footer-nav { display: flex; gap: 1.25rem; flex-wrap: wrap; }
@@ -313,9 +326,9 @@ main.page { padding: 2.5rem 0 4rem; }
 }
 /* Content tag picker (industry/function checkbox chips on create forms) */
 .tag-picker { border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1.1rem 1.1rem; margin: 1rem 0; }
-.tag-picker legend { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage); font-family: "JetBrains Mono", monospace; padding: 0 0.4rem; }
+.tag-picker legend { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); font-family: "JetBrains Mono", monospace; padding: 0 0.4rem; }
 .tag-pick-group { margin-top: 0.6rem; }
-.tag-pick-label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-family: "JetBrains Mono", monospace; margin-bottom: 0.45rem; }
+.tag-pick-label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--olive); font-family: "JetBrains Mono", monospace; margin-bottom: 0.45rem; }
 .tag-pick-options { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .tag-check { display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid var(--line); border-radius: 999px; padding: 0.3rem 0.7rem; font-size: 0.82rem; cursor: pointer; }
 .tag-check input { width: auto; margin: 0; }
@@ -539,7 +552,7 @@ body { overflow-wrap: break-word; }
 /* Nav badge (Messages) */
 .nav-badge {
   display: inline-block; margin-left: 0.4rem; min-width: 16px; height: 16px; padding: 0 4px;
-  border-radius: 999px; background: var(--sage); color: var(--cream);
+  border-radius: 999px; background: var(--clay); color: #fff;
   font-family: "JetBrains Mono", monospace; font-size: 0.56rem; line-height: 16px; text-align: center;
 }
 

@@ -7,10 +7,22 @@ import { deleteImage } from "@/lib/media";
 import { findOrCreateCompany } from "@/lib/companies";
 import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 import { generateToken } from "@/lib/crypto";
-import { emailAccessApproved, emailAccessApprovedSetPassword, emailAccessDeclined, siteUrl } from "@/lib/email";
+import { emailAccessApproved, emailAccessApprovedSetPassword, emailAccessDeclined, emailEnabled, emailTest, siteUrl } from "@/lib/email";
 import type { Company } from "@/lib/types";
 
 const SET_PASSWORD_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+export type TestEmailState = { ok?: string; error?: string };
+
+// Send the signed-in admin a branded test email to confirm Resend is wired up.
+export async function sendTestEmail(_prev: TestEmailState, _formData: FormData): Promise<TestEmailState> {
+  const me = await requireAdmin();
+  if (!emailEnabled()) {
+    return { error: "Email isn’t configured yet — set RESEND_API_KEY and EMAIL_FROM, then redeploy." };
+  }
+  await emailTest(me.email, me.name);
+  return { ok: `Sent a test email to ${me.email}. Check your inbox (and Resend → Logs).` };
+}
 
 export type AdminMemberState = { ok?: boolean; error?: string };
 

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import Icon, { type IconName } from "@/components/icons";
+import TestEmailButton from "./test-email-button";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,14 @@ export default async function AdminHome() {
             <p className="meta" style={{ marginTop: "0.25rem" }}>{s.hint}</p>
           </Link>
         ))}
+      </div>
+
+      <div className="card" style={{ marginTop: "1.5rem", maxWidth: 480 }}>
+        <h3 style={{ fontSize: "1.3rem", margin: 0 }}>Email</h3>
+        <p className="meta" style={{ margin: "0.25rem 0 0.9rem" }}>
+          Send yourself a branded test email to confirm Resend is configured.
+        </p>
+        <TestEmailButton />
       </div>
     </>
   );

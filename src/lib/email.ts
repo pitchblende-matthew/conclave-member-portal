@@ -100,6 +100,16 @@ export async function adminEmails(): Promise<string[]> {
 
 // ---- Senders (all best-effort; sendEmail never throws) ----
 
+// A simple branded test, sent from the admin panel to verify the Resend wiring.
+export async function emailTest(to: string, name: string): Promise<void> {
+  await sendEmail({
+    to,
+    subject: "Conclave test email",
+    html: layout("Test email", `<p>${greeting(name)}</p><p>This is a test of Conclave&rsquo;s transactional email. If it reached your inbox, Resend is configured correctly.</p>`, { label: "Open the portal", href: siteUrl("/dashboard") }),
+    text: "This is a test of Conclave's transactional email. If you received it, Resend is configured correctly.",
+  });
+}
+
 export async function emailWelcome(to: string, name: string): Promise<void> {
   await sendEmail({
     to,
@@ -204,18 +214,6 @@ export async function emailAdminsNewRequest(applicantName: string): Promise<void
       subject: "New Conclave access request",
       html: layout("New access request", `<p><strong>${esc(applicantName || "Someone")}</strong> requested access to Conclave and is awaiting review.</p>`, { label: "Review requests", href: siteUrl("/admin/requests") }),
       text: `${applicantName || "Someone"} requested access. Review: ${siteUrl("/admin/requests")}`,
-    });
-  }
-}
-
-export async function emailAdminsInviteRequest(name: string, email: string): Promise<void> {
-  const tos = await adminEmails();
-  for (const to of tos) {
-    await sendEmail({
-      to,
-      subject: "New invitation request",
-      html: layout("New invitation request", `<p><strong>${esc(name || "Someone")}</strong> requested an invitation to Conclave.</p><p>Email: ${esc(email)}</p>`, { label: "View requests", href: siteUrl("/admin/invite-requests") }),
-      text: `${name || "Someone"} (${email}) requested an invitation. ${siteUrl("/admin/invite-requests")}`,
     });
   }
 }

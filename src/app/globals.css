@@ -150,7 +150,7 @@ input:focus, textarea:focus, select:focus {
   display: inline-flex; align-items: center; gap: 0.3rem; line-height: 1;
 }
 .nav-link:hover { color: var(--sage); }
-.nav-group { position: relative; }
+.nav-group { position: relative; display: flex; align-items: center; }
 .nav-group-btn .caret { font-size: 0.75em; transition: transform 0.15s ease; }
 .nav-group.open .nav-group-btn .caret { transform: rotate(180deg); }
 .nav-dropdown {
@@ -162,7 +162,7 @@ input:focus, textarea:focus, select:focus {
 .nav-group.open .nav-dropdown { display: flex; }
 .nav-drop-link {
   display: block; padding: 0.55rem 0.7rem; border-radius: 7px;
-  color: var(--ink); text-decoration: none; font-size: 0.85rem;
+  color: var(--ink); text-decoration: none; font-size: 0.85rem; white-space: nowrap;
 }
 .nav-drop-link:hover { background: var(--cream-deep); color: var(--sage-deep); }
 .nav-toggle {
@@ -209,6 +209,9 @@ input:focus, textarea:focus, select:focus {
 /* Open a desktop dropdown on hover too, for pointer users. */
 @media (hover: hover) and (min-width: 769px) {
   .nav-group:hover .nav-dropdown { display: flex; }
+  /* Transparent bridge across the gap below the trigger so the cursor can reach
+     the menu without crossing dead space and collapsing the hover. */
+  .nav-dropdown::before { content: ""; position: absolute; left: 0; right: 0; top: -0.7rem; height: 0.7rem; }
 }
 
 main.page { padding: 2.5rem 0 4rem; }
@@ -412,7 +415,7 @@ body { overflow-wrap: break-word; }
   }
   .member-nav.open { display: flex; }
   .nav-link { padding: 0.7rem 0.25rem; font-size: 0.95rem; }
-  .nav-group { width: 100%; }
+  .nav-group { width: 100%; display: block; }
   .nav-group-btn { width: 100%; justify-content: space-between; color: var(--sage); }
   /* Dropdowns render inline (expanded) inside the mobile panel. */
   .nav-dropdown {

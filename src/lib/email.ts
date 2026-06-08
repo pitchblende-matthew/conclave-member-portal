@@ -232,6 +232,20 @@ export async function emailAdminsNewReport(reporterName: string, targetType: str
   }
 }
 
+export async function emailAdminsFeedback(kind: "bug" | "feature", testerName: string, page: string, body: string): Promise<void> {
+  const tos = await adminEmails();
+  const noun = kind === "bug" ? "bug report" : "feature request";
+  const where = page ? ` on <code>${esc(page)}</code>` : "";
+  for (const to of tos) {
+    await sendEmail({
+      to,
+      subject: `New alpha ${noun} on Conclave`,
+      html: layout("Alpha feedback", `<p><strong>${esc(testerName || "An alpha tester")}</strong> filed a ${noun}${where}.</p><p style="white-space:pre-wrap;">${esc(body)}</p>`, { label: "Review feedback", href: siteUrl("/admin/feedback") }),
+      text: `${testerName || "An alpha tester"} filed a ${noun}${page ? ` on ${page}` : ""}:\n\n${body}\n\nReview: ${siteUrl("/admin/feedback")}`,
+    });
+  }
+}
+
 export async function emailAdminsNewSubmission(kind: "event" | "briefing", submitterName: string, title: string): Promise<void> {
   const tos = await adminEmails();
   const where = kind === "event" ? "/admin/events" : "/admin/briefings";

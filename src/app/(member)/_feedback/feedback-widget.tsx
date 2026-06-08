@@ -48,6 +48,10 @@ export default function FeedbackWidget() {
                 placeholder={kind === "bug" ? "What went wrong, and what did you expect?" : "What would you like to see?"}
                 style={{ marginTop: "0.6rem" }}
               />
+              <label className="fab-shot">
+                <span>Screenshot <span className="fab-optional">(optional)</span></span>
+                <input type="file" name="screenshot" accept="image/png,image/jpeg,image/webp" />
+              </label>
               <p className="fab-page">On <code>{pathname}</code></p>
               {state?.error && <div className="error" role="alert">{state.error}</div>}
               <button className="btn inline-btn" type="submit" disabled={pending} style={{ width: "100%", marginTop: "0.7rem" }}>

@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { createFeedback, type FeedbackKind } from "@/lib/feedback";
+import { storeImage } from "@/lib/media";
 import { notifyAdmins } from "@/lib/notifications";
+import { emailAdminsFeedback } from "@/lib/email";
 
 export type FeedbackState = { ok?: boolean; error?: string };
 
@@ -21,8 +23,18 @@ export async function submitFeedback(_prev: FeedbackState, formData: FormData): 
   const rawPage = String(formData.get("page") ?? "");
   const page = rawPage.startsWith("/") && !rawPage.startsWith("//") ? rawPage.slice(0, 300) : "";
 
-  await createFeedback(user.id, kind, page, body.slice(0, 4000));
+  // Optional screenshot — only attempt an upload when a file was actually chosen.
+  let screenshotKey = "";
+  const shot = formData.get("screenshot");
+  if (shot instanceof File && shot.size > 0) {
+    const result = await storeImage(`feedback/${user.id}`, shot);
+    if ("error" in result) return { error: result.error };
+    screenshotKey = result.key;
+  }
+
+  await createFeedback(user.id, kind, page, body.slice(0, 4000), screenshotKey);
   await notifyAdmins("feedback", { actorId: user.id });
+  await emailAdminsFeedback(kind, user.name, page, body.slice(0, 4000));
   revalidatePath("/admin/feedback");
   revalidatePath("/admin");
   return { ok: true };

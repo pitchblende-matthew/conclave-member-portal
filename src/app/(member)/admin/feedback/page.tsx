@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { listFeedback } from "@/lib/feedback";
+import { mediaUrl } from "@/lib/media";
 import LocalTime from "@/components/local-time";
 import ConfirmSubmit from "@/components/confirm-submit";
 import { resolveFeedback, removeFeedback } from "./actions";
@@ -32,6 +33,12 @@ export default async function AdminFeedback() {
                 {closed ? <span className="market-tag" style={{ marginLeft: "0.6rem" }}>Resolved</span> : null}
               </div>
               <p style={{ margin: "0.4rem 0 0.5rem", whiteSpace: "pre-wrap" }}>{f.body}</p>
+              {f.screenshot_key ? (
+                <a href={mediaUrl(f.screenshot_key)} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginBottom: "0.5rem" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={mediaUrl(f.screenshot_key)} alt="Screenshot" className="feedback-shot" />
+                </a>
+              ) : null}
               <p className="meta" style={{ margin: 0 }}>
                 {f.author || "A member"}
                 {f.page ? <> · <Link href={f.page}>{f.page}</Link></> : null}

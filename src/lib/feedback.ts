@@ -9,14 +9,15 @@ export type FeedbackRow = {
   page: string;
   body: string;
   status: string;
+  screenshot_key: string;
   created_at: number;
   author: string | null;
 };
 
-export async function createFeedback(userId: number, kind: FeedbackKind, page: string, body: string): Promise<void> {
+export async function createFeedback(userId: number, kind: FeedbackKind, page: string, body: string, screenshotKey = ""): Promise<void> {
   await getDb()
-    .prepare("INSERT INTO feedback (user_id, kind, page, body, status, created_at) VALUES (?, ?, ?, ?, 'open', ?)")
-    .bind(userId, kind, page, body, Date.now())
+    .prepare("INSERT INTO feedback (user_id, kind, page, body, screenshot_key, status, created_at) VALUES (?, ?, ?, ?, ?, 'open', ?)")
+    .bind(userId, kind, page, body, screenshotKey, Date.now())
     .run();
 }
 
@@ -24,7 +25,7 @@ export async function createFeedback(userId: number, kind: FeedbackKind, page: s
 export async function listFeedback(): Promise<FeedbackRow[]> {
   const { results } = await getDb()
     .prepare(
-      `SELECT f.id, f.user_id, f.kind, f.page, f.body, f.status, f.created_at, u.name AS author
+      `SELECT f.id, f.user_id, f.kind, f.page, f.body, f.status, f.screenshot_key, f.created_at, u.name AS author
        FROM feedback f LEFT JOIN users u ON u.id = f.user_id
        ORDER BY (f.status = 'open') DESC, f.created_at DESC
        LIMIT 300`

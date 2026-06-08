@@ -44,7 +44,7 @@ export function locationLabel(city: string, state: string): string {
 }
 
 // Distinct markets present in a table, with counts — powers the filter menus.
-export async function marketsIn(table: "users" | "companies" | "events"): Promise<{ slug: string; name: string; n: number }[]> {
+export async function marketsIn(table: "users" | "companies" | "events" | "listings"): Promise<{ slug: string; name: string; n: number }[]> {
   const where = table === "users" ? "WHERE status = 'approved' AND dma_slug != ''" : "WHERE dma_slug != ''";
   const { results } = await getDb()
     .prepare(

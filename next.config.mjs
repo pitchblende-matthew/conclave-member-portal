@@ -13,6 +13,10 @@ const allowedOrigins = [
   "the-conclave-0806c8.webflow.io",
   "*.webflow.io",
   "*.cosmic.webflow.services",
+  // Mapped production domain(s). Server Actions are rejected when the request's
+  // origin isn't trusted, so the live custom domain must be listed here.
+  "jointheconclave.com",
+  "www.jointheconclave.com",
   ...(process.env.SERVER_ACTIONS_ALLOWED_ORIGINS
     ? process.env.SERVER_ACTIONS_ALLOWED_ORIGINS.split(",")
         .map((s) => s.trim())

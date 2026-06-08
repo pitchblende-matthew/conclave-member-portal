@@ -68,4 +68,5 @@ export async function toggleRsvp(formData: FormData) {
       .run();
   }
   revalidatePath("/events");
+  revalidatePath(`/events/${eventId}`);
 }

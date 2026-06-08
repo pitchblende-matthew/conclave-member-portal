@@ -618,3 +618,19 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
   }
   .member-card:hover { transform: none; }
 }
+
+/* Alpha-tester feedback widget (floating reporter) */
+.fab-wrap { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 90; display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
+.fab { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--ink); color: var(--cream); border: none; border-radius: 999px; padding: 0.6rem 1rem; font: inherit; font-size: 0.8rem; letter-spacing: 0.03em; cursor: pointer; box-shadow: 0 8px 22px rgba(20, 20, 15, 0.18); }
+.fab:hover { background: var(--sage-deep); }
+.fab svg { flex: none; }
+.fab-panel { width: 300px; max-width: 84vw; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem 1rem 1rem; box-shadow: 0 16px 34px rgba(20, 20, 15, 0.18); }
+.fab-head { display: flex; justify-content: space-between; align-items: center; font-family: "JetBrains Mono", monospace; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); margin-bottom: 0.5rem; }
+.fab-x { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 0.9rem; line-height: 1; padding: 0; }
+.fab-x:hover { color: var(--ink); }
+.fab-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.fab-seg-btn { background: none; border: none; padding: 0.32rem 0.9rem; font: inherit; font-size: 0.8rem; cursor: pointer; color: var(--muted); }
+.fab-seg-btn.on { background: var(--sage); color: var(--cream); }
+.fab-panel textarea { min-height: 84px; }
+.fab-page { font-size: 0.72rem; color: var(--muted); margin: 0.5rem 0 0; }
+.fab-page code { font-family: "JetBrains Mono", monospace; font-size: 0.7rem; }

@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import Wordmark from "@/components/wordmark";
 import MemberNav from "@/components/member-nav";
 import NotificationsBell, { type BellItem } from "@/components/notifications-bell";
+import FeedbackWidget from "./_feedback/feedback-widget";
 import { unreadMessageCount } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
@@ -73,6 +74,10 @@ function toItem(n: NotifRow): BellItem {
       text = "New invitation request from the site";
       href = "/admin/requests";
       break;
+    case "feedback":
+      text = `${who} sent alpha feedback`;
+      href = "/admin/feedback";
+      break;
     default:
       text = "New activity";
   }
@@ -126,6 +131,7 @@ export default async function MemberLayout({ children }: { children: React.React
         </nav>
         <span className="footer-tag">Private. By invitation.</span>
       </footer>
+      {user.alpha_tester === 1 && <FeedbackWidget />}
     </div>
   );
 }

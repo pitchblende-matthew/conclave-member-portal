@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import Avatar from "@/components/avatar";
 import ConfirmSubmit from "@/components/confirm-submit";
-import { setAdmin, removeMember } from "../actions";
+import { setAdmin, setAlphaTester, removeMember } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,7 @@ type Row = {
   email: string;
   avatar_key: string;
   is_admin: number;
+  alpha_tester: number;
   company_name: string | null;
 };
 
@@ -24,7 +25,7 @@ export default async function AdminMembers() {
 
   const { results } = await getDb()
     .prepare(
-      `SELECT u.id, u.name, u.email, u.avatar_key, u.is_admin,
+      `SELECT u.id, u.name, u.email, u.avatar_key, u.is_admin, u.alpha_tester,
               COALESCE(c.name, NULLIF(u.company, '')) AS company_name
        FROM users u LEFT JOIN companies c ON c.id = u.company_id
        WHERE u.status = 'approved'
@@ -48,7 +49,9 @@ export default async function AdminMembers() {
                 <Avatar src={m.avatar_key ? mediaUrl(m.avatar_key) : null} name={m.name} size={44} />
                 <div>
                   <h3 style={{ fontSize: "1.2rem", marginBottom: 0 }}>
-                    {m.name || "Member"}{m.is_admin === 1 ? <span className="badge">Admin</span> : null}
+                    {m.name || "Member"}
+                    {m.is_admin === 1 ? <span className="badge">Admin</span> : null}
+                    {m.alpha_tester === 1 ? <span className="badge">Alpha</span> : null}
                   </h3>
                   <p className="meta" style={{ margin: 0 }}>
                     {m.email}{m.company_name ? ` · ${m.company_name}` : ""}
@@ -62,6 +65,13 @@ export default async function AdminMembers() {
                   <input type="hidden" name="makeAdmin" value={m.is_admin === 1 ? "0" : "1"} />
                   <button className="btn btn-ghost inline-btn" type="submit" disabled={isSelf && m.is_admin === 1}>
                     {m.is_admin === 1 ? "Revoke admin" : "Make admin"}
+                  </button>
+                </form>
+                <form action={setAlphaTester}>
+                  <input type="hidden" name="userId" value={m.id} />
+                  <input type="hidden" name="makeAlpha" value={m.alpha_tester === 1 ? "0" : "1"} />
+                  <button className="btn btn-ghost inline-btn" type="submit">
+                    {m.alpha_tester === 1 ? "Revoke alpha" : "Make alpha tester"}
                   </button>
                 </form>
                 {!isSelf && (

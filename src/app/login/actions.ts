@@ -18,8 +18,19 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     .bind(email)
     .first<User>();
 
+  // Approved members who applied via the website have no password yet — point
+  // them to the set-password link rather than a confusing "incorrect" error.
+  if (user?.needs_password === 1) {
+    return {
+      error:
+        "Your membership is approved, but you haven’t set a password yet. Check your email for the link to set one, or use “Forgot your password?” below.",
+    };
+  }
+
+  // Kept deliberately generic (same message whether the email is unknown or the
+  // password is wrong) so the form can't be used to discover who has an account.
   if (!user || !(await verifyPassword(password, user.password_hash))) {
-    return { error: "Invalid email or password." };
+    return { error: "That email or password isn’t right. Please try again." };
   }
 
   await createSession(user.id);

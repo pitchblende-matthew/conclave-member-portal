@@ -1,10 +1,17 @@
-import { NextResponse } from "next/server";
 import { destroySession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+// Clear the session, then land on the signed-out confirmation page.
+// A *relative* Location is used deliberately: behind the Webflow Cloud proxy the
+// request's host is internal, so building an absolute URL from `request.url`
+// would redirect the browser to an unreachable host (and look like "no page").
+// A relative target resolves against the public domain the visitor is on.
+export async function GET() {
   await destroySession();
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  return NextResponse.redirect(new URL(`${base}/login`, request.url));
+  return new Response(null, {
+    status: 303,
+    headers: { Location: `${base}/signed-out` },
+  });
 }

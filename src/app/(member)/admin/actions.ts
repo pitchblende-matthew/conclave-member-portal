@@ -6,8 +6,11 @@ import { requireAdmin } from "@/lib/auth";
 import { deleteImage } from "@/lib/media";
 import { findOrCreateCompany } from "@/lib/companies";
 import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
-import { emailAccessApproved, emailAccessDeclined } from "@/lib/email";
+import { generateToken } from "@/lib/crypto";
+import { emailAccessApproved, emailAccessApprovedSetPassword, emailAccessDeclined, siteUrl } from "@/lib/email";
 import type { Company } from "@/lib/types";
+
+const SET_PASSWORD_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export type AdminMemberState = { ok?: boolean; error?: string };
 
@@ -64,8 +67,25 @@ export async function approveMember(formData: FormData): Promise<void> {
     .prepare("UPDATE users SET status = 'approved', approved_at = ?, approved_by = ? WHERE id = ?")
     .bind(Date.now(), me.id, userId)
     .run();
-  const u = await db.prepare("SELECT email, name FROM users WHERE id = ?").bind(userId).first<{ email: string; name: string }>();
-  if (u?.email) await emailAccessApproved(u.email, u.name);
+  const u = await db
+    .prepare("SELECT email, name, needs_password FROM users WHERE id = ?")
+    .bind(userId)
+    .first<{ email: string; name: string; needs_password: number }>();
+  if (u?.email) {
+    if (u.needs_password === 1) {
+      // Application created without a password (marketing form): send a link to
+      // set one, reusing the password-reset token mechanism.
+      const token = generateToken(32);
+      const now = Date.now();
+      await db
+        .prepare("INSERT INTO password_reset_tokens (token, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
+        .bind(token, userId, now + SET_PASSWORD_TTL, now)
+        .run();
+      await emailAccessApprovedSetPassword(u.email, u.name, siteUrl(`/reset-password?token=${token}`));
+    } else {
+      await emailAccessApproved(u.email, u.name);
+    }
+  }
   revalidatePath("/admin/requests");
   revalidatePath("/admin");
   revalidatePath("/directory");

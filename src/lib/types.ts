@@ -29,6 +29,8 @@ export interface User {
   onboarded: number;
   approved_at: number | null;
   approved_by: number | null;
+  apply_note: string;
+  needs_password: number; // 1 = account created without a password (set on approval)
   created_at: number;
 }
 

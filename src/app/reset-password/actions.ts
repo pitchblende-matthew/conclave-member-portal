@@ -25,7 +25,9 @@ export async function resetPassword(_prev: ResetState, formData: FormData): Prom
 
   const hash = await hashPassword(password);
   const now = Date.now();
-  await db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(hash, row.user_id).run();
+  // Setting a password also clears needs_password (covers the approve-then-set
+  // flow), so the login hint for passwordless accounts stays accurate.
+  await db.prepare("UPDATE users SET password_hash = ?, needs_password = 0 WHERE id = ?").bind(hash, row.user_id).run();
   await db.prepare("UPDATE password_reset_tokens SET used_at = ? WHERE token = ?").bind(now, token).run();
   // Invalidate any other outstanding tokens and existing sessions for safety.
   await db.prepare("UPDATE password_reset_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL").bind(now, row.user_id).run();

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { findOrCreateCompany } from "@/lib/companies";
+import { setUserExpertise } from "@/lib/expertise";
 import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 import type { ProfileState } from "@/app/(member)/profile/actions";
 
@@ -38,6 +39,9 @@ export async function completeOnboarding(_prev: ProfileState, formData: FormData
       formData.get("discover_region_only") ? 1 : 0, formData.get("discover_peers_only") ? 1 : 0, user.id
     )
     .run();
+
+  const expertiseIds = formData.getAll("expertise").map((v) => Number(v)).filter(Boolean);
+  await setUserExpertise(user.id, expertiseIds);
 
   redirect("/dashboard");
 }

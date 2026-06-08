@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
 import { listFunctions, listSeniorities } from "@/lib/member-taxonomy";
+import { listExpertise, getUserExpertiseIds, MAX_EXPERTISE } from "@/lib/expertise";
 import ProfileForm from "@/app/(member)/profile/form";
 import Wordmark from "@/components/wordmark";
 
@@ -17,7 +18,12 @@ export default async function Onboarding() {
   const { results: companies } = await getDb()
     .prepare("SELECT id, name FROM companies ORDER BY name COLLATE NOCASE")
     .all<{ id: number; name: string }>();
-  const [functions, seniorities] = await Promise.all([listFunctions(), listSeniorities()]);
+  const [functions, seniorities, expertise, expertiseIds] = await Promise.all([
+    listFunctions(),
+    listSeniorities(),
+    listExpertise(),
+    getUserExpertiseIds(user.id),
+  ]);
 
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -35,6 +41,8 @@ export default async function Onboarding() {
           companies={companies}
           functions={functions}
           seniorities={seniorities}
+          expertise={expertise}
+          maxExpertise={MAX_EXPERTISE}
           mode="onboarding"
           initial={{
             name: user.name,
@@ -42,6 +50,7 @@ export default async function Onboarding() {
             role: user.role,
             function_id: user.function_id,
             seniority_id: user.seniority_id,
+            expertiseIds,
             city: user.city,
             state: user.state,
             zip: user.zip,

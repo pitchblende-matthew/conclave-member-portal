@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import { connectionState } from "@/lib/connections";
+import { expertiseForUsers } from "@/lib/expertise";
 import Avatar from "@/components/avatar";
 import ConnectControls from "@/components/connect-controls";
 import ReportButton from "@/components/report-button";
@@ -35,6 +36,7 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
   if (!member) notFound();
 
   const connState = await connectionState(me.id, member.id!);
+  const expertise = (await expertiseForUsers([member.id!])).get(member.id!) ?? [];
 
   const links: { label: string; href: string }[] = [];
   if (member.website) links.push({ label: "Website", href: member.website });
@@ -76,6 +78,16 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
         {member.dma_name ? (
           <p style={{ margin: "0.5rem 0 0" }}><span className="market-tag">{member.dma_name}</span></p>
         ) : null}
+
+        {expertise.length > 0 && (
+          <div className="chip-row" style={{ marginTop: "0.85rem" }} aria-label="Areas of expertise">
+            {expertise.map((e) => (
+              <Link key={e.id} href={`/directory?expertise=${e.slug}`} className="chip chip-static" style={{ textDecoration: "none" }}>
+                {e.name}
+              </Link>
+            ))}
+          </div>
+        )}
 
         {connState !== "self" && (
           <div style={{ marginTop: "1.25rem", display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>

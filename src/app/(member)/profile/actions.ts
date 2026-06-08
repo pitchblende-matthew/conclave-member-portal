@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { storeImage, deleteImage } from "@/lib/media";
 import { findOrCreateCompany } from "@/lib/companies";
+import { setUserExpertise } from "@/lib/expertise";
 import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 
 export type ProfileState = { ok?: boolean; error?: string };
@@ -48,8 +49,12 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
     )
     .run();
 
+  const expertiseIds = formData.getAll("expertise").map((v) => Number(v)).filter(Boolean);
+  await setUserExpertise(user.id, expertiseIds);
+
   revalidatePath("/profile");
   revalidatePath("/directory");
+  revalidatePath(`/directory/${user.id}`);
   return { ok: true };
 }
 

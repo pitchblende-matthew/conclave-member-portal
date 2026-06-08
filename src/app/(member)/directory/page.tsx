@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import { marketsIn, resolveArea } from "@/lib/region";
 import { functionsWithCounts, senioritiesWithCounts } from "@/lib/member-taxonomy";
+import { expertiseWithCounts, expertiseForUsers } from "@/lib/expertise";
 import { visibleMembersClause } from "@/lib/discovery";
 import Avatar from "@/components/avatar";
 import AreaFilter from "@/components/area-filter";
@@ -18,15 +19,20 @@ const PAGE_SIZE = 24;
 export default async function Directory({
   searchParams,
 }: {
-  searchParams: Promise<{ area?: string; function?: string; seniority?: string; page?: string }>;
+  searchParams: Promise<{ area?: string; function?: string; seniority?: string; expertise?: string; page?: string }>;
 }) {
   const user = await requireUser();
-  const { area, function: fnParam, seniority: senParam, page: pageParam } = await searchParams;
+  const { area, function: fnParam, seniority: senParam, expertise: expParam, page: pageParam } = await searchParams;
   const active = resolveArea(area, user.dma_slug);
   const markets = await marketsIn("users");
-  const [functions, seniorities] = await Promise.all([functionsWithCounts(user), senioritiesWithCounts(user)]);
+  const [functions, seniorities, expertise] = await Promise.all([
+    functionsWithCounts(user),
+    senioritiesWithCounts(user),
+    expertiseWithCounts(user),
+  ]);
   const activeFn = fnParam ? functions.find((f) => f.slug === fnParam) ?? null : null;
   const activeSen = senParam ? seniorities.find((s) => s.slug === senParam) ?? null : null;
+  const activeExp = expParam ? expertise.find((e) => e.slug === expParam) ?? null : null;
   const page = Math.max(1, Number(pageParam) || 1);
 
   // Compose the market + function + seniority filters, then limit to members the
@@ -36,6 +42,7 @@ export default async function Directory({
   if (active) { conds.push("u.dma_slug = ?"); binds.push(active); }
   if (activeFn) { conds.push("u.function_id = ?"); binds.push(activeFn.id); }
   if (activeSen) { conds.push("u.seniority_id = ?"); binds.push(activeSen.id); }
+  if (activeExp) { conds.push("u.id IN (SELECT user_id FROM user_expertise WHERE expertise_id = ?)"); binds.push(activeExp.id); }
   const vis = visibleMembersClause(user);
   conds.push(vis.sql);
   binds.push(...vis.binds);
@@ -55,24 +62,29 @@ export default async function Directory({
     .all<Partial<User> & { company_name: string | null; function_name: string | null }>();
   const hasNext = rows.length > PAGE_SIZE;
   const results = rows.slice(0, PAGE_SIZE);
+  const expMap = await expertiseForUsers(results.map((m) => m.id!));
   const pagerParams: Record<string, string> = {};
   if (area) pagerParams.area = area;
   if (activeFn) pagerParams.function = activeFn.slug;
   if (activeSen) pagerParams.seniority = activeSen.slug;
+  if (activeExp) pagerParams.expertise = activeExp.slug;
 
   // Filter chip links preserve the other active filters.
-  const buildHref = (over: { function?: string | null; seniority?: string | null }) => {
+  const buildHref = (over: { function?: string | null; seniority?: string | null; expertise?: string | null }) => {
     const sp = new URLSearchParams();
     if (area) sp.set("area", area);
     const fn = over.function === undefined ? activeFn?.slug : over.function;
     const sen = over.seniority === undefined ? activeSen?.slug : over.seniority;
+    const exp = over.expertise === undefined ? activeExp?.slug : over.expertise;
     if (fn) sp.set("function", fn);
     if (sen) sp.set("seniority", sen);
+    if (exp) sp.set("expertise", exp);
     const s = sp.toString();
     return s ? `/directory?${s}` : "/directory";
   };
   const fnChips = functions.filter((f) => f.n > 0);
   const senChips = seniorities.filter((s) => s.n > 0);
+  const expChips = expertise.filter((e) => e.n > 0);
 
   return (
     <>
@@ -88,6 +100,7 @@ export default async function Directory({
         hidden={{
           ...(activeFn ? { function: activeFn.slug } : {}),
           ...(activeSen ? { seniority: activeSen.slug } : {}),
+          ...(activeExp ? { expertise: activeExp.slug } : {}),
         }}
       />
 
@@ -104,6 +117,14 @@ export default async function Directory({
           <Link href={buildHref({ seniority: null })} className={`chip${!activeSen ? " chip-active" : ""}`}>All seniority</Link>
           {senChips.map((s) => (
             <Link key={s.id} href={buildHref({ seniority: s.slug })} className={`chip${activeSen?.slug === s.slug ? " chip-active" : ""}`}>{s.name}</Link>
+          ))}
+        </nav>
+      )}
+      {expChips.length > 0 && (
+        <nav className="chip-row" style={{ marginTop: "0.6rem" }} aria-label="Filter by expertise">
+          <Link href={buildHref({ expertise: null })} className={`chip${!activeExp ? " chip-active" : ""}`}>All expertise</Link>
+          {expChips.map((e) => (
+            <Link key={e.id} href={buildHref({ expertise: e.slug })} className={`chip${activeExp?.slug === e.slug ? " chip-active" : ""}`}>{e.name}</Link>
           ))}
         </nav>
       )}
@@ -131,11 +152,16 @@ export default async function Directory({
               </p>
             ) : null}
             {m.bio ? <p className="member-card-bio">{m.bio}</p> : null}
+            {(expMap.get(m.id!)?.length ?? 0) > 0 ? (
+              <p className="content-tags" style={{ marginTop: "0.55rem" }}>
+                {expMap.get(m.id!)!.slice(0, 4).map((e) => <span key={e.id} className="market-tag">{e.name}</span>)}
+              </p>
+            ) : null}
           </Link>
         ))}
         {results.length === 0 && (
-          <EmptyState title={activeFn || activeSen ? `No ${activeFn?.name ?? ""}${activeFn && activeSen ? " · " : ""}${activeSen?.name ?? ""} members here yet` : active ? "No members in this market yet" : "No members yet"}>
-            {active || activeFn || activeSen ? "Try clearing a filter." : null}
+          <EmptyState title={activeFn || activeSen || activeExp ? `No ${[activeExp?.name, activeFn?.name, activeSen?.name].filter(Boolean).join(" · ")} members here yet` : active ? "No members in this market yet" : "No members yet"}>
+            {active || activeFn || activeSen || activeExp ? "Try clearing a filter." : null}
           </EmptyState>
         )}
       </div>

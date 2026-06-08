@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Avatar from "@/components/avatar";
 import { US_STATES } from "@/lib/us-states";
 import type { Taxon } from "@/lib/member-taxonomy";
+import type { Expertise } from "@/lib/expertise";
 import { updateProfile, uploadAvatar, removeAvatar, uploadCover, removeCover } from "./actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
 
@@ -14,6 +15,7 @@ type Initial = {
   role: string;
   function_id: number;
   seniority_id: number;
+  expertiseIds: number[];
   city: string;
   state: string;
   zip: string;
@@ -37,16 +39,30 @@ export default function ProfileForm({
   companies,
   functions,
   seniorities,
+  expertise,
+  maxExpertise,
   mode = "profile",
 }: {
   initial: Initial;
   companies: CompanyOption[];
   functions: Taxon[];
   seniorities: Taxon[];
+  expertise: Expertise[];
+  maxExpertise: number;
   mode?: "profile" | "onboarding";
 }) {
   const router = useRouter();
   const onboarding = mode === "onboarding";
+
+  // Areas of expertise — a capped multi-select rendered as toggle chips.
+  const [expSel, setExpSel] = useState<Set<number>>(() => new Set(initial.expertiseIds));
+  const toggleExp = (id: number) =>
+    setExpSel((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else if (next.size < maxExpertise) next.add(id);
+      return next;
+    });
 
   // Submit action imported directly (not passed as a prop) so the server-action
   // reference is stable on the client.
@@ -231,6 +247,34 @@ export default function ProfileForm({
 
         <label htmlFor="bio">Short bio</label>
         <textarea id="bio" name="bio" defaultValue={initial.bio} />
+
+        {expertise.length > 0 && (
+          <fieldset className="discover-box">
+            <legend>Areas of expertise <span className="meta">(up to {maxExpertise})</span></legend>
+            <div className="chip-select">
+              {expertise.map((e) => {
+                const on = expSel.has(e.id);
+                const blocked = !on && expSel.size >= maxExpertise;
+                return (
+                  <label key={e.id} className={`chip chip-toggle${on ? " chip-active" : ""}${blocked ? " chip-disabled" : ""}`}>
+                    <input
+                      type="checkbox"
+                      name="expertise"
+                      value={e.id}
+                      checked={on}
+                      disabled={blocked}
+                      onChange={() => toggleExp(e.id)}
+                    />
+                    {e.name}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="note" style={{ marginTop: "0.4rem" }}>
+              Shown on your profile and used to filter the directory. {expSel.size}/{maxExpertise} selected.
+            </p>
+          </fieldset>
+        )}
 
         <fieldset className="discover-box">
           <legend>Discoverability <span className="meta">(optional)</span></legend>

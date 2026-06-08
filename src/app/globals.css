@@ -322,6 +322,11 @@ main.page { padding: 2.5rem 0 4rem; }
 .tag-check:has(input:checked) { background: var(--sage); border-color: var(--sage); color: var(--cream); }
 /* Inline content tags on cards */
 .content-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem; }
+/* Chip multiselect (areas of expertise on the profile form) */
+.chip-select { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip-toggle { cursor: pointer; user-select: none; }
+.chip-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.chip-toggle.chip-disabled { opacity: 0.45; cursor: not-allowed; }
 /* Appreciate / Save toggle buttons */
 .react-btn { display: inline-flex; align-items: center; gap: 0.35rem; background: none; border: 1px solid var(--line); border-radius: 999px; padding: 0.32rem 0.72rem; font: inherit; font-size: 0.78rem; color: var(--muted); cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease; }
 .react-btn:hover { border-color: var(--sage-soft); color: var(--ink); }

@@ -619,6 +619,24 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
   .member-card:hover { transform: none; }
 }
 
+/* Admin analytics */
+.metric-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.metric { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 0.95rem 1.05rem; }
+.metric-label { font-family: "JetBrains Mono", monospace; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); }
+.metric-value { font-family: "Cormorant Garamond", serif; font-size: 2rem; font-weight: 600; color: var(--sage-deep); line-height: 1.1; margin-top: 0.15rem; }
+.metric-sub { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
+.spark { display: flex; align-items: flex-end; gap: 0.5rem; height: 130px; }
+.spark-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.3rem; height: 100%; }
+.spark-bar { width: 100%; max-width: 38px; background: var(--sage); border-radius: 5px 5px 0 0; min-height: 3px; }
+.spark-n { font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.analytics-cols { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+.bd-row { display: grid; grid-template-columns: 116px 1fr 2.2rem; align-items: center; gap: 0.6rem; margin: 0.4rem 0; font-size: 0.85rem; }
+.bd-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bd-track { height: 8px; background: var(--cream-deep); border-radius: 999px; overflow: hidden; }
+.bd-fill { display: block; height: 100%; background: var(--sage); border-radius: 999px; }
+.bd-n { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .analytics-cols { grid-template-columns: 1fr; } }
+
 /* Alpha-tester feedback widget (floating reporter) */
 .fab-wrap { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 90; display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
 .fab { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--ink); color: var(--cream); border: none; border-radius: 999px; padding: 0.6rem 1rem; font: inherit; font-size: 0.8rem; letter-spacing: 0.03em; cursor: pointer; box-shadow: 0 8px 22px rgba(20, 20, 15, 0.18); }

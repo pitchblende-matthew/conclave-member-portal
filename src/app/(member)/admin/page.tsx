@@ -37,6 +37,7 @@ export default async function AdminHome() {
   ]);
 
   const sections: { href: string; title: string; value: number; hint: string; icon: IconName }[] = [
+    { href: "/admin/analytics", title: "Analytics", value: members, hint: "Members, usage & growth", icon: "dashboard" },
     { href: "/admin/requests", title: "Requests", value: requests + inviteRequests, hint: inviteRequests > 0 ? `Applications + ${inviteRequests} invitation request${inviteRequests === 1 ? "" : "s"}` : "Applications & invitation requests", icon: "requests" },
     { href: "/admin/reports", title: "Reports", value: openReports, hint: openReports > 0 ? `${openReports} open to review` : "Member content reports", icon: "requests" },
     { href: "/admin/feedback", title: "Feedback", value: openFeedback, hint: openFeedback > 0 ? `${openFeedback} active from alpha testers` : "Alpha bug & feature reports", icon: "sparkle" },

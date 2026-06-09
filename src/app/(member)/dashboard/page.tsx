@@ -66,6 +66,19 @@ export default async function Dashboard() {
   const marketLabel = hasDma ? user.dma_name : "the network";
   const suggestions = await suggestedMembers(user, 4);
 
+  // Activation checklist — the first actions that turn a new member into an
+  // active one (and that power matching). Hidden once everything's done.
+  const rsvpCount = await one("SELECT COUNT(*) AS n FROM rsvps WHERE user_id = ?", user.id);
+  const steps = [
+    { label: "Add a profile photo", done: !!user.avatar_key, href: "/profile" },
+    { label: "Write a short bio", done: !!user.bio, href: "/profile" },
+    { label: "Set your market", done: !!user.dma_slug, href: "/profile" },
+    { label: "Make your first connection", done: connections > 0, href: "/discover" },
+    { label: "RSVP to an event", done: rsvpCount > 0, href: "/events" },
+  ];
+  const stepsDone = steps.filter((s) => s.done).length;
+  const activated = stepsDone === steps.length;
+
   return (
     <>
       <div className="dash-hero">
@@ -82,6 +95,32 @@ export default async function Dashboard() {
           )}
         </p>
       </div>
+
+      {!activated && (
+        <section className="card getstarted" style={{ marginTop: "1.5rem" }}>
+          <div className="topline">
+            <h2 className="sec-head" style={{ fontSize: "1.4rem", margin: 0 }}><Icon name="sparkle" size={18} />Get started</h2>
+            <span className="meta">{stepsDone} of {steps.length} done</span>
+          </div>
+          <div className="gs-bar"><span className="gs-fill" style={{ width: `${(stepsDone / steps.length) * 100}%` }} /></div>
+          <div className="checklist">
+            {steps.map((s) =>
+              s.done ? (
+                <div key={s.label} className="check-item done">
+                  <span className="check-mark">✓</span>
+                  <span className="check-label">{s.label}</span>
+                </div>
+              ) : (
+                <Link key={s.label} href={s.href} className="check-item">
+                  <span className="check-mark" aria-hidden />
+                  <span className="check-label">{s.label}</span>
+                  <span className="check-go">Do it →</span>
+                </Link>
+              )
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Market snapshot */}
       <div className="grid" style={{ marginTop: "1.5rem" }}>

@@ -53,6 +53,29 @@ export async function resizeImage(file: File, { maxDim = 2400, maxBytes = 4.5 * 
   return new File([blob], name, { type: "image/jpeg", lastModified: Date.now() });
 }
 
+export type PreparedImage = { previewUrl: string } | { error: string };
+
+// Resize an just-picked image (when needed) and swap the smaller file back into
+// the <input> so the form posts it; returns a preview URL or a friendly size
+// error if it still exceeds the cap.
+export async function prepareImageInput(input: HTMLInputElement, file: File, maxMB = 5): Promise<PreparedImage> {
+  let chosen = file;
+  try {
+    const resized = await resizeImage(file);
+    const dt = new DataTransfer();
+    dt.items.add(resized);
+    input.files = dt.files;
+    chosen = resized;
+  } catch {
+    chosen = input.files?.[0] ?? file;
+  }
+  if (chosen.size > maxMB * 1024 * 1024) {
+    input.value = "";
+    return { error: `That image is ${(chosen.size / 1024 / 1024).toFixed(1)} MB — please use one ${maxMB} MB or smaller.` };
+  }
+  return { previewUrl: URL.createObjectURL(chosen) };
+}
+
 function loadImage(file: File): Promise<ImageBitmap | HTMLImageElement> {
   if (typeof createImageBitmap === "function") return createImageBitmap(file);
   return new Promise((resolve, reject) => {

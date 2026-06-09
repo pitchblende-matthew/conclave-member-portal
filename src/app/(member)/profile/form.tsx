@@ -6,7 +6,7 @@ import Avatar from "@/components/avatar";
 import { US_STATES } from "@/lib/us-states";
 import type { Taxon } from "@/lib/member-taxonomy";
 import type { Expertise } from "@/lib/expertise";
-import { resizeImage } from "@/lib/image-resize";
+import { prepareImageInput } from "@/lib/image-resize";
 import { updateProfile, uploadAvatar, removeAvatar, uploadCover, removeCover } from "./actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
 
@@ -83,11 +83,8 @@ export default function ProfileForm({
   const [covError, setCovError] = useState<string | null>(null);
   const [covBusy, setCovBusy] = useState(false);
 
-  const MAX_IMAGE_MB = 5;
-
   // On pick: downscale large images in the browser so they fit, swap the resized
-  // file back into the input (that's what gets posted), and preview it. A size
-  // check stays as a backstop in case resizing can't get under the cap.
+  // file back into the input (that's what gets posted), and preview it.
   const handlePick = async (
     input: HTMLInputElement,
     file: File,
@@ -97,24 +94,10 @@ export default function ProfileForm({
   ): Promise<void> => {
     setError(null);
     setBusy(true);
-    let chosen = file;
-    try {
-      const resized = await resizeImage(file);
-      const dt = new DataTransfer();
-      dt.items.add(resized);
-      input.files = dt.files;
-      chosen = resized;
-    } catch {
-      chosen = input.files?.[0] ?? file;
-    }
+    const res = await prepareImageInput(input, file);
     setBusy(false);
-    if (chosen.size > MAX_IMAGE_MB * 1024 * 1024) {
-      setError(`That image is ${(chosen.size / 1024 / 1024).toFixed(1)} MB — please use one ${MAX_IMAGE_MB} MB or smaller.`);
-      input.value = "";
-      setPreviewUrl(null);
-      return;
-    }
-    setPreviewUrl(URL.createObjectURL(chosen));
+    if ("error" in res) { setError(res.error); setPreviewUrl(null); return; }
+    setPreviewUrl(res.previewUrl);
   };
 
   // Details

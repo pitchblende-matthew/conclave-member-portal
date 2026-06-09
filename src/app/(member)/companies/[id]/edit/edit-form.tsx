@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/avatar";
 import RegionFields from "@/components/region-fields";
+import { useImagePick } from "@/lib/use-image-pick";
 import type { Industry } from "@/lib/industries";
 import { updateCompany, uploadCompanyLogo, removeCompanyLogo, uploadCompanyCover, removeCompanyCover } from "../../actions";
 
@@ -26,22 +27,22 @@ export default function EditCompanyForm({ initial, industries }: { initial: Init
   const router = useRouter();
   const [logoState, logoAction, logoPending] = useActionState(uploadCompanyLogo, {});
   const [rmState, rmAction, rmPending] = useActionState(removeCompanyLogo, {});
-  const [preview, setPreview] = useState<string | null>(null);
+  const logo = useImagePick(initial.logoUrl);
   const [covState, covAction, covPending] = useActionState(uploadCompanyCover, {});
   const [covRmState, covRmAction, covRmPending] = useActionState(removeCompanyCover, {});
-  const [covPreview, setCovPreview] = useState<string | null>(null);
+  const cover = useImagePick(initial.coverUrl);
   const [state, formAction, pending] = useActionState(updateCompany, {});
 
   useEffect(() => {
     if (logoState?.ok || rmState?.ok || covState?.ok || covRmState?.ok) {
-      setPreview(null);
-      setCovPreview(null);
+      logo.reset();
+      cover.reset();
       router.refresh();
     }
-  }, [logoState, rmState, covState, covRmState, router]);
+  }, [logoState, rmState, covState, covRmState, router, logo.reset, cover.reset]);
 
-  const shownLogo = preview ?? initial.logoUrl;
-  const shownCover = covPreview ?? initial.coverUrl;
+  const shownLogo = logo.shown;
+  const shownCover = cover.shown;
 
   return (
     <>
@@ -51,20 +52,11 @@ export default function EditCompanyForm({ initial, industries }: { initial: Init
         </div>
         <form action={covAction}>
           <input type="hidden" name="companyId" value={initial.id} />
-          <label htmlFor="cover" className="meta">Cover image — a wide JPG, PNG, or WebP, up to 5 MB</label>
-          <input
-            id="cover"
-            name="cover"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              setCovPreview(file ? URL.createObjectURL(file) : null);
-            }}
-          />
+          <label htmlFor="cover" className="meta">Cover image — a wide JPG, PNG, or WebP. Large images are resized to fit.</label>
+          <input id="cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp" onChange={cover.onChange} />
           <div className="btn-row">
-            <button className="btn inline-btn" type="submit" disabled={covPending}>
-              {covPending ? "Uploading…" : "Upload cover"}
+            <button className="btn inline-btn" type="submit" disabled={covPending || cover.busy || !!cover.error}>
+              {cover.busy ? "Optimizing…" : covPending ? "Uploading…" : "Upload cover"}
             </button>
             {initial.coverUrl && (
               <button className="btn btn-ghost inline-btn" formAction={covRmAction} disabled={covRmPending}>
@@ -72,7 +64,7 @@ export default function EditCompanyForm({ initial, industries }: { initial: Init
               </button>
             )}
           </div>
-          {covState?.error && <div className="error" role="alert">{covState.error}</div>}
+          {(cover.error || covState?.error) && <div className="error" role="alert">{cover.error || covState?.error}</div>}
         </form>
       </div>
 
@@ -81,20 +73,11 @@ export default function EditCompanyForm({ initial, industries }: { initial: Init
         <div className="avatar-controls">
           <form action={logoAction}>
             <input type="hidden" name="companyId" value={initial.id} />
-            <label htmlFor="logo" className="meta">Logo — JPG, PNG, or WebP, up to 5 MB</label>
-            <input
-              id="logo"
-              name="logo"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                setPreview(file ? URL.createObjectURL(file) : null);
-              }}
-            />
+            <label htmlFor="logo" className="meta">Logo — JPG, PNG, or WebP. Large images are resized to fit.</label>
+            <input id="logo" name="logo" type="file" accept="image/jpeg,image/png,image/webp" onChange={logo.onChange} />
             <div className="btn-row">
-              <button className="btn inline-btn" type="submit" disabled={logoPending}>
-                {logoPending ? "Uploading…" : "Upload logo"}
+              <button className="btn inline-btn" type="submit" disabled={logoPending || logo.busy || !!logo.error}>
+                {logo.busy ? "Optimizing…" : logoPending ? "Uploading…" : "Upload logo"}
               </button>
               {initial.logoUrl && (
                 <button className="btn btn-ghost inline-btn" formAction={rmAction} disabled={rmPending}>
@@ -102,7 +85,7 @@ export default function EditCompanyForm({ initial, industries }: { initial: Init
                 </button>
               )}
             </div>
-            {logoState?.error && <div className="error" role="alert">{logoState.error}</div>}
+            {(logo.error || logoState?.error) && <div className="error" role="alert">{logo.error || logoState?.error}</div>}
           </form>
         </div>
       </div>

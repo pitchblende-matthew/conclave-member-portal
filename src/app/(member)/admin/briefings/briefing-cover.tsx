@@ -1,46 +1,37 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useImagePick } from "@/lib/use-image-pick";
 import { uploadCover, removeCover } from "./actions";
 
 export default function BriefingCover({ id, coverUrl }: { id: number; coverUrl: string | null }) {
   const router = useRouter();
   const [upState, upAction, upPending] = useActionState(uploadCover, {});
   const [rmState, rmAction, rmPending] = useActionState(removeCover, {});
-  const [preview, setPreview] = useState<string | null>(null);
+  const cover = useImagePick(coverUrl);
 
   useEffect(() => {
     if (upState?.ok || rmState?.ok) {
-      setPreview(null);
+      cover.reset();
       router.refresh();
     }
-  }, [upState, rmState, router]);
-
-  const shown = preview ?? coverUrl;
+  }, [upState, rmState, router, cover.reset]);
 
   return (
     <form action={upAction}>
       <input type="hidden" name="briefingId" value={id} />
-      <label className="meta">Cover image — JPG, PNG, or WebP, up to 5 MB</label>
-      {shown ? (
+      <label className="meta">Cover image — JPG, PNG, or WebP. Large images are resized to fit.</label>
+      {cover.shown ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={shown} alt="Cover preview" className="cover-preview" />
+        <img src={cover.shown} alt="Cover preview" className="cover-preview" />
       ) : (
         <div className="cover-preview cover-empty">No cover yet</div>
       )}
-      <input
-        name="cover"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          setPreview(file ? URL.createObjectURL(file) : null);
-        }}
-      />
+      <input name="cover" type="file" accept="image/jpeg,image/png,image/webp" onChange={cover.onChange} />
       <div className="btn-row">
-        <button className="btn inline-btn" type="submit" disabled={upPending}>
-          {upPending ? "Uploading…" : "Upload cover"}
+        <button className="btn inline-btn" type="submit" disabled={upPending || cover.busy || !!cover.error}>
+          {cover.busy ? "Optimizing…" : upPending ? "Uploading…" : "Upload cover"}
         </button>
         {coverUrl && (
           <button className="btn btn-ghost inline-btn" formAction={rmAction} disabled={rmPending}>
@@ -48,7 +39,7 @@ export default function BriefingCover({ id, coverUrl }: { id: number; coverUrl: 
           </button>
         )}
       </div>
-      {upState?.error && <div className="error" role="alert">{upState.error}</div>}
+      {(cover.error || upState?.error) && <div className="error" role="alert">{cover.error || upState?.error}</div>}
     </form>
   );
 }

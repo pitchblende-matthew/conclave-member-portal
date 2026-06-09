@@ -72,11 +72,25 @@ export default function ProfileForm({
   const [upState, upAction, upPending] = useActionState(uploadAvatar, {});
   const [rmState, rmAction, rmPending] = useActionState(removeAvatar, {});
   const [preview, setPreview] = useState<string | null>(null);
+  const [avaError, setAvaError] = useState<string | null>(null);
 
   // Cover upload
   const [covState, covAction, covPending] = useActionState(uploadCover, {});
   const [covRmState, covRmAction, covRmPending] = useActionState(removeCover, {});
   const [covPreview, setCovPreview] = useState<string | null>(null);
+  const [covError, setCovError] = useState<string | null>(null);
+
+  // Reject oversized images client-side, before they're posted — a too-large
+  // upload would otherwise exceed the Server Action body limit and 500.
+  const MAX_IMAGE_MB = 5;
+  const checkSize = (file: File, setError: (m: string | null) => void): boolean => {
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setError(`That image is ${(file.size / 1024 / 1024).toFixed(1)} MB — please use one ${MAX_IMAGE_MB} MB or smaller.`);
+      return false;
+    }
+    setError(null);
+    return true;
+  };
 
   // Details
   const [state, formAction, pending] = useActionState(submit, {});
@@ -108,11 +122,16 @@ export default function ProfileForm({
             accept="image/jpeg,image/png,image/webp"
             onChange={(e) => {
               const file = e.target.files?.[0];
+              if (file && !checkSize(file, setCovError)) {
+                e.target.value = "";
+                setCovPreview(null);
+                return;
+              }
               setCovPreview(file ? URL.createObjectURL(file) : null);
             }}
           />
           <div className="btn-row">
-            <button className="btn inline-btn" type="submit" disabled={covPending}>
+            <button className="btn inline-btn" type="submit" disabled={covPending || !!covError}>
               {covPending ? "Uploading…" : "Upload cover"}
             </button>
             {initial.coverUrl && (
@@ -121,7 +140,7 @@ export default function ProfileForm({
               </button>
             )}
           </div>
-          {covState?.error && <div className="error" role="alert">{covState.error}</div>}
+          {(covError || covState?.error) && <div className="error" role="alert">{covError || covState?.error}</div>}
         </form>
       </div>
 
@@ -137,11 +156,16 @@ export default function ProfileForm({
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => {
                 const file = e.target.files?.[0];
+                if (file && !checkSize(file, setAvaError)) {
+                  e.target.value = "";
+                  setPreview(null);
+                  return;
+                }
                 setPreview(file ? URL.createObjectURL(file) : null);
               }}
             />
             <div className="btn-row">
-              <button className="btn inline-btn" type="submit" disabled={upPending}>
+              <button className="btn inline-btn" type="submit" disabled={upPending || !!avaError}>
                 {upPending ? "Uploading…" : "Upload photo"}
               </button>
               {initial.avatarUrl && (
@@ -150,7 +174,7 @@ export default function ProfileForm({
                 </button>
               )}
             </div>
-            {upState?.error && <div className="error" role="alert">{upState.error}</div>}
+            {(avaError || upState?.error) && <div className="error" role="alert">{avaError || upState?.error}</div>}
           </form>
         </div>
       </div>

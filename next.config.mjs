@@ -34,9 +34,12 @@ const nextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins,
-      // Profile photos / company logos post through Server Actions; the default
-      // cap is 1 MB, but media.ts allows images up to 5 MB. Allow headroom.
-      bodySizeLimit: "6mb",
+      // Profile photos / company logos post through Server Actions; media.ts
+      // allows images up to 5 MB. Keep a generous margin above that (multipart
+      // overhead + slightly-over files) so an oversized upload reaches the
+      // handler and gets a friendly "5 MB or smaller" error instead of being
+      // rejected by the framework as an unhandled 500.
+      bodySizeLimit: "12mb",
     },
   },
 };

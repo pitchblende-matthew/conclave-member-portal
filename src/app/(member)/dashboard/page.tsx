@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
 import { connectionCounts } from "@/lib/connections";
 import { suggestedMembers } from "@/lib/suggestions";
+import { networkFeed } from "@/lib/feed";
 import Icon, { Sprig } from "@/components/icons";
 import Eyebrow from "@/components/eyebrow";
 import SectionDivider from "@/components/section-divider";
@@ -65,6 +66,7 @@ export default async function Dashboard() {
 
   const marketLabel = hasDma ? user.dma_name : "the network";
   const suggestions = await suggestedMembers(user, 4);
+  const feed = await networkFeed(user.id, 12);
 
   return (
     <>
@@ -123,6 +125,30 @@ export default async function Dashboard() {
           </section>
         </>
       )}
+
+      <SectionDivider />
+      <section>
+        <div className="topline">
+          <h2 className="sec-head" style={{ fontSize: "1.5rem" }}><Icon name="sparkle" size={18} />Around the network</h2>
+        </div>
+        <div className="card feed" style={{ marginTop: "0.75rem" }}>
+          {feed.map((f, i) => {
+            const inner = (
+              <>
+                <span className="feed-ico"><Icon name={f.icon} size={15} /></span>
+                <span className="feed-text">{f.text}</span>
+                <span className="feed-time"><LocalTime ms={f.created_at} mode="date" /></span>
+              </>
+            );
+            return f.external ? (
+              <a key={i} href={f.href} target="_blank" rel="noreferrer" className="feed-item">{inner}</a>
+            ) : (
+              <Link key={i} href={f.href} className="feed-item">{inner}</Link>
+            );
+          })}
+          {feed.length === 0 && <p className="meta" style={{ margin: "0.5rem" }}>Quiet so far — start a discussion or RSVP to an event to get things going.</p>}
+        </div>
+      </section>
 
       <SectionDivider />
 

@@ -23,22 +23,28 @@ export default async function AdminReports() {
     )
     .all<Row>();
 
-  // Resolve each report's target context.
-  const ctx = await Promise.all(
-    reports.map(async (r) => {
+  // Resolve each report's target context. Done sequentially (not Promise.all) to
+  // avoid firing many concurrent D1 queries, and guarded per row so one bad or
+  // deleted target degrades to a placeholder instead of failing the whole page.
+  type Ctx = { heading: string; body: string; link: string | null; removable: boolean; memberId: number | null };
+  const ctx: Ctx[] = [];
+  for (const r of reports) {
+    try {
       if (r.target_type === "post") {
         const p = await db.prepare("SELECT body, topic_id, user_id FROM posts WHERE id = ?").bind(r.target_id).first<{ body: string; topic_id: number; user_id: number }>();
         const author = p ? await db.prepare("SELECT name FROM users WHERE id = ?").bind(p.user_id).first<{ name: string }>() : null;
-        return { heading: `Reply${author?.name ? ` by ${author.name}` : ""}`, body: p?.body ?? "(deleted)", link: p?.topic_id ? `/board/${p.topic_id}` : null, removable: !!p, memberId: null as number | null };
-      }
-      if (r.target_type === "topic") {
+        ctx.push({ heading: `Reply${author?.name ? ` by ${author.name}` : ""}`, body: p?.body ?? "(deleted)", link: p?.topic_id ? `/board/${p.topic_id}` : null, removable: !!p, memberId: null });
+      } else if (r.target_type === "topic") {
         const t = await db.prepare("SELECT title FROM topics WHERE id = ?").bind(r.target_id).first<{ title: string }>();
-        return { heading: `Topic: ${t?.title ?? "(deleted)"}`, body: "", link: t ? `/board/${r.target_id}` : null, removable: !!t, memberId: null as number | null };
+        ctx.push({ heading: `Topic: ${t?.title ?? "(deleted)"}`, body: "", link: t ? `/board/${r.target_id}` : null, removable: !!t, memberId: null });
+      } else {
+        const u = await db.prepare("SELECT name FROM users WHERE id = ?").bind(r.target_id).first<{ name: string }>();
+        ctx.push({ heading: `Member: ${u?.name ?? "(deleted)"}`, body: "", link: u ? `/directory/${r.target_id}` : null, removable: false, memberId: r.target_id });
       }
-      const u = await db.prepare("SELECT name FROM users WHERE id = ?").bind(r.target_id).first<{ name: string }>();
-      return { heading: `Member: ${u?.name ?? "(deleted)"}`, body: "", link: u ? `/directory/${r.target_id}` : null, removable: false, memberId: r.target_id };
-    })
-  );
+    } catch {
+      ctx.push({ heading: `${r.target_type} #${r.target_id}`, body: "(could not load this item)", link: null, removable: false, memberId: null });
+    }
+  }
 
   return (
     <>

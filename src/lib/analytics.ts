@@ -31,7 +31,6 @@ export async function getAnalytics(): Promise<Analytics> {
 
   const [
     approved, pending, declined, new7, new30m, onboarded, alpha, admins,
-    active30,
     nTopics, nPosts, nEvents, nRsvps, nBriefings, nListings, nMessages, nConnections,
     tCompanies, tTopics, tPosts, tEvents, tRsvps, tBriefings, tConnections, tMessages, tJobs, tBiz, tFeedback,
   ] = await Promise.all([
@@ -43,18 +42,6 @@ export async function getAnalytics(): Promise<Analytics> {
     one("SELECT COUNT(*) n FROM users WHERE status='approved' AND onboarded=1"),
     one("SELECT COUNT(*) n FROM users WHERE alpha_tester=1"),
     one("SELECT COUNT(*) n FROM users WHERE is_admin=1"),
-    // distinct members who took an action in the last 30 days
-    one(
-      `SELECT COUNT(*) n FROM (
-         SELECT user_id uid FROM posts WHERE created_at>=?
-         UNION SELECT user_id FROM rsvps WHERE created_at>=?
-         UNION SELECT sender_id FROM messages WHERE created_at>=?
-         UNION SELECT created_by FROM topics WHERE created_at>=?
-         UNION SELECT requester_id FROM connections WHERE created_at>=?
-         UNION SELECT user_id FROM listings WHERE created_at>=?
-       )`,
-      d30, d30, d30, d30, d30, d30
-    ),
     // new content (30d)
     one("SELECT COUNT(*) n FROM topics WHERE created_at>=?", d30),
     one("SELECT COUNT(*) n FROM posts WHERE created_at>=?", d30),
@@ -77,6 +64,22 @@ export async function getAnalytics(): Promise<Analytics> {
     one("SELECT COUNT(*) n FROM listings WHERE kind='business' AND status='open'"),
     one("SELECT COUNT(*) n FROM feedback WHERE status!='closed'"),
   ]);
+
+  // Distinct members active in the last 30 days. Unioned in JS rather than one
+  // compound SELECT — D1 caps the number of UNION terms allowed in a statement.
+  const activitySources: [string, string][] = [
+    ["user_id", "posts"], ["user_id", "rsvps"], ["sender_id", "messages"],
+    ["created_by", "topics"], ["requester_id", "connections"], ["user_id", "listings"],
+  ];
+  const activeRows = await Promise.all(
+    // Column/table come from the fixed whitelist above, never user input.
+    activitySources.map(([col, table]) =>
+      db.prepare(`SELECT DISTINCT ${col} AS id FROM ${table} WHERE created_at>=?`).bind(d30).all<{ id: number }>()
+    )
+  );
+  const activeIds = new Set<number>();
+  for (const r of activeRows) for (const row of r.results) activeIds.add(row.id);
+  const active30 = activeIds.size;
 
   const [markets, functions, seniorities, weeklyRows] = await Promise.all([
     list("SELECT dma_name AS name, COUNT(*) n FROM users WHERE status='approved' AND dma_name!='' GROUP BY dma_slug ORDER BY n DESC, name LIMIT 8"),

@@ -6,6 +6,7 @@ import Avatar from "@/components/avatar";
 import { US_STATES } from "@/lib/us-states";
 import type { Taxon } from "@/lib/member-taxonomy";
 import type { Expertise } from "@/lib/expertise";
+import { resizeImage } from "@/lib/image-resize";
 import { updateProfile, uploadAvatar, removeAvatar, uploadCover, removeCover } from "./actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
 
@@ -73,23 +74,47 @@ export default function ProfileForm({
   const [rmState, rmAction, rmPending] = useActionState(removeAvatar, {});
   const [preview, setPreview] = useState<string | null>(null);
   const [avaError, setAvaError] = useState<string | null>(null);
+  const [avaBusy, setAvaBusy] = useState(false);
 
   // Cover upload
   const [covState, covAction, covPending] = useActionState(uploadCover, {});
   const [covRmState, covRmAction, covRmPending] = useActionState(removeCover, {});
   const [covPreview, setCovPreview] = useState<string | null>(null);
   const [covError, setCovError] = useState<string | null>(null);
+  const [covBusy, setCovBusy] = useState(false);
 
-  // Reject oversized images client-side, before they're posted — a too-large
-  // upload would otherwise exceed the Server Action body limit and 500.
   const MAX_IMAGE_MB = 5;
-  const checkSize = (file: File, setError: (m: string | null) => void): boolean => {
-    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
-      setError(`That image is ${(file.size / 1024 / 1024).toFixed(1)} MB — please use one ${MAX_IMAGE_MB} MB or smaller.`);
-      return false;
-    }
+
+  // On pick: downscale large images in the browser so they fit, swap the resized
+  // file back into the input (that's what gets posted), and preview it. A size
+  // check stays as a backstop in case resizing can't get under the cap.
+  const handlePick = async (
+    input: HTMLInputElement,
+    file: File,
+    setPreviewUrl: (u: string | null) => void,
+    setError: (m: string | null) => void,
+    setBusy: (b: boolean) => void
+  ): Promise<void> => {
     setError(null);
-    return true;
+    setBusy(true);
+    let chosen = file;
+    try {
+      const resized = await resizeImage(file);
+      const dt = new DataTransfer();
+      dt.items.add(resized);
+      input.files = dt.files;
+      chosen = resized;
+    } catch {
+      chosen = input.files?.[0] ?? file;
+    }
+    setBusy(false);
+    if (chosen.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setError(`That image is ${(chosen.size / 1024 / 1024).toFixed(1)} MB — please use one ${MAX_IMAGE_MB} MB or smaller.`);
+      input.value = "";
+      setPreviewUrl(null);
+      return;
+    }
+    setPreviewUrl(URL.createObjectURL(chosen));
   };
 
   // Details
@@ -114,25 +139,22 @@ export default function ProfileForm({
           {!shownCover && <span className="meta">No cover image yet</span>}
         </div>
         <form action={covAction}>
-          <label htmlFor="cover" className="meta">Cover image — a wide JPG, PNG, or WebP, up to 5 MB</label>
+          <label htmlFor="cover" className="meta">Cover image — a wide JPG, PNG, or WebP. Large images are resized to fit.</label>
           <input
             id="cover"
             name="cover"
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file && !checkSize(file, setCovError)) {
-                e.target.value = "";
-                setCovPreview(null);
-                return;
-              }
-              setCovPreview(file ? URL.createObjectURL(file) : null);
+              const input = e.currentTarget;
+              const file = input.files?.[0];
+              if (!file) { setCovPreview(null); setCovError(null); return; }
+              void handlePick(input, file, setCovPreview, setCovError, setCovBusy);
             }}
           />
           <div className="btn-row">
-            <button className="btn inline-btn" type="submit" disabled={covPending || !!covError}>
-              {covPending ? "Uploading…" : "Upload cover"}
+            <button className="btn inline-btn" type="submit" disabled={covPending || covBusy || !!covError}>
+              {covBusy ? "Optimizing…" : covPending ? "Uploading…" : "Upload cover"}
             </button>
             {initial.coverUrl && (
               <button className="btn btn-ghost inline-btn" formAction={covRmAction} disabled={covRmPending}>
@@ -148,25 +170,22 @@ export default function ProfileForm({
         <Avatar src={shownAvatar} name={initial.name} size={88} />
         <div className="avatar-controls">
           <form action={upAction}>
-            <label htmlFor="avatar" className="meta">Profile photo — JPG, PNG, or WebP, up to 5 MB</label>
+            <label htmlFor="avatar" className="meta">Profile photo — JPG, PNG, or WebP. Large images are resized to fit.</label>
             <input
               id="avatar"
               name="avatar"
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file && !checkSize(file, setAvaError)) {
-                  e.target.value = "";
-                  setPreview(null);
-                  return;
-                }
-                setPreview(file ? URL.createObjectURL(file) : null);
+                const input = e.currentTarget;
+                const file = input.files?.[0];
+                if (!file) { setPreview(null); setAvaError(null); return; }
+                void handlePick(input, file, setPreview, setAvaError, setAvaBusy);
               }}
             />
             <div className="btn-row">
-              <button className="btn inline-btn" type="submit" disabled={upPending || !!avaError}>
-                {upPending ? "Uploading…" : "Upload photo"}
+              <button className="btn inline-btn" type="submit" disabled={upPending || avaBusy || !!avaError}>
+                {avaBusy ? "Optimizing…" : upPending ? "Uploading…" : "Upload photo"}
               </button>
               {initial.avatarUrl && (
                 <button className="btn btn-ghost inline-btn" formAction={rmAction} disabled={rmPending}>

@@ -15,13 +15,21 @@ export default async function AdminReports() {
   if (me.is_admin !== 1) redirect("/dashboard");
   const db = getDb();
 
-  const { results: reports } = await db
-    .prepare(
-      `SELECT r.*, u.name AS reporter_name
-       FROM reports r LEFT JOIN users u ON u.id = r.reporter_id
-       WHERE r.status = 'open' ORDER BY r.created_at ASC`
-    )
-    .all<Row>();
+  // Wrapped so any DB hiccup renders a friendly message instead of a 500.
+  let reports: Row[] = [];
+  let loadError = false;
+  try {
+    const res = await db
+      .prepare(
+        `SELECT r.*, u.name AS reporter_name
+         FROM reports r LEFT JOIN users u ON u.id = r.reporter_id
+         WHERE r.status = 'open' ORDER BY r.created_at ASC`
+      )
+      .all<Row>();
+    reports = res.results;
+  } catch {
+    loadError = true;
+  }
 
   // Resolve each report's target context. Done sequentially (not Promise.all) to
   // avoid firing many concurrent D1 queries, and guarded per row so one bad or
@@ -51,7 +59,13 @@ export default async function AdminReports() {
       <p className="meta"><Link href="/admin">← Admin</Link></p>
       <div className="tag">Admin · Moderation</div>
       <h1 style={{ fontSize: "2.6rem" }}>Reports</h1>
-      <p className="meta">{reports.length} open</p>
+      <p className="meta">{loadError ? "Queue unavailable" : `${reports.length} open`}</p>
+
+      {loadError && (
+        <div className="card" style={{ marginTop: "1.5rem" }}>
+          <p className="meta" style={{ margin: 0 }}>The moderation queue couldn&apos;t be loaded right now. Refresh to try again — if it keeps happening, check the server logs.</p>
+        </div>
+      )}
 
       <div style={{ marginTop: "1.5rem" }}>
         {reports.map((r, i) => {

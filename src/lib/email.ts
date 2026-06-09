@@ -32,12 +32,18 @@ export function emailEnabled(): boolean {
   return !!(env.RESEND_API_KEY && env.EMAIL_FROM);
 }
 
-// Absolute URL into the portal for links inside emails.
+// Absolute URL into the portal for links inside emails. Paths passed in are
+// app-relative (e.g. "/login"); the portal's mount path (e.g. "/portal") is
+// always included exactly once, whether or not EMAIL_BASE_URL already has it —
+// so a root-domain EMAIL_BASE_URL still produces "…/portal/login".
 export function siteUrl(path = ""): string {
   const env = readEnv();
+  const mount = (env.NEXT_PUBLIC_BASE_PATH || env.COSMIC_MOUNT_PATH || "").replace(/\/$/, "");
   const base = (env.EMAIL_BASE_URL || "").replace(/\/$/, "");
-  if (base) return `${base}${path}`;
-  const mount = env.NEXT_PUBLIC_BASE_PATH || env.COSMIC_MOUNT_PATH || "";
+  if (base) {
+    const withMount = mount && !base.endsWith(mount) ? `${base}${mount}` : base;
+    return `${withMount}${path}`;
+  }
   return `${mount}${path}`;
 }
 

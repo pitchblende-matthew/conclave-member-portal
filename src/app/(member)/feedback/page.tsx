@@ -27,6 +27,12 @@ export default async function MyFeedback() {
             </div>
             <p style={{ margin: "0.4rem 0 0.4rem", whiteSpace: "pre-wrap" }}>{f.body}</p>
             {f.page ? <p className="meta" style={{ margin: 0 }}>{f.page}</p> : null}
+            {f.admin_reply ? (
+              <div className="feedback-reply">
+                <span className="feedback-reply-label">Reply from the team</span>
+                <p style={{ margin: "0.2rem 0 0", whiteSpace: "pre-wrap" }}>{f.admin_reply}</p>
+              </div>
+            ) : null}
           </div>
         ))}
         {items.length === 0 && (

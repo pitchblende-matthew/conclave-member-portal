@@ -78,6 +78,10 @@ function toItem(n: NotifRow): BellItem {
       text = `${who} sent alpha feedback`;
       href = "/admin/feedback";
       break;
+    case "feedback_reply":
+      text = "The team replied to your feedback";
+      href = "/feedback";
+      break;
     default:
       text = "New activity";
   }

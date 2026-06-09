@@ -24,11 +24,14 @@ export type FeedbackRow = {
   status: string;
   screenshot_key: string;
   user_agent: string;
+  admin_reply: string;
+  replied_at: number | null;
   created_at: number;
   author: string | null;
 };
 
-const SELECT_COLS = "f.id, f.user_id, f.kind, f.page, f.body, f.status, f.screenshot_key, f.user_agent, f.created_at";
+const SELECT_COLS =
+  "f.id, f.user_id, f.kind, f.page, f.body, f.status, f.screenshot_key, f.user_agent, f.admin_reply, f.replied_at, f.created_at";
 
 export async function createFeedback(
   userId: number,
@@ -46,17 +49,37 @@ export async function createFeedback(
     .run();
 }
 
-// All feedback for admins — active items (anything not resolved) first, newest first.
-export async function listFeedback(): Promise<FeedbackRow[]> {
+// All feedback for admins — active items (anything not resolved) first, newest
+// first — with optional status / kind filters.
+export async function listFeedback(filter: { status?: string; kind?: string } = {}): Promise<FeedbackRow[]> {
+  const conds: string[] = [];
+  const binds: string[] = [];
+  if (filter.status && filter.status !== "all") { conds.push("f.status = ?"); binds.push(filter.status); }
+  if (filter.kind && filter.kind !== "all") { conds.push("f.kind = ?"); binds.push(filter.kind); }
+  const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
   const { results } = await getDb()
     .prepare(
       `SELECT ${SELECT_COLS}, u.name AS author
        FROM feedback f LEFT JOIN users u ON u.id = f.user_id
+       ${where}
        ORDER BY (f.status = 'closed'), f.created_at DESC
        LIMIT 300`
     )
+    .bind(...binds)
     .all<FeedbackRow>();
   return results;
+}
+
+// Save an admin reply; returns the tester's user/email/name so the caller can
+// notify them. null if the item is gone.
+export async function replyToFeedback(id: number, reply: string): Promise<{ user_id: number; email: string; name: string } | null> {
+  const db = getDb();
+  const rec = await db
+    .prepare("SELECT f.user_id, u.email, u.name FROM feedback f JOIN users u ON u.id = f.user_id WHERE f.id = ?")
+    .bind(id)
+    .first<{ user_id: number; email: string; name: string }>();
+  await db.prepare("UPDATE feedback SET admin_reply = ?, replied_at = ? WHERE id = ?").bind(reply, Date.now(), id).run();
+  return rec ?? null;
 }
 
 // A single tester's own reports.

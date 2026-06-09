@@ -642,3 +642,6 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
 .fab-reports:hover { text-decoration: underline; }
 /* Admin feedback screenshot thumbnail */
 .feedback-shot { max-width: 240px; max-height: 160px; border: 1px solid var(--line); border-radius: 8px; display: block; }
+/* Team reply block on a feedback item */
+.feedback-reply { margin-top: 0.75rem; padding: 0.6rem 0.8rem; border-left: 3px solid var(--sage-soft); background: var(--cream-deep); border-radius: 0 8px 8px 0; }
+.feedback-reply-label { font-family: "JetBrains Mono", monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); }

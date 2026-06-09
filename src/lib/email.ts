@@ -232,6 +232,16 @@ export async function emailAdminsNewReport(reporterName: string, targetType: str
   }
 }
 
+// Reply from the team on a tester's report — closes the loop by email too.
+export async function emailFeedbackReply(to: string, name: string, reply: string): Promise<void> {
+  await sendEmail({
+    to,
+    subject: "A reply to your Conclave feedback",
+    html: layout("Reply to your feedback", `<p>${greeting(name)}</p><p>Thanks for the report. The team replied:</p><p style="white-space:pre-wrap;border-left:3px solid #9aae9d;padding-left:12px;color:#45564b;">${esc(reply)}</p>`, { label: "View your reports", href: siteUrl("/feedback") }),
+    text: `The team replied to your Conclave feedback:\n\n${reply}\n\nView your reports: ${siteUrl("/feedback")}`,
+  });
+}
+
 export async function emailAdminsFeedback(kind: "bug" | "feature", testerName: string, page: string, body: string): Promise<void> {
   const tos = await adminEmails();
   const noun = kind === "bug" ? "bug report" : "feature request";

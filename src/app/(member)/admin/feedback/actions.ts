@@ -2,9 +2,26 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { setFeedbackStatus, deleteFeedback, FEEDBACK_STATUSES, type FeedbackStatus } from "@/lib/feedback";
+import { setFeedbackStatus, deleteFeedback, replyToFeedback, FEEDBACK_STATUSES, type FeedbackStatus } from "@/lib/feedback";
+import { notify } from "@/lib/notifications";
+import { emailFeedbackReply } from "@/lib/email";
 
 const VALID = new Set(FEEDBACK_STATUSES.map((s) => s.value));
+
+// Reply to a report; the tester is notified (bell + email) so the loop closes.
+export async function replyFeedback(formData: FormData): Promise<void> {
+  const me = await requireAdmin();
+  const id = Number(formData.get("id"));
+  const reply = String(formData.get("reply") ?? "").trim().slice(0, 4000);
+  if (!id || !reply) return;
+  const rec = await replyToFeedback(id, reply);
+  if (rec) {
+    await notify(rec.user_id, "feedback_reply", { actorId: me.id });
+    await emailFeedbackReply(rec.email, rec.name, reply);
+  }
+  revalidatePath("/admin/feedback");
+  revalidatePath("/feedback");
+}
 
 export async function updateFeedbackStatus(formData: FormData): Promise<void> {
   await requireAdmin();

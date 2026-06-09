@@ -232,6 +232,30 @@ export async function emailAdminsNewReport(reporterName: string, targetType: str
   }
 }
 
+// Reply from the team on a tester's report — closes the loop by email too.
+export async function emailFeedbackReply(to: string, name: string, reply: string): Promise<void> {
+  await sendEmail({
+    to,
+    subject: "A reply to your Conclave feedback",
+    html: layout("Reply to your feedback", `<p>${greeting(name)}</p><p>Thanks for the report. The team replied:</p><p style="white-space:pre-wrap;border-left:3px solid #9aae9d;padding-left:12px;color:#45564b;">${esc(reply)}</p>`, { label: "View your reports", href: siteUrl("/feedback") }),
+    text: `The team replied to your Conclave feedback:\n\n${reply}\n\nView your reports: ${siteUrl("/feedback")}`,
+  });
+}
+
+export async function emailAdminsFeedback(kind: "bug" | "feature", testerName: string, page: string, body: string): Promise<void> {
+  const tos = await adminEmails();
+  const noun = kind === "bug" ? "bug report" : "feature request";
+  const where = page ? ` on <code>${esc(page)}</code>` : "";
+  for (const to of tos) {
+    await sendEmail({
+      to,
+      subject: `New alpha ${noun} on Conclave`,
+      html: layout("Alpha feedback", `<p><strong>${esc(testerName || "An alpha tester")}</strong> filed a ${noun}${where}.</p><p style="white-space:pre-wrap;">${esc(body)}</p>`, { label: "Review feedback", href: siteUrl("/admin/feedback") }),
+      text: `${testerName || "An alpha tester"} filed a ${noun}${page ? ` on ${page}` : ""}:\n\n${body}\n\nReview: ${siteUrl("/admin/feedback")}`,
+    });
+  }
+}
+
 export async function emailAdminsNewSubmission(kind: "event" | "briefing", submitterName: string, title: string): Promise<void> {
   const tos = await adminEmails();
   const where = kind === "event" ? "/admin/events" : "/admin/briefings";

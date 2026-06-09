@@ -31,6 +31,7 @@ export interface User {
   approved_by: number | null;
   apply_note: string;
   needs_password: number; // 1 = account created without a password (set on approval)
+  alpha_tester: number; // 1 = can file in-app bug/feature feedback
   created_at: number;
 }
 

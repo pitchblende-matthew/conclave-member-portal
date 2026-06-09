@@ -136,6 +136,16 @@ export async function setAdmin(formData: FormData): Promise<void> {
   revalidatePath("/admin/members");
 }
 
+// Grant or revoke the alpha-tester role (unlocks the in-app feedback widget).
+export async function setAlphaTester(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const userId = Number(formData.get("userId"));
+  const make = String(formData.get("makeAlpha")) === "1";
+  if (!userId) return;
+  await getDb().prepare("UPDATE users SET alpha_tester = ? WHERE id = ?").bind(make ? 1 : 0, userId).run();
+  revalidatePath("/admin/members");
+}
+
 // Remove a member entirely, along with their sessions and RSVPs.
 export async function removeMember(formData: FormData): Promise<void> {
   const me = await requireAdmin();

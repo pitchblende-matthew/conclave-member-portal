@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import Icon from "@/components/icons";
 import { submitFeedback } from "./actions";
 
@@ -59,6 +60,7 @@ export default function FeedbackWidget() {
               </button>
             </form>
           )}
+          <Link href="/feedback" className="fab-reports" onClick={() => setOpen(false)}>Your reports →</Link>
         </div>
       )}
       <button

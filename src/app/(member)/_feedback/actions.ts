@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { requireUser } from "@/lib/auth";
 import { createFeedback, type FeedbackKind } from "@/lib/feedback";
 import { storeImage } from "@/lib/media";
@@ -32,10 +33,14 @@ export async function submitFeedback(_prev: FeedbackState, formData: FormData): 
     screenshotKey = result.key;
   }
 
-  await createFeedback(user.id, kind, page, body.slice(0, 4000), screenshotKey);
+  // Browser/OS, captured server-side from the request header.
+  const userAgent = ((await headers()).get("user-agent") ?? "").slice(0, 400);
+
+  await createFeedback(user.id, kind, page, body.slice(0, 4000), screenshotKey, userAgent);
   await notifyAdmins("feedback", { actorId: user.id });
   await emailAdminsFeedback(kind, user.name, page, body.slice(0, 4000));
   revalidatePath("/admin/feedback");
   revalidatePath("/admin");
+  revalidatePath("/feedback");
   return { ok: true };
 }

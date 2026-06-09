@@ -638,5 +638,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
 .fab-shot span { display: block; margin-bottom: 0.3rem; }
 .fab-optional { color: var(--muted); }
 .fab-shot input[type="file"] { font-size: 0.75rem; padding: 0.4rem; }
+.fab-reports { display: inline-block; margin-top: 0.75rem; font-size: 0.75rem; color: var(--sage-deep); text-decoration: none; }
+.fab-reports:hover { text-decoration: underline; }
 /* Admin feedback screenshot thumbnail */
 .feedback-shot { max-width: 240px; max-height: 160px; border: 1px solid var(--line); border-radius: 8px; display: block; }

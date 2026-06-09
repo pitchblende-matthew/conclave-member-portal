@@ -32,13 +32,13 @@ export default async function AdminHome() {
     count("SELECT COUNT(*) AS n FROM functions"),
     count("SELECT COUNT(*) AS n FROM seniorities"),
     count("SELECT COUNT(*) AS n FROM expertise"),
-    count("SELECT COUNT(*) AS n FROM feedback WHERE status = 'open'"),
+    count("SELECT COUNT(*) AS n FROM feedback WHERE status != 'closed'"),
   ]);
 
   const sections: { href: string; title: string; value: number; hint: string; icon: IconName }[] = [
     { href: "/admin/requests", title: "Requests", value: requests + inviteRequests, hint: inviteRequests > 0 ? `Applications + ${inviteRequests} invitation request${inviteRequests === 1 ? "" : "s"}` : "Applications & invitation requests", icon: "requests" },
     { href: "/admin/reports", title: "Reports", value: openReports, hint: openReports > 0 ? `${openReports} open to review` : "Member content reports", icon: "requests" },
-    { href: "/admin/feedback", title: "Feedback", value: openFeedback, hint: openFeedback > 0 ? `${openFeedback} open from alpha testers` : "Alpha bug & feature reports", icon: "sparkle" },
+    { href: "/admin/feedback", title: "Feedback", value: openFeedback, hint: openFeedback > 0 ? `${openFeedback} active from alpha testers` : "Alpha bug & feature reports", icon: "sparkle" },
     { href: "/admin/events", title: "Events", value: events, hint: pendingEvents > 0 ? `${pendingEvents} submission${pendingEvents === 1 ? "" : "s"} to review` : "Create, edit, see attendees", icon: "events" },
     { href: "/admin/briefings", title: "Briefings", value: briefings, hint: pendingBriefings > 0 ? `${pendingBriefings} submission${pendingBriefings === 1 ? "" : "s"} to review` : "Publish articles and links", icon: "briefings" },
     { href: "/admin/members", title: "Members", value: members, hint: "Promote admins, remove members", icon: "members" },

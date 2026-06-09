@@ -8,6 +8,7 @@ import { findOrCreateCompany } from "@/lib/companies";
 import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 import { generateToken } from "@/lib/crypto";
 import { emailAccessApproved, emailAccessApprovedSetPassword, emailAccessDeclined, emailEnabled, emailTest, siteUrl } from "@/lib/email";
+import { sendWeeklyDigest } from "@/lib/digest";
 import type { Company } from "@/lib/types";
 
 const SET_PASSWORD_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -22,6 +23,16 @@ export async function sendTestEmail(_prev: TestEmailState, _formData: FormData):
   }
   await emailTest(me.email, me.name);
   return { ok: `Sent a test email to ${me.email}. Check your inbox (and Resend → Logs).` };
+}
+
+// Send the weekly digest to all eligible members now (bypasses the gap guard).
+export async function sendDigestNow(_prev: TestEmailState, _formData: FormData): Promise<TestEmailState> {
+  await requireAdmin();
+  const result = await sendWeeklyDigest({ force: true });
+  if ("error" in result) return { error: result.error };
+  if ("skipped" in result) return { error: result.skipped };
+  revalidatePath("/admin");
+  return { ok: `Digest sent to ${result.sent} member${result.sent === 1 ? "" : "s"}.` };
 }
 
 export type AdminMemberState = { ok?: boolean; error?: string };

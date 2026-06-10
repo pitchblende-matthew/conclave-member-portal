@@ -1,0 +1,46 @@
+name: Weekly digest
+
+# Webflow Cloud has no cron, so GitHub Actions plays scheduler: it pings the
+# portal's digest endpoint, which builds and sends the roundup email. The route
+# self-guards against double-sends (3.5-day minimum gap) and skips when there's
+# nothing new, so an extra run is harmless.
+on:
+  schedule:
+    # Thursdays at 13:00 UTC (~9am ET). GitHub cron is always UTC.
+    - cron: "0 13 * * 4"
+  # Allow a manual run from the Actions tab; tick "force" to bypass the guards.
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force send (bypass the recently-sent / nothing-new guards)"
+        type: boolean
+        default: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger digest
+        env:
+          DIGEST_SECRET: ${{ secrets.DIGEST_SECRET }}
+          # Override via repo variable DIGEST_URL if the portal ever moves.
+          DIGEST_URL: ${{ vars.DIGEST_URL || 'https://www.jointheconclave.com/portal/api/digest/run' }}
+          FORCE: ${{ github.event.inputs.force == 'true' && '1' || '0' }}
+        run: |
+          if [ -z "$DIGEST_SECRET" ]; then
+            echo "::error::DIGEST_SECRET repo secret is not set."
+            exit 1
+          fi
+          url="${DIGEST_URL}?key=${DIGEST_SECRET}"
+          if [ "$FORCE" = "1" ]; then
+            url="${url}&force=1"
+          fi
+          echo "GET ${DIGEST_URL} (force=${FORCE})"
+          # Capture body + HTTP status; fail the job on any non-2xx response.
+          status=$(curl -sS -o response.json -w "%{http_code}" "$url")
+          echo "HTTP ${status}"
+          echo "Response: $(cat response.json)"
+          case "$status" in
+            2*) echo "Digest endpoint accepted the request." ;;
+            *)  echo "::error::Digest endpoint returned HTTP ${status}"; exit 1 ;;
+          esac

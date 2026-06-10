@@ -619,6 +619,19 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
   .member-card:hover { transform: none; }
 }
 
+/* Activation "Get started" checklist */
+.getstarted .gs-bar { height: 6px; background: var(--cream-deep); border-radius: 999px; overflow: hidden; margin: 0.8rem 0 0.3rem; }
+.getstarted .gs-fill { display: block; height: 100%; background: var(--sage); border-radius: 999px; transition: width 0.3s ease; }
+.checklist { margin-top: 0.4rem; }
+.check-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0.2rem; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.check-item:last-child { border-bottom: none; }
+.check-item:not(.done):hover .check-label { color: var(--sage-deep); }
+.check-mark { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--sage-soft); flex: none; display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; color: transparent; }
+.check-item.done .check-mark { background: var(--sage); border-color: var(--sage); color: #fff; }
+.check-label { flex: 1; font-size: 0.92rem; }
+.check-item.done .check-label { color: var(--muted); text-decoration: line-through; }
+.check-go { color: var(--sage-deep); font-size: 0.78rem; flex: none; }
+
 /* Dashboard "Around the network" feed */
 .feed { padding: 0.35rem 0.45rem; }
 .feed-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0.65rem; border-radius: 8px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--line); }

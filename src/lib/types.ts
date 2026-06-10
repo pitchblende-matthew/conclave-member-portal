@@ -32,6 +32,7 @@ export interface User {
   apply_note: string;
   needs_password: number; // 1 = account created without a password (set on approval)
   alpha_tester: number; // 1 = can file in-app bug/feature feedback
+  digest_opt_out: number; // 1 = excluded from the weekly digest
   created_at: number;
 }
 

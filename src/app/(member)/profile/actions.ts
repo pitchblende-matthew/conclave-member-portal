@@ -20,6 +20,7 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
   const seniorityId = Number(formData.get("seniority_id")) || 0;
   const discoverRegionOnly = formData.get("discover_region_only") ? 1 : 0;
   const discoverPeersOnly = formData.get("discover_peers_only") ? 1 : 0;
+  const digestOptOut = formData.get("digest") ? 0 : 1; // checkbox = wants the digest
   const pronouns = field("pronouns");
   const phone = field("phone");
   const website = field("website");
@@ -38,14 +39,14 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
          name = ?, role = ?, function_id = ?, seniority_id = ?, pronouns = ?,
          location = ?, city = ?, state = ?, zip = ?, dma_slug = ?, dma_name = ?,
          phone = ?, website = ?, linkedin = ?, twitter = ?, bio = ?, company_id = ?,
-         discover_region_only = ?, discover_peers_only = ?
+         discover_region_only = ?, discover_peers_only = ?, digest_opt_out = ?
        WHERE id = ?`
     )
     .bind(
       name, role, functionId, seniorityId, pronouns,
       locationLabel(region.city, region.state), region.city, region.state, region.zip, region.dma_slug, region.dma_name,
       phone, website, linkedin, twitter, bio, companyId,
-      discoverRegionOnly, discoverPeersOnly, user.id
+      discoverRegionOnly, discoverPeersOnly, digestOptOut, user.id
     )
     .run();
 

@@ -1,5 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "./db";
+import type { DigestData } from "./digest";
 
 // Email is sent through Resend's REST API. Everything is env-gated: with no
 // RESEND_API_KEY / EMAIL_FROM configured, sendEmail() logs and no-ops, so the
@@ -95,6 +96,68 @@ function layout(heading: string, bodyHtml: string, cta?: { label: string; href: 
 }
 
 const greeting = (name?: string) => (name ? `Hi ${esc(name)},` : "Hello,");
+
+// ---- Weekly digest -----------------------------------------------------------
+
+function digestSection(title: string, items: { href: string; main: string; sub?: string; external?: boolean }[]): string {
+  if (!items.length) return "";
+  const rows = items
+    .map(
+      (it) => `<tr><td style="padding:5px 0;">
+        <a href="${it.href}" style="color:#2c3a31;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;">${esc(it.main)}${it.external ? ' <span style="color:#7c7a52;">↗</span>' : ""}</a>
+        ${it.sub ? `<div style="color:#6f6e60;font-size:12px;font-family:Helvetica,Arial,sans-serif;">${esc(it.sub)}</div>` : ""}
+      </td></tr>`
+    )
+    .join("");
+  return `<div style="margin:22px 0 0;">
+    <div style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#7c7a52;margin-bottom:4px;">${esc(title)}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+  </div>`;
+}
+
+function fmtDate(ms: number): string {
+  return new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" });
+}
+
+function digestLayout(bodyHtml: string, ctaHref: string, unsubUrl: string): string {
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#f2ede4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2ede4;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#fbf8f1;border:1px solid #e7ded0;border-radius:14px;">
+        <tr><td style="padding:30px 32px;">
+          <img src="${LOGO_URL}" alt="Conclave" width="158" style="width:158px;max-width:62%;height:auto;display:block;border:0;margin-bottom:18px;" />
+          <h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:24px;line-height:1.2;margin:0 0 8px;color:#2c3a31;">This week in The Conclave</h1>
+          ${bodyHtml}
+          <div style="margin:26px 0 4px;"><a href="${ctaHref}" style="display:inline-block;background:#2c3a31;color:#f2ede4;text-decoration:none;padding:12px 22px;border-radius:8px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:0.05em;text-transform:uppercase;">Open the portal</a></div>
+        </td></tr>
+      </table>
+      <div style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#7c7a52;margin-top:16px;">Private. By invitation. · <a href="${unsubUrl}" style="color:#7c7a52;">Unsubscribe</a></div>
+    </td></tr>
+  </table></body></html>`;
+}
+
+export async function emailWeeklyDigest(to: string, name: string, data: DigestData, unsubUrl: string): Promise<void> {
+  const sections =
+    digestSection("New members", data.members.map((m) => ({ href: siteUrl(`/directory/${m.id}`), main: m.name, sub: m.role || undefined }))) +
+    digestSection("Upcoming events", data.events.map((e) => ({ href: siteUrl(`/events/${e.id}`), main: e.title, sub: fmtDate(e.starts_at) }))) +
+    digestSection("Active discussions", data.topics.map((t) => ({ href: siteUrl(`/board/${t.id}`), main: t.title, sub: `${Math.max(0, t.replies)} repl${t.replies === 1 ? "y" : "ies"}` }))) +
+    digestSection("Fresh briefings", data.briefings.map((b) => ({ href: b.kind === "link" ? b.url : siteUrl(`/briefings/${b.id}`), main: b.title, external: b.kind === "link" }))) +
+    digestSection("Jobs & businesses", data.listings.map((l) => ({ href: siteUrl(`/${l.kind === "job" ? "jobs" : "businesses"}/${l.id}`), main: l.title, sub: l.kind === "job" ? "Job" : "For sale" })));
+
+  const intro = `<p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#33322b;margin:0;">${greeting(name)}</p><p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#33322b;margin:6px 0 0;">A quick look at what's new and coming up across the network.</p>`;
+  const html = digestLayout(intro + sections, siteUrl("/dashboard"), unsubUrl);
+
+  const lines: string[] = ["This week in The Conclave:", ""];
+  const block = (title: string, arr: string[]) => { if (arr.length) { lines.push(title.toUpperCase(), ...arr, ""); } };
+  block("New members", data.members.map((m) => `- ${m.name}${m.role ? ` (${m.role})` : ""}`));
+  block("Upcoming events", data.events.map((e) => `- ${e.title} — ${fmtDate(e.starts_at)}`));
+  block("Active discussions", data.topics.map((t) => `- ${t.title}`));
+  block("Fresh briefings", data.briefings.map((b) => `- ${b.title}`));
+  block("Jobs & businesses", data.listings.map((l) => `- ${l.title}`));
+  lines.push(`Open the portal: ${siteUrl("/dashboard")}`, `Unsubscribe: ${unsubUrl}`);
+
+  await sendEmail({ to, subject: "This week in The Conclave", html, text: lines.join("\n") });
+}
 
 // Admin recipients for alert emails.
 export async function adminEmails(): Promise<string[]> {

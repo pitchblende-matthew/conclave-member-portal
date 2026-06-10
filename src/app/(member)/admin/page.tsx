@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import Icon, { type IconName } from "@/components/icons";
+import LocalTime from "@/components/local-time";
 import TestEmailButton from "./test-email-button";
+import DigestButton from "./digest-button";
+import { lastDigestAt } from "@/lib/digest";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +18,7 @@ async function count(sql: string): Promise<number> {
 export default async function AdminHome() {
   const user = await requireUser();
   if (user.is_admin !== 1) redirect("/dashboard");
+  const lastDigest = await lastDigestAt();
 
   const [requests, members, companies, events, pendingEvents, categories, briefingCategories, briefings, pendingBriefings, invites, openReports, inviteRequests, industries, functions, seniorities, expertise, openFeedback] = await Promise.all([
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'"),
@@ -79,6 +83,15 @@ export default async function AdminHome() {
           Send yourself a branded test email to confirm Resend is configured.
         </p>
         <TestEmailButton />
+      </div>
+
+      <div className="card" style={{ marginTop: "1rem", maxWidth: 480 }}>
+        <h3 style={{ fontSize: "1.3rem", margin: 0 }}>Weekly digest</h3>
+        <p className="meta" style={{ margin: "0.25rem 0 0.9rem" }}>
+          A round-up of new members, events, and discussions to every member.
+          {lastDigest ? <> Last sent <LocalTime ms={lastDigest} />.</> : " Never sent yet."}
+        </p>
+        <DigestButton />
       </div>
     </>
   );

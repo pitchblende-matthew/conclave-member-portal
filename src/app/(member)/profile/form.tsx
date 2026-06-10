@@ -29,6 +29,7 @@ type Initial = {
   email: string;
   discoverRegionOnly: boolean;
   discoverPeersOnly: boolean;
+  digestOptIn: boolean;
   avatarUrl: string | null;
   coverUrl: string | null;
 };
@@ -334,6 +335,14 @@ export default function ProfileForm({
             directory, the by-function browse, and member search for anyone outside your selection.
             Members can still reach your profile from things you post.
           </p>
+        </fieldset>
+
+        <fieldset className="discover-box">
+          <legend>Email <span className="meta">(optional)</span></legend>
+          <label className="check-row">
+            <input type="checkbox" name="digest" defaultChecked={initial.digestOptIn} />
+            Email me the weekly digest — new members, events, and discussions
+          </label>
         </fieldset>
 
         {!onboarding && state?.ok && <div className="note">Saved.</div>}

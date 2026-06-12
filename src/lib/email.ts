@@ -99,18 +99,23 @@ const greeting = (name?: string) => (name ? `Hi ${esc(name)},` : "Hello,");
 
 // ---- Weekly digest -----------------------------------------------------------
 
+// One section = an accent-ruled header (with a live item count) over a list of
+// rows. The top rule + warm-grey count give the digest an editorial rhythm
+// instead of reading as one flat list.
 function digestSection(title: string, items: { href: string; main: string; sub?: string; external?: boolean }[]): string {
   if (!items.length) return "";
   const rows = items
     .map(
-      (it) => `<tr><td style="padding:5px 0;">
-        <a href="${it.href}" style="color:#2c3a31;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;">${esc(it.main)}${it.external ? ' <span style="color:#7c7a52;">↗</span>' : ""}</a>
-        ${it.sub ? `<div style="color:#6f6e60;font-size:12px;font-family:Helvetica,Arial,sans-serif;">${esc(it.sub)}</div>` : ""}
+      (it, i) => `<tr><td style="padding:9px 0;${i ? "border-top:1px solid #efe8db;" : ""}">
+        <a href="${it.href}" style="color:#2c3a31;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.35;">${esc(it.main)}${it.external ? ' <span style="color:#b26a4c;">↗</span>' : ""}</a>
+        ${it.sub ? `<div style="color:#6f6e60;font-size:12px;font-family:Helvetica,Arial,sans-serif;margin-top:2px;">${esc(it.sub)}</div>` : ""}
       </td></tr>`
     )
     .join("");
-  return `<div style="margin:22px 0 0;">
-    <div style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#7c7a52;margin-bottom:4px;">${esc(title)}</div>
+  return `<div style="margin:24px 0 0;padding-top:22px;border-top:1px solid #e7ded0;">
+    <div style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#7c7a52;margin-bottom:6px;">
+      <span style="display:inline-block;width:20px;height:2px;background:#9aae9d;vertical-align:middle;margin:0 9px 3px 0;"></span>${esc(title)} <span style="color:#b6b09c;">· ${items.length}</span>
+    </div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
   </div>`;
 }
@@ -119,16 +124,35 @@ function fmtDate(ms: number): string {
   return new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" });
 }
 
-function digestLayout(bodyHtml: string, ctaHref: string, unsubUrl: string): string {
+// A dated masthead line, e.g. "Weekly digest · Friday, June 12".
+function fmtIssueDate(ms: number): string {
+  return new Date(ms).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/New_York" });
+}
+
+// A little warmth up top — rotates weekly so the digest doesn't read the same
+// way every Thursday.
+function weeklyIntro(ms: number): string {
+  const lines = [
+    "A few new faces, a couple of conversations worth your time, and what's coming up — here's the week in brief.",
+    "The short version of everything moving across the network this week. Skim it, then come find the good parts.",
+    "Who joined, what's being discussed, and where to be next. Your week in The Conclave, in one scroll.",
+    "A quick pass through the week — fresh members to meet, threads worth a reply, and dates for the calendar.",
+    "Your weekly cup of what's new around here. Pull up a chair.",
+  ];
+  return lines[Math.floor(ms / (7 * 86400000)) % lines.length];
+}
+
+function digestLayout(bodyHtml: string, ctaHref: string, unsubUrl: string, dateLabel: string): string {
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f2ede4;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2ede4;padding:32px 12px;">
     <tr><td align="center">
       <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#fbf8f1;border:1px solid #e7ded0;border-radius:14px;">
-        <tr><td style="padding:30px 32px;">
-          <img src="${LOGO_URL}" alt="Conclave" width="158" style="width:158px;max-width:62%;height:auto;display:block;border:0;margin-bottom:18px;" />
-          <h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:24px;line-height:1.2;margin:0 0 8px;color:#2c3a31;">This week in The Conclave</h1>
+        <tr><td style="padding:32px 34px;">
+          <img src="${LOGO_URL}" alt="Conclave" width="158" style="width:158px;max-width:62%;height:auto;display:block;border:0;margin-bottom:22px;" />
+          <div style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#7c7a52;margin-bottom:8px;">Weekly digest · ${esc(dateLabel)}</div>
+          <h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:25px;line-height:1.2;margin:0 0 14px;color:#2c3a31;">This week in The Conclave</h1>
           ${bodyHtml}
-          <div style="margin:26px 0 4px;"><a href="${ctaHref}" style="display:inline-block;background:#2c3a31;color:#f2ede4;text-decoration:none;padding:12px 22px;border-radius:8px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:0.05em;text-transform:uppercase;">Open the portal</a></div>
+          <div style="margin:30px 0 4px;"><a href="${ctaHref}" style="display:inline-block;background:#2c3a31;color:#f2ede4;text-decoration:none;padding:13px 24px;border-radius:8px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:0.05em;text-transform:uppercase;">Open the portal</a></div>
         </td></tr>
       </table>
       <div style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#7c7a52;margin-top:16px;">Private. By invitation. · <a href="${unsubUrl}" style="color:#7c7a52;">Unsubscribe</a></div>
@@ -137,6 +161,7 @@ function digestLayout(bodyHtml: string, ctaHref: string, unsubUrl: string): stri
 }
 
 export async function emailWeeklyDigest(to: string, name: string, data: DigestData, unsubUrl: string): Promise<void> {
+  const now = Date.now();
   const sections =
     digestSection("New members", data.members.map((m) => ({ href: siteUrl(`/directory/${m.id}`), main: m.name, sub: m.role || undefined }))) +
     digestSection("Upcoming events", data.events.map((e) => ({ href: siteUrl(`/events/${e.id}`), main: e.title, sub: fmtDate(e.starts_at) }))) +
@@ -144,17 +169,22 @@ export async function emailWeeklyDigest(to: string, name: string, data: DigestDa
     digestSection("Fresh briefings", data.briefings.map((b) => ({ href: b.kind === "link" ? b.url : siteUrl(`/briefings/${b.id}`), main: b.title, external: b.kind === "link" }))) +
     digestSection("Jobs & businesses", data.listings.map((l) => ({ href: siteUrl(`/${l.kind === "job" ? "jobs" : "businesses"}/${l.id}`), main: l.title, sub: l.kind === "job" ? "Job" : "For sale" })));
 
-  const intro = `<p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#33322b;margin:0;">${greeting(name)}</p><p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#33322b;margin:6px 0 0;">A quick look at what's new and coming up across the network.</p>`;
-  const html = digestLayout(intro + sections, siteUrl("/dashboard"), unsubUrl);
+  const para = (text: string, margin: string) => `<p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#33322b;margin:${margin};">${text}</p>`;
+  const intro = para(greeting(name), "0") + para(weeklyIntro(now), "8px 0 0");
+  const signoff =
+    `<div style="margin:30px 0 0;padding-top:22px;border-top:1px solid #e7ded0;">` +
+    para("That's the week in brief. A network is only as good as who shows up — so glad you're here.", "0") +
+    `<p style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:16px;color:#5c7165;margin:8px 0 0;">— The Conclave</p></div>`;
+  const html = digestLayout(intro + sections + signoff, siteUrl("/dashboard"), unsubUrl, fmtIssueDate(now));
 
-  const lines: string[] = ["This week in The Conclave:", ""];
-  const block = (title: string, arr: string[]) => { if (arr.length) { lines.push(title.toUpperCase(), ...arr, ""); } };
+  const lines: string[] = [`This week in The Conclave — ${fmtIssueDate(now)}`, "", weeklyIntro(now), ""];
+  const block = (title: string, arr: string[]) => { if (arr.length) { lines.push(`${title.toUpperCase()} (${arr.length})`, ...arr, ""); } };
   block("New members", data.members.map((m) => `- ${m.name}${m.role ? ` (${m.role})` : ""}`));
   block("Upcoming events", data.events.map((e) => `- ${e.title} — ${fmtDate(e.starts_at)}`));
   block("Active discussions", data.topics.map((t) => `- ${t.title}`));
   block("Fresh briefings", data.briefings.map((b) => `- ${b.title}`));
   block("Jobs & businesses", data.listings.map((l) => `- ${l.title}`));
-  lines.push(`Open the portal: ${siteUrl("/dashboard")}`, `Unsubscribe: ${unsubUrl}`);
+  lines.push("That's the week in brief. Glad you're here. — The Conclave", "", `Open the portal: ${siteUrl("/dashboard")}`, `Unsubscribe: ${unsubUrl}`);
 
   await sendEmail({ to, subject: "This week in The Conclave", html, text: lines.join("\n") });
 }

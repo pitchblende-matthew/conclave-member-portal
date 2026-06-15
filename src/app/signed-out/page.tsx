@@ -1,11 +1,13 @@
 import Link from "next/link";
 import Wordmark from "@/components/wordmark";
+import HearthGlow from "@/components/hearth-glow";
 
 export const metadata = { title: "Signed out — Conclave" };
 
 export default function SignedOut() {
   return (
     <div className="auth-wrap">
+      <HearthGlow />
       <div className="auth-card">
         <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
         <div className="eyebrow">Members</div>

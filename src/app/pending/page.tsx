@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import Wordmark from "@/components/wordmark";
+import HearthGlow from "@/components/hearth-glow";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function Pending() {
 
   return (
     <div className="auth-wrap">
+      <HearthGlow />
       <div className="auth-card">
         <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
         <h1>{declined ? "Request not approved" : "Request received"}</h1>

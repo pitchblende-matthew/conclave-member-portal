@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Wordmark from "@/components/wordmark";
+import HearthGlow from "@/components/hearth-glow";
 import { US_STATES } from "@/lib/us-states";
 import { signup } from "./actions";
 
@@ -79,6 +80,7 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <div className="auth-wrap">
+      <HearthGlow />
       <Suspense fallback={<div className="auth-card">Loading…</div>}>
         <SignupForm />
       </Suspense>

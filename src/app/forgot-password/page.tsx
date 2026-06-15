@@ -3,12 +3,14 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import Wordmark from "@/components/wordmark";
+import HearthGlow from "@/components/hearth-glow";
 import { requestReset } from "./actions";
 
 export default function ForgotPasswordPage() {
   const [state, formAction, pending] = useActionState(requestReset, {});
   return (
     <div className="auth-wrap">
+      <HearthGlow />
       <div className="auth-card">
         <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
         <div className="eyebrow">Members</div>

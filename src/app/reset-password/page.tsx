@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Wordmark from "@/components/wordmark";
+import HearthGlow from "@/components/hearth-glow";
 import { resetPassword } from "./actions";
 
 function ResetForm() {
@@ -46,6 +47,7 @@ function ResetForm() {
 export default function ResetPasswordPage() {
   return (
     <div className="auth-wrap">
+      <HearthGlow />
       <Suspense fallback={<div className="auth-card">Loading…</div>}>
         <ResetForm />
       </Suspense>

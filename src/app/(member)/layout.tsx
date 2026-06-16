@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import Wordmark from "@/components/wordmark";
 import MemberNav from "@/components/member-nav";
 import NotificationsBell, { type BellItem } from "@/components/notifications-bell";
+import ThemeToggle from "@/components/theme-toggle";
 import FeedbackWidget from "./_feedback/feedback-widget";
 import { unreadMessageCount } from "@/lib/messages";
 
@@ -110,8 +112,11 @@ export default async function MemberLayout({ children }: { children: React.React
   const unread = notifs.filter((n) => n.read_at === null).length;
   const unreadMessages = await unreadMessageCount(user.id);
 
+  // Theme preference (defaults to dark); rendered server-side so there's no flash.
+  const theme = (await cookies()).get("theme")?.value === "light" ? "light" : "dark";
+
   return (
-    <div className="app-dark">
+    <div id="app-shell" className={theme === "dark" ? "app-dark" : "app-light"}>
       <div className="shell">
         <a href="#main" className="skip-link">Skip to content</a>
         <header className="topbar">
@@ -123,6 +128,7 @@ export default async function MemberLayout({ children }: { children: React.React
             unreadMessages={unreadMessages}
             logoutHref={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}
           />
+          <ThemeToggle initial={theme} />
           <NotificationsBell items={notifs.map(toItem)} unread={unread} />
         </header>
         <main id="main" className="page" tabIndex={-1}>{children}</main>

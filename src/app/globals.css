@@ -22,6 +22,17 @@
   --line: rgba(44, 58, 49, 0.14);
 }
 
+/* Light mode is the original tokens (cream page, tan cards) — no overrides. */
+.app-light { min-height: 100vh; }
+
+/* Light/dark switch in the top bar (adapts to the surrounding --ink) */
+.theme-toggle {
+  background: none; border: none; padding: 0.25rem; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink); line-height: 0;
+}
+.theme-toggle:hover { color: var(--sage); }
+
 /* ---- Portal "Hearth" canvas: dark-green background, original tan surfaces ----
    Scoped to .app-dark (the member shell). The dark green is only the page
    canvas; cards, menus and inputs keep the original light tan, and text that

@@ -8,7 +8,6 @@ import { expertiseForUsers } from "@/lib/expertise";
 import Avatar from "@/components/avatar";
 import ConnectControls from "@/components/connect-controls";
 import ReportButton from "@/components/report-button";
-import { Sprig } from "@/components/icons";
 import type { User } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -51,9 +50,7 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
           {member.cover_key ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mediaUrl(member.cover_key)} alt="" className="banner-img" />
-          ) : (
-            <Sprig size={120} className="banner-sprig" />
-          )}
+          ) : null}
         </div>
         <span className="profile-avatar">
           <Avatar src={member.avatar_key ? mediaUrl(member.avatar_key) : null} name={member.name} size={92} />

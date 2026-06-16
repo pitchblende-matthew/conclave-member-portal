@@ -22,35 +22,67 @@
   --line: rgba(44, 58, 49, 0.14);
 }
 
-/* ---- Dark "Hearth" theme for the logged-in portal ----
-   Scoped to .app-dark (the member shell). Remapping the role tokens flips every
-   token-driven component to the dark palette; auth pages live outside this scope
-   and keep their light card. */
-.app-dark {
-  /* Surfaces — dark green base, cards lifted above it */
-  --cream: #1c2620;
-  --cream-deep: #2b362f;
-  --paper: #232f28;
-  /* Text */
-  --ink: #eef2ea;
-  --muted: #9aa39a;
-  --line: rgba(238, 242, 234, 0.13);
-  /* Accents retuned for a dark backdrop */
-  --sage: #88a08f;
-  --sage-deep: #a9bdac;
-  --sage-soft: #6f8472;
-  --olive: #9a9a73;
+/* Light mode is the original tokens (cream page, tan cards) — no overrides. */
+.app-light { min-height: 100vh; }
 
+/* Light/dark switch in the top bar (adapts to the surrounding --ink) */
+.theme-toggle {
+  background: none; border: none; padding: 0.25rem; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink); line-height: 0;
+}
+.theme-toggle:hover { color: var(--sage); }
+
+/* ---- Portal "Hearth" canvas: dark-green background, original tan surfaces ----
+   Scoped to .app-dark (the member shell). The dark green is only the page
+   canvas; cards, menus and inputs keep the original light tan, and text that
+   sits directly on the green is lightened. Auth pages are outside this scope. */
+.app-dark {
   min-height: 100vh;
-  background-color: #19211b;
+  color: #f3eee5;                       /* default text on the green canvas */
+  background-color: #1b2620;
   /* Soft, static warm glow near the top — the "calm" hearth ambience */
-  background-image: radial-gradient(80% 55% at 50% 0%, rgba(196, 120, 70, 0.13), rgba(196, 120, 70, 0) 55%);
+  background-image: radial-gradient(85% 55% at 50% 0%, rgba(196, 120, 70, 0.12), rgba(196, 120, 70, 0) 55%);
   background-attachment: fixed;
   background-repeat: no-repeat;
+  /* Tokens used by text sitting directly on the green, lightened for contrast */
+  --muted: #b7c0b3;
+  --olive: #c3c191;
+  --sage-deep: #b3c4b6;
+  --line: rgba(243, 238, 229, 0.16);
 }
-/* Lift the few hardcoded light-theme grays/reds into the dark palette */
-.app-dark .card-detail, .app-dark .dash-sub { color: #98a298; }
-.app-dark .error, .app-dark .link-danger { color: #e8978d; }
+/* Top bar sits on the green: its links/icons (which use --ink) go light */
+.app-dark .topbar { --ink: #f3eee5; }
+/* Italic emphasis tracks the link accent so it reads on either surface */
+.app-dark .em { color: var(--sage-deep); }
+
+/* Tan surfaces restore the original light-theme text colors */
+.app-dark .card,
+.app-dark .nav-dropdown,
+.app-dark .bell-panel,
+.app-dark .fab-panel,
+.app-dark .empty-state,
+.app-dark .metric,
+.app-dark .msg-bubble,
+.app-dark .md-editor,
+.app-dark .tag-picker,
+.app-dark .discover-box,
+.app-dark .feedback-reply,
+.app-dark .cover-empty,
+.app-dark .chip,
+.app-dark .chip-static,
+.app-dark .market-tag,
+.app-dark .tag-check,
+.app-dark input,
+.app-dark textarea,
+.app-dark select {
+  color: #2c3a31;
+  --ink: #2c3a31;
+  --muted: #6f6e60;
+  --olive: #7c7a52;
+  --sage-deep: #45564b;
+  --line: rgba(44, 58, 49, 0.14);
+}
 
 * { box-sizing: border-box; }
 
@@ -499,6 +531,8 @@ body { overflow-wrap: break-word; }
     box-shadow: 0 16px 30px rgba(20, 20, 15, 0.1); padding: 0.5rem 0 0.85rem; z-index: 65;
   }
   .member-nav.open { display: flex; }
+  /* The mobile nav becomes a tan overlay, so its text reverts to the dark palette */
+  .app-dark .member-nav { color: #2c3a31; --ink: #2c3a31; --olive: #7c7a52; --sage-deep: #45564b; }
   .nav-link { padding: 0.7rem 0.25rem; font-size: 0.95rem; }
   .nav-group { width: 100%; display: block; }
   .nav-group-btn { width: 100%; justify-content: space-between; color: var(--sage); }

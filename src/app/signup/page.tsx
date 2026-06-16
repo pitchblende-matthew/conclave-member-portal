@@ -15,7 +15,6 @@ function SignupForm() {
   const [state, formAction, pending] = useActionState(signup, {});
   return (
     <div className="auth-card">
-      <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
       <div className="eyebrow">By invitation</div>
       <h1>Request access</h1>
       <p className="meta">
@@ -81,6 +80,7 @@ export default function SignupPage() {
   return (
     <div className="auth-wrap">
       <HearthGlow />
+      <div className="auth-logo"><Wordmark reverse size={2.2} /></div>
       <Suspense fallback={<div className="auth-card">Loading…</div>}>
         <SignupForm />
       </Suspense>

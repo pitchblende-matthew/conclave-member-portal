@@ -16,8 +16,8 @@ export default async function Pending() {
   return (
     <div className="auth-wrap">
       <HearthGlow />
+      <div className="auth-logo"><Wordmark reverse size={2.2} /></div>
       <div className="auth-card">
-        <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
         <h1>{declined ? "Request not approved" : "Request received"}</h1>
         <p className="meta">
           {declined

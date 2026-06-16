@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/media";
 import Avatar from "@/components/avatar";
+import { Flame } from "@/components/icons";
 import JoinCompanyButton from "./join-button";
 import type { Company, User } from "@/lib/types";
 
@@ -38,7 +39,9 @@ export default async function CompanyProfile({ params }: { params: Promise<{ id:
           {company.cover_key ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mediaUrl(company.cover_key)} alt="" className="banner-img" />
-          ) : null}
+          ) : (
+            <Flame size={120} className="banner-flame" />
+          )}
         </div>
         {canEdit && (
           <Link href={`/companies/${companyId}/edit`} className="btn btn-ghost inline-btn profile-edit">Edit</Link>

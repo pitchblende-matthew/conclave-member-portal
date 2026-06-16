@@ -5,7 +5,7 @@ import { mediaUrl } from "@/lib/media";
 import { connectionCounts } from "@/lib/connections";
 import { suggestedMembers } from "@/lib/suggestions";
 import { networkFeed } from "@/lib/feed";
-import Icon from "@/components/icons";
+import Icon, { Flame } from "@/components/icons";
 import Eyebrow from "@/components/eyebrow";
 import SectionDivider from "@/components/section-divider";
 import SuggestedMemberCard from "@/components/suggested-member-card";
@@ -84,6 +84,7 @@ export default async function Dashboard() {
   return (
     <>
       <div className="dash-hero">
+        <Flame size={150} className="dash-hero-flame" />
         <Eyebrow icon="dashboard">Member dashboard</Eyebrow>
         <h1 style={{ fontSize: "2.6rem", marginBottom: "0.35rem" }}>
           Welcome{user.name ? <>, <span className="em">{user.name}</span></> : ""}.

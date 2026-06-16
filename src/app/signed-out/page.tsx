@@ -8,8 +8,8 @@ export default function SignedOut() {
   return (
     <div className="auth-wrap">
       <HearthGlow />
+      <div className="auth-logo"><Wordmark reverse size={2.2} /></div>
       <div className="auth-card">
-        <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
         <div className="eyebrow">Members</div>
         <h1>You&apos;ve been signed out</h1>
         <p className="meta">Your session has ended on this device. See you again soon.</p>

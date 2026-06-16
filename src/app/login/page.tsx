@@ -11,8 +11,8 @@ export default function LoginPage() {
   return (
     <div className="auth-wrap">
       <HearthGlow />
+      <div className="auth-logo"><Wordmark reverse size={2.2} /></div>
       <div className="auth-card">
-        <div style={{ marginBottom: "1.25rem" }}><Wordmark size={1.7} /></div>
         <div className="eyebrow">Members</div>
         <h1>Sign in</h1>
         <p className="meta">Welcome back. Enter your details to continue.</p>

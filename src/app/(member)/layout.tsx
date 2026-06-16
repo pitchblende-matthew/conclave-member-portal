@@ -111,31 +111,33 @@ export default async function MemberLayout({ children }: { children: React.React
   const unreadMessages = await unreadMessageCount(user.id);
 
   return (
-    <div className="shell">
-      <a href="#main" className="skip-link">Skip to content</a>
-      <header className="topbar">
-        <Link href="/dashboard" className="wordmark-link" aria-label="Conclave — dashboard">
-          <Wordmark size={1.5} />
-        </Link>
-        <MemberNav
-          isAdmin={user.is_admin === 1}
-          unreadMessages={unreadMessages}
-          logoutHref={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}
-        />
-        <NotificationsBell items={notifs.map(toItem)} unread={unread} />
-      </header>
-      <main id="main" className="page" tabIndex={-1}>{children}</main>
-      <footer className="footer">
-        {/* Plain anchors (not next/link) so these resolve to the marketing site at the
-            domain root rather than under the portal's /portal base path. */}
-        <nav className="footer-nav" aria-label="The Conclave">
-          <a href="/">The Conclave</a>
-          <a href="/about">About</a>
-          <a href="mailto:hello@jointheconclave.com">Contact</a>
-        </nav>
-        <span className="footer-tag">Private. By invitation.</span>
-      </footer>
-      {user.alpha_tester === 1 && <FeedbackWidget />}
+    <div className="app-dark">
+      <div className="shell">
+        <a href="#main" className="skip-link">Skip to content</a>
+        <header className="topbar">
+          <Link href="/dashboard" className="wordmark-link" aria-label="Conclave — dashboard">
+            <Wordmark size={1.5} />
+          </Link>
+          <MemberNav
+            isAdmin={user.is_admin === 1}
+            unreadMessages={unreadMessages}
+            logoutHref={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}
+          />
+          <NotificationsBell items={notifs.map(toItem)} unread={unread} />
+        </header>
+        <main id="main" className="page" tabIndex={-1}>{children}</main>
+        <footer className="footer">
+          {/* Plain anchors (not next/link) so these resolve to the marketing site at the
+              domain root rather than under the portal's /portal base path. */}
+          <nav className="footer-nav" aria-label="The Conclave">
+            <a href="/">The Conclave</a>
+            <a href="/about">About</a>
+            <a href="mailto:hello@jointheconclave.com">Contact</a>
+          </nav>
+          <span className="footer-tag">Private. By invitation.</span>
+        </footer>
+        {user.alpha_tester === 1 && <FeedbackWidget />}
+      </div>
     </div>
   );
 }

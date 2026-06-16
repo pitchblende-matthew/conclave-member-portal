@@ -22,6 +22,36 @@
   --line: rgba(44, 58, 49, 0.14);
 }
 
+/* ---- Dark "Hearth" theme for the logged-in portal ----
+   Scoped to .app-dark (the member shell). Remapping the role tokens flips every
+   token-driven component to the dark palette; auth pages live outside this scope
+   and keep their light card. */
+.app-dark {
+  /* Surfaces — dark green base, cards lifted above it */
+  --cream: #1c2620;
+  --cream-deep: #2b362f;
+  --paper: #232f28;
+  /* Text */
+  --ink: #eef2ea;
+  --muted: #9aa39a;
+  --line: rgba(238, 242, 234, 0.13);
+  /* Accents retuned for a dark backdrop */
+  --sage: #88a08f;
+  --sage-deep: #a9bdac;
+  --sage-soft: #6f8472;
+  --olive: #9a9a73;
+
+  min-height: 100vh;
+  background-color: #19211b;
+  /* Soft, static warm glow near the top — the "calm" hearth ambience */
+  background-image: radial-gradient(80% 55% at 50% 0%, rgba(196, 120, 70, 0.13), rgba(196, 120, 70, 0) 55%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+/* Lift the few hardcoded light-theme grays/reds into the dark palette */
+.app-dark .card-detail, .app-dark .dash-sub { color: #98a298; }
+.app-dark .error, .app-dark .link-danger { color: #e8978d; }
+
 * { box-sizing: border-box; }
 
 html, body {

@@ -40,9 +40,9 @@
 .app-dark {
   min-height: 100vh;
   color: #f3eee5;                       /* default text on the green canvas */
-  background-color: #1b2620;
+  background-color: #2c3a31;            /* brand green-900 — matches the logo plate */
   /* Soft, static warm glow near the top — the "calm" hearth ambience */
-  background-image: radial-gradient(85% 55% at 50% 0%, rgba(196, 120, 70, 0.12), rgba(196, 120, 70, 0) 55%);
+  background-image: radial-gradient(85% 55% at 50% 0%, rgba(196, 120, 70, 0.10), rgba(196, 120, 70, 0) 55%);
   background-attachment: fixed;
   background-repeat: no-repeat;
   /* Tokens used by text sitting directly on the green, lightened for contrast */
@@ -121,8 +121,8 @@ a { color: var(--sage-deep); }
   gap: 1.6rem;
   padding: 2rem 1.25rem;
   background:
-    radial-gradient(135% 92% at 50% 128%, rgba(178, 106, 76, 0.55) 0%, rgba(152, 88, 56, 0.16) 34%, rgba(36, 48, 41, 0) 60%),
-    linear-gradient(180deg, #243029 0%, #161d18 100%);
+    radial-gradient(135% 92% at 50% 128%, rgba(178, 106, 76, 0.45) 0%, rgba(152, 88, 56, 0.14) 34%, rgba(36, 48, 41, 0) 60%),
+    linear-gradient(180deg, #2c3a31 0%, #2c3a31 34%, #1a221c 100%);
 }
 /* Logo centered on the dark background, above the auth card */
 .auth-logo { position: relative; z-index: 2; }

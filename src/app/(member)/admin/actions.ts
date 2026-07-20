@@ -9,6 +9,7 @@ import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 import { generateToken } from "@/lib/crypto";
 import { emailAccessApproved, emailAccessApprovedSetPassword, emailAccessDeclined, emailEnabled, emailTest, siteUrl } from "@/lib/email";
 import { sendWeeklyDigest } from "@/lib/digest";
+import { getSlackConfig } from "@/lib/slack";
 import type { Company } from "@/lib/types";
 
 const SET_PASSWORD_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -95,6 +96,7 @@ export async function approveMember(formData: FormData): Promise<void> {
     .bind(userId)
     .first<{ email: string; name: string; needs_password: number }>();
   if (u?.email) {
+    const slack = await getSlackConfig();
     if (u.needs_password === 1) {
       // Application created without a password (marketing form): send a link to
       // set one, reusing the password-reset token mechanism.
@@ -104,9 +106,9 @@ export async function approveMember(formData: FormData): Promise<void> {
         .prepare("INSERT INTO password_reset_tokens (token, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
         .bind(token, userId, now + SET_PASSWORD_TTL, now)
         .run();
-      await emailAccessApprovedSetPassword(u.email, u.name, siteUrl(`/reset-password?token=${token}`));
+      await emailAccessApprovedSetPassword(u.email, u.name, siteUrl(`/reset-password?token=${token}`), slack?.inviteUrl);
     } else {
-      await emailAccessApproved(u.email, u.name);
+      await emailAccessApproved(u.email, u.name, slack?.inviteUrl);
     }
   }
   revalidatePath("/admin/requests");

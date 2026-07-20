@@ -93,6 +93,13 @@ export default async function AdminHome() {
         </p>
         <DigestButton />
       </div>
+
+      <Link href="/admin/slack" className="card member-card" style={{ marginTop: "1rem", maxWidth: 480, display: "block" }}>
+        <h3 style={{ fontSize: "1.3rem", margin: 0 }}>Slack</h3>
+        <p className="meta" style={{ margin: "0.25rem 0 0" }}>
+          Set the members-only Slack invite link shown on the dashboard and in the approval email.
+        </p>
+      </Link>
     </>
   );
 }

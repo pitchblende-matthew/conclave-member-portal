@@ -4,11 +4,13 @@ import { mediaUrl } from "@/lib/media";
 import { listFunctions, listSeniorities } from "@/lib/member-taxonomy";
 import { listExpertise, getUserExpertiseIds, MAX_EXPERTISE } from "@/lib/expertise";
 import ProfileForm from "./form";
+import SlackCard from "./slack-card";
 
 export const dynamic = "force-dynamic";
 
-export default async function Profile() {
+export default async function Profile({ searchParams }: { searchParams: Promise<{ slack?: string }> }) {
   const user = await requireUser();
+  const { slack: slackStatus } = await searchParams;
   const { results: companies } = await getDb()
     .prepare("SELECT id, name FROM companies ORDER BY name COLLATE NOCASE")
     .all<{ id: number; name: string }>();
@@ -56,6 +58,7 @@ export default async function Profile() {
           }}
         />
       </div>
+      <SlackCard user={user} status={slackStatus} />
     </>
   );
 }

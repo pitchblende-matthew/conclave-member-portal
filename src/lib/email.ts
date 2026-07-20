@@ -227,23 +227,33 @@ export async function emailAccessPending(to: string, name: string): Promise<void
   });
 }
 
-export async function emailAccessApproved(to: string, name: string): Promise<void> {
+function slackBlock(slackInviteUrl?: string): { html: string; text: string } {
+  if (!slackInviteUrl) return { html: "", text: "" };
+  return {
+    html: `<p>Join the members' Slack to introduce yourself: <a href="${esc(slackInviteUrl)}">${esc(slackInviteUrl)}</a></p>`,
+    text: `\nJoin the members' Slack: ${slackInviteUrl}`,
+  };
+}
+
+export async function emailAccessApproved(to: string, name: string, slackInviteUrl?: string): Promise<void> {
+  const slack = slackBlock(slackInviteUrl);
   await sendEmail({
     to,
     subject: "Your Conclave membership is approved",
-    html: layout("You're approved", `<p>${greeting(name)}</p><p>Welcome to Conclave. Sign in to finish setting up your profile and meet the network.</p>`, { label: "Sign in", href: siteUrl("/login") }),
-    text: `Your Conclave membership is approved. Sign in: ${siteUrl("/login")}`,
+    html: layout("You're approved", `<p>${greeting(name)}</p><p>Welcome to Conclave. Sign in to finish setting up your profile and meet the network.</p>${slack.html}`, { label: "Sign in", href: siteUrl("/login") }),
+    text: `Your Conclave membership is approved. Sign in: ${siteUrl("/login")}${slack.text}`,
   });
 }
 
 // Approval for an application created without a password (e.g. via the
 // marketing form): the member sets a password through the link, then signs in.
-export async function emailAccessApprovedSetPassword(to: string, name: string, link: string): Promise<void> {
+export async function emailAccessApprovedSetPassword(to: string, name: string, link: string, slackInviteUrl?: string): Promise<void> {
+  const slack = slackBlock(slackInviteUrl);
   await sendEmail({
     to,
     subject: "Your Conclave membership is approved",
-    html: layout("You're approved", `<p>${greeting(name)}</p><p>Welcome to Conclave. Set a password to sign in and finish setting up your profile.</p>`, { label: "Set your password", href: link }),
-    text: `Your Conclave membership is approved. Set your password to sign in: ${link}`,
+    html: layout("You're approved", `<p>${greeting(name)}</p><p>Welcome to Conclave. Set a password to sign in and finish setting up your profile.</p>${slack.html}`, { label: "Set your password", href: link }),
+    text: `Your Conclave membership is approved. Set your password to sign in: ${link}${slack.text}`,
   });
 }
 

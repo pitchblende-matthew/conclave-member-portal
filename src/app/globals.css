@@ -25,6 +25,18 @@
 /* Light mode is the original tokens (cream page, tan cards) — no overrides. */
 .app-light { min-height: 100vh; }
 
+/* Dashboard "Join the Slack" card */
+.slack-card { display: flex; align-items: center; gap: 1rem; text-decoration: none; color: inherit; transition: border-color 0.15s ease; }
+.slack-card:hover { border-color: var(--sage-soft); }
+.slack-card-ico { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 11px; background: var(--cream-deep); color: var(--sage-deep); flex: none; }
+.slack-card-body { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; min-width: 0; }
+.slack-card-title { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.35rem; color: var(--ink); line-height: 1.2; }
+.slack-card-cta { color: var(--sage-deep); font-size: 0.8rem; white-space: nowrap; flex: none; }
+@media (max-width: 480px) {
+  .slack-card { flex-wrap: wrap; }
+  .slack-card-cta { width: 100%; }
+}
+
 /* Light/dark switch in the top bar (adapts to the surrounding --ink) */
 .theme-toggle {
   background: none; border: none; padding: 0.25rem; flex: none;

@@ -9,6 +9,7 @@ import Icon, { Flame } from "@/components/icons";
 import Eyebrow from "@/components/eyebrow";
 import SectionDivider from "@/components/section-divider";
 import SuggestedMemberCard from "@/components/suggested-member-card";
+import SlackJoinCard from "@/components/slack-join-card";
 import LocalTime from "@/components/local-time";
 import type { Briefing } from "@/lib/types";
 
@@ -123,6 +124,9 @@ export default async function Dashboard() {
           </div>
         </section>
       )}
+
+      {/* Members-only Slack — appears once an admin sets an invite link */}
+      <SlackJoinCard />
 
       {/* Market snapshot */}
       <div className="grid" style={{ marginTop: "1.5rem" }}>

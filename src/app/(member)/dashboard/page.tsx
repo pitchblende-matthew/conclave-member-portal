@@ -5,6 +5,7 @@ import { mediaUrl } from "@/lib/media";
 import { connectionCounts } from "@/lib/connections";
 import { suggestedMembers } from "@/lib/suggestions";
 import { networkFeed } from "@/lib/feed";
+import { getSlackConfig } from "@/lib/slack";
 import Icon, { Flame } from "@/components/icons";
 import Eyebrow from "@/components/eyebrow";
 import SectionDivider from "@/components/section-divider";
@@ -72,12 +73,16 @@ export default async function Dashboard() {
   // Activation checklist — the first actions that turn a new member into an
   // active one (and that power matching). Hidden once everything's done.
   const rsvpCount = await one("SELECT COUNT(*) AS n FROM rsvps WHERE user_id = ?", user.id);
+  const slackConfig = await getSlackConfig();
   const steps = [
     { label: "Add a profile photo", done: !!user.avatar_key, href: "/profile" },
     { label: "Write a short bio", done: !!user.bio, href: "/profile" },
     { label: "Set your market", done: !!user.dma_slug, href: "/profile" },
     { label: "Make your first connection", done: connections > 0, href: "/discover" },
     { label: "RSVP to an event", done: rsvpCount > 0, href: "/events" },
+    ...(slackConfig
+      ? [{ label: `Join ${slackConfig.workspaceName}`, done: !!user.slack_linked_at, href: "/profile" }]
+      : []),
   ];
   const stepsDone = steps.filter((s) => s.done).length;
   const activated = stepsDone === steps.length;

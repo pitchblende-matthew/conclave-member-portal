@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mediaUrl } from "@/lib/media";
@@ -26,9 +27,12 @@ export default async function Onboarding() {
   ]);
 
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  // Match the portal theme (defaults to dark), rendered server-side to avoid a flash.
+  const theme = (await cookies()).get("theme")?.value === "light" ? "light" : "dark";
 
   return (
-    <main className="page" style={{ maxWidth: 680, margin: "0 auto", padding: "3rem 1.5rem 4rem" }}>
+    <div id="app-shell" className={theme === "dark" ? "app-dark" : "app-light"}>
+      <main className="page" style={{ maxWidth: 680, margin: "0 auto", padding: "3rem 1.5rem 4rem" }}>
       <div style={{ marginBottom: "1rem" }}><Wordmark size={1.6} /></div>
       <div className="eyebrow">Welcome</div>
       <h1 style={{ fontSize: "2.6rem" }}>Complete your profile</h1>
@@ -72,6 +76,7 @@ export default async function Onboarding() {
       <p className="note" style={{ marginTop: "1rem" }}>
         <a href={`${base}/logout`}>Sign out</a>
       </p>
-    </main>
+      </main>
+    </div>
   );
 }

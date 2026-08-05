@@ -109,6 +109,28 @@ Webflow components into the app with **DevLink** and replace the plain markup he
 
 ---
 
+## Marketing-site event pages (Webflow CMS sync)
+
+Approved, upcoming events are mirrored into a Webflow **CMS collection** ("Events"), so each
+one gets its own page on the marketing site at `jointheconclave.com/event/{slug}` — designed
+once as a Collection Page template. The portal is the source of truth; the sync is one-way.
+
+- **Sync engine:** `src/lib/webflow-sync.ts` — creates / updates / removes CMS items to match
+  events where `status = 'approved'` and `starts_at` is in the future. Idempotent via
+  `events.webflow_item_id`; it skips unchanged items using a content hash.
+- **Trigger:** `GET /api/webflow/sync?key=<WEBFLOW_SYNC_SECRET>`. Webflow Cloud has no cron,
+  so point the **same external scheduler** used for the digest at this URL (every 10–15 min).
+- **Config (Webflow Cloud → Environment variables):**
+  - `WEBFLOW_API_TOKEN` — a Webflow **site API token** with CMS read/write scope.
+  - `WEBFLOW_EVENTS_COLLECTION_ID` — the Events collection id.
+  - `WEBFLOW_SYNC_SECRET` — any random string; guards the endpoint.
+  - (`EMAIL_BASE_URL` is reused to build the per-event RSVP deep link into the portal.)
+
+  With the first two unset, the sync safely no-ops. Run `db:migrate:remote` so the
+  `webflow_item_id` columns (migration `0036`) exist before enabling it.
+
+---
+
 ## Before you go live (hardening checklist)
 
 This scaffold covers the core flow but intentionally leaves these to you / a developer:

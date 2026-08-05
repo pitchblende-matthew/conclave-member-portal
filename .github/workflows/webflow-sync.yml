@@ -1,0 +1,38 @@
+name: Webflow event sync
+
+# Webflow Cloud has no cron, so GitHub Actions plays scheduler (same pattern as
+# the weekly digest): it pings the portal's sync endpoint, which mirrors
+# approved, upcoming events into the marketing site's Webflow "Events"
+# collection — one page per event at jointheconclave.com/event/{slug}. The sync
+# is idempotent and skips unchanged items, so frequent runs are harmless.
+on:
+  schedule:
+    # Every 15 minutes. GitHub cron is always UTC (irrelevant at this cadence).
+    - cron: "*/15 * * * *"
+  # Allow a manual run from the Actions tab.
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Webflow sync
+        env:
+          WEBFLOW_SYNC_SECRET: ${{ secrets.WEBFLOW_SYNC_SECRET }}
+          # Override via repo variable WEBFLOW_SYNC_URL if the portal ever moves.
+          WEBFLOW_SYNC_URL: ${{ vars.WEBFLOW_SYNC_URL || 'https://www.jointheconclave.com/portal/api/webflow/sync' }}
+        run: |
+          if [ -z "$WEBFLOW_SYNC_SECRET" ]; then
+            echo "::error::WEBFLOW_SYNC_SECRET repo secret is not set."
+            exit 1
+          fi
+          url="${WEBFLOW_SYNC_URL}?key=${WEBFLOW_SYNC_SECRET}"
+          echo "GET ${WEBFLOW_SYNC_URL}"
+          # Capture body + HTTP status; fail the job on any non-2xx response.
+          status=$(curl -sS -o response.json -w "%{http_code}" "$url")
+          echo "HTTP ${status}"
+          echo "Response: $(cat response.json)"
+          case "$status" in
+            2*) echo "Sync endpoint accepted the request." ;;
+            *)  echo "::error::Sync endpoint returned HTTP ${status}"; exit 1 ;;
+          esac

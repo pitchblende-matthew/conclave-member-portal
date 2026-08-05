@@ -1,3 +1,11 @@
 # Copy to .dev.vars for local development. Do NOT commit real secrets.
 # (No secrets are strictly required for the base scaffold — auth uses the D1 DB.)
 NEXT_PUBLIC_BASE_PATH=/portal
+
+# Webflow CMS sync — mirrors approved, upcoming events into the marketing site's
+# "Events" collection so each becomes a page at jointheconclave.com/event/{slug}.
+# Set these on Webflow Cloud (Environment variables) in production; leave unset
+# to disable the sync locally. See src/lib/webflow-sync.ts.
+# WEBFLOW_API_TOKEN=            # Webflow site API token, CMS read + write scope
+# WEBFLOW_EVENTS_COLLECTION_ID= # id of the "Events" collection
+# WEBFLOW_SYNC_SECRET=          # any random string; guards /api/webflow/sync?key=

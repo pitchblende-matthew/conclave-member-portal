@@ -199,8 +199,8 @@ export async function syncEventsToWebflow(): Promise<SyncResult> {
           continue;
         }
         await db
-          .prepare(`UPDATE events SET webflow_item_id = ?, webflow_synced_hash = ? WHERE id = ?`)
-          .bind(itemId, h, e.id)
+          .prepare(`UPDATE events SET webflow_item_id = ?, webflow_slug = ?, webflow_synced_hash = ? WHERE id = ?`)
+          .bind(itemId, slug, h, e.id)
           .run();
         result.created++;
       } else if (e.webflow_synced_hash !== h) {
@@ -242,7 +242,7 @@ export async function syncEventsToWebflow(): Promise<SyncResult> {
         result.errors.push(`remove #${s.id}: ${res.status} ${JSON.stringify(res.body)}`);
         continue;
       }
-      await db.prepare(`UPDATE events SET webflow_item_id = '', webflow_synced_hash = '' WHERE id = ?`).bind(s.id).run();
+      await db.prepare(`UPDATE events SET webflow_item_id = '', webflow_slug = '', webflow_synced_hash = '' WHERE id = ?`).bind(s.id).run();
       result.removed++;
     } catch (err) {
       result.errors.push(`remove #${s.id}: ${String(err)}`);

@@ -1,5 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "./db";
+import { announceBriefing } from "./board-announce";
 
 // Pull published pitchblende.net Insights posts into the portal's briefings as
 // 'link' entries, so new posts appear automatically. Pitchblende's Webflow CMS
@@ -150,23 +151,18 @@ export async function syncBriefingsFromPitchblende(): Promise<BriefingsSyncResul
       const publishedAt = Number.isNaN(pub) ? (p.lastPublished ? Date.parse(p.lastPublished) : Date.now()) : pub;
       const now = Date.now();
 
-      await db
+      const title = String(fd.name ?? slug);
+      const summary = typeof fd.excerpt === "string" ? fd.excerpt : "";
+      const ins = await db
         .prepare(
           `INSERT INTO briefings (kind, title, summary, body, url, cover_key, cover_url, author_id, published, published_at, status, submitted_by, category_id, created_at, updated_at)
            VALUES ('link', ?, ?, '', ?, '', ?, NULL, 1, ?, 'approved', NULL, ?, ?, ?)`
         )
-        .bind(
-          String(fd.name ?? slug),
-          typeof fd.excerpt === "string" ? fd.excerpt : "",
-          url,
-          cover,
-          Number.isNaN(publishedAt) ? now : publishedAt,
-          categoryId,
-          now,
-          now
-        )
+        .bind(title, summary, url, cover, Number.isNaN(publishedAt) ? now : publishedAt, categoryId, now, now)
         .run();
       result.created++;
+      // Open a discussion thread for the newly imported post.
+      await announceBriefing(Number(ins.meta.last_row_id), { title, summary, url });
     } catch (e) {
       result.errors.push(`post ${String(p?.fieldData?.slug ?? p?.id)}: ${String(e)}`);
     }

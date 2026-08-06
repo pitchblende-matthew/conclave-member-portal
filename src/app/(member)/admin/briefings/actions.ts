@@ -9,6 +9,7 @@ import { notify } from "@/lib/notifications";
 import { emailSubmissionDecision } from "@/lib/email";
 import { fetchOgImage } from "@/lib/opengraph";
 import { readTagIds, setContentTags } from "@/lib/content-tags";
+import { announceBriefing } from "@/lib/board-announce";
 import type { Briefing } from "@/lib/types";
 
 export type BriefingState = { ok?: boolean; error?: string };
@@ -46,7 +47,7 @@ export async function approveBriefing(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const id = Number(formData.get("briefingId"));
   if (!id) return;
-  const b = await getDb().prepare("SELECT submitted_by, title, published_at FROM briefings WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string; published_at: number | null }>();
+  const b = await getDb().prepare("SELECT submitted_by, title, summary, url, published_at FROM briefings WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string; summary: string; url: string; published_at: number | null }>();
   const now = Date.now();
   await getDb()
     .prepare("UPDATE briefings SET status = 'approved', published = 1, published_at = ?, updated_at = ? WHERE id = ?")
@@ -57,6 +58,8 @@ export async function approveBriefing(formData: FormData): Promise<void> {
     const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(b.submitted_by).first<{ email: string }>();
     if (u?.email) await emailSubmissionDecision(u.email, "briefing", b.title, true);
   }
+  // Now published — open a discussion thread (idempotent).
+  if (b) await announceBriefing(id, { title: b.title, summary: b.summary, url: b.url });
   revalidatePath("/admin/briefings");
   revalidatePath("/briefings");
 }
@@ -195,10 +198,12 @@ export async function setPublished(formData: FormData): Promise<void> {
   const now = Date.now();
 
   if (publish) {
-    const row = await getDb().prepare("SELECT published_at FROM briefings WHERE id = ?").bind(id).first<{ published_at: number | null }>();
+    const row = await getDb().prepare("SELECT title, summary, url, published_at FROM briefings WHERE id = ?").bind(id).first<{ title: string; summary: string; url: string; published_at: number | null }>();
     const publishedAt = row?.published_at ?? now;
     // Publishing also clears any pending-review state.
     await getDb().prepare("UPDATE briefings SET published = 1, status = 'approved', published_at = ?, updated_at = ? WHERE id = ?").bind(publishedAt, now, id).run();
+    // Now published — open a discussion thread (idempotent).
+    if (row) await announceBriefing(id, { title: row.title, summary: row.summary, url: row.url });
   } else {
     await getDb().prepare("UPDATE briefings SET published = 0, updated_at = ? WHERE id = ?").bind(now, id).run();
   }

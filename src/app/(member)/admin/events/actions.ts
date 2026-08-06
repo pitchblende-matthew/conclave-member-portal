@@ -8,6 +8,7 @@ import { regionFromForm } from "@/lib/region";
 import { notify } from "@/lib/notifications";
 import { emailSubmissionDecision } from "@/lib/email";
 import { readTagIds, setContentTags } from "@/lib/content-tags";
+import { announceEvent } from "@/lib/board-announce";
 
 export type EventState = { ok?: boolean; error?: string };
 
@@ -58,8 +59,11 @@ export async function createEvent(_prev: EventState, formData: FormData): Promis
     )
     .run();
 
+  const eventId = Number(res.meta.last_row_id);
   const tags = readTagIds(formData);
-  await setContentTags("event", Number(res.meta.last_row_id), tags.industry, tags.function);
+  await setContentTags("event", eventId, tags.industry, tags.function);
+  // Admin-created events are live immediately — open a discussion thread.
+  await announceEvent(eventId, { title: e.title, description: e.description });
 
   revalidatePath("/admin/events");
   revalidatePath("/events");
@@ -104,13 +108,15 @@ export async function approveEvent(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const id = Number(formData.get("eventId"));
   if (!id) return;
-  const ev = await getDb().prepare("SELECT submitted_by, title FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string }>();
+  const ev = await getDb().prepare("SELECT submitted_by, title, description FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string; description: string }>();
   await getDb().prepare("UPDATE events SET status = 'approved' WHERE id = ?").bind(id).run();
   if (ev?.submitted_by) {
     await notify(ev.submitted_by, "event_approved", { actorId: admin.id });
     const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(ev.submitted_by).first<{ email: string }>();
     if (u?.email) await emailSubmissionDecision(u.email, "event", ev.title, true);
   }
+  // Now visible on the calendar — open a discussion thread (idempotent).
+  if (ev) await announceEvent(id, { title: ev.title, description: ev.description });
   revalidatePath("/admin/events");
   revalidatePath("/events");
 }

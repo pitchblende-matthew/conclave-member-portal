@@ -36,6 +36,25 @@ export async function topicForSource(sourceType: "event" | "briefing", sourceId:
   }
 }
 
+// Batch version for list pages: source id -> topic id (only for sources that
+// have a thread). Missing entries mean "no thread".
+export async function topicsForSources(sourceType: "event" | "briefing", sourceIds: number[]): Promise<Map<number, number>> {
+  const map = new Map<number, number>();
+  const ids = sourceIds.filter(Boolean);
+  if (!ids.length) return map;
+  try {
+    const placeholders = ids.map(() => "?").join(",");
+    const { results } = await getDb()
+      .prepare(`SELECT source_id, id FROM topics WHERE source_type = ? AND source_id IN (${placeholders})`)
+      .bind(sourceType, ...ids)
+      .all<{ source_id: number; id: number }>();
+    for (const r of results) map.set(r.source_id, r.id);
+  } catch {
+    /* table/columns not present yet — return empty */
+  }
+  return map;
+}
+
 async function announce(sourceType: "event" | "briefing", sourceId: number, title: string, body: string): Promise<void> {
   try {
     if (!sourceId) return;

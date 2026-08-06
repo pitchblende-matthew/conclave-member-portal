@@ -7,6 +7,7 @@ import LocalTime from "@/components/local-time";
 import EmptyState from "@/components/empty-state";
 import Pager from "@/components/pager";
 import { tagsInUse, tagsForItems, tagFilterClause } from "@/lib/content-tags";
+import { topicsForSources } from "@/lib/board-announce";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ export default async function Briefings({
   const hasNext = rows.length > PAGE_SIZE;
   const results = rows.slice(0, PAGE_SIZE);
   const tagMap = await tagsForItems("briefing", results.map((r) => r.id));
+  const threadMap = await topicsForSources("briefing", results.map((r) => r.id));
   const pagerParams: Record<string, string> = {};
   if (active) pagerParams.category = active.slug;
   if (activeIndustry) pagerParams.industry = activeIndustry.slug;
@@ -129,14 +131,25 @@ export default async function Briefings({
               </div>
             </>
           );
-          return isLink ? (
-            <a key={b.id} href={b.url} target="_blank" rel="noreferrer" className="card briefing-card">
+          const threadId = threadMap.get(b.id);
+          const card = isLink ? (
+            <a href={b.url} target="_blank" rel="noreferrer" className="card briefing-card">
               {inner}
             </a>
           ) : (
-            <Link key={b.id} href={`/briefings/${b.id}`} className="card briefing-card">
+            <Link href={`/briefings/${b.id}`} className="card briefing-card">
               {inner}
             </Link>
+          );
+          return (
+            <div key={b.id} style={{ display: "flex", flexDirection: "column" }}>
+              {card}
+              {threadId ? (
+                <Link href={`/board/${threadId}`} className="meta" style={{ marginTop: "0.5rem", fontSize: "0.8rem", textDecoration: "none" }}>
+                  💬 Discuss on the board →
+                </Link>
+              ) : null}
+            </div>
           );
         })}
         {results.length === 0 && (

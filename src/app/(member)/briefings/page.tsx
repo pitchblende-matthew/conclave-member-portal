@@ -103,7 +103,7 @@ export default async function Briefings({
         </nav>
       )}
 
-      <div className="grid" style={{ marginTop: "1.5rem" }}>
+      <div className="grid briefings-grid" style={{ marginTop: "1.5rem" }}>
         {results.map((b) => {
           const isLink = b.kind === "link";
           const cover = b.cover_key ? mediaUrl(b.cover_key) : (b.cover_url || null);
@@ -142,10 +142,10 @@ export default async function Briefings({
             </Link>
           );
           return (
-            <div key={b.id} style={{ display: "flex", flexDirection: "column" }}>
+            <div key={b.id} className="briefing-cell">
               {card}
               {threadId ? (
-                <Link href={`/board/${threadId}`} className="meta" style={{ marginTop: "0.5rem", fontSize: "0.8rem", textDecoration: "none" }}>
+                <Link href={`/board/${threadId}`} className="meta briefing-discuss">
                   💬 Discuss on the board →
                 </Link>
               ) : null}

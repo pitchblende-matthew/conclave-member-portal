@@ -8,9 +8,32 @@ import { getDb } from "./db";
 
 const SYSTEM_EMAIL = "conclave-system@jointheconclave.com";
 
+// Board category each source type files its threads under (see migration 0043).
+const CATEGORY_SLUG: Record<"event" | "briefing", string> = { event: "events", briefing: "briefings" };
+
 async function systemUserId(db: D1Database): Promise<number | null> {
   const row = await db.prepare("SELECT id FROM users WHERE email = ?").bind(SYSTEM_EMAIL).first<{ id: number }>();
   return row?.id ?? null;
+}
+
+async function categoryId(db: D1Database, slug: string): Promise<number> {
+  const row = await db.prepare("SELECT id FROM categories WHERE slug = ?").bind(slug).first<{ id: number }>();
+  return row?.id ?? 0;
+}
+
+// The board topic that was opened for a given event/briefing, if any. Used to
+// link the source back to its discussion thread.
+export async function topicForSource(sourceType: "event" | "briefing", sourceId: number): Promise<number | null> {
+  if (!sourceId) return null;
+  try {
+    const row = await getDb()
+      .prepare("SELECT id FROM topics WHERE source_type = ? AND source_id = ?")
+      .bind(sourceType, sourceId)
+      .first<{ id: number }>();
+    return row?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function announce(sourceType: "event" | "briefing", sourceId: number, title: string, body: string): Promise<void> {
@@ -28,11 +51,12 @@ async function announce(sourceType: "event" | "briefing", sourceId: number, titl
     if (!sys) return;
 
     const now = Date.now();
+    const catId = await categoryId(db, CATEGORY_SLUG[sourceType]);
     const res = await db
       .prepare(
-        "INSERT INTO topics (title, category_id, dma_slug, dma_name, created_by, created_at, last_activity_at, source_type, source_id) VALUES (?, 0, '', '', ?, ?, ?, ?, ?)"
+        "INSERT INTO topics (title, category_id, dma_slug, dma_name, created_by, created_at, last_activity_at, source_type, source_id) VALUES (?, ?, '', '', ?, ?, ?, ?, ?)"
       )
-      .bind(title, sys, now, now, sourceType, sourceId)
+      .bind(title, catId, sys, now, now, sourceType, sourceId)
       .run();
     const topicId = Number(res.meta.last_row_id);
     await db

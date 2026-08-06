@@ -10,6 +10,7 @@ import LocalTime from "@/components/local-time";
 import Avatar from "@/components/avatar";
 import BookmarkButton from "@/components/bookmark-button";
 import type { EventRow } from "@/lib/types";
+import { topicForSource } from "@/lib/board-announce";
 import { toggleRsvp } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
   const isGoing = attendees.some((a) => a.id === user.id);
   const tags = (await tagsForItems("event", [eventId])).get(eventId) ?? [];
   const saved = (await myFlags(user.id, "save", "event", [eventId])).has(eventId);
+  const threadId = await topicForSource("event", eventId);
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
   const path = `/events/${eventId}`;
 
@@ -92,6 +94,7 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
         <a className="btn btn-ghost inline-btn" href={googleCalendarUrl(ev)} target="_blank" rel="noreferrer">Add to Google Calendar</a>
         <a className="btn btn-ghost inline-btn" href={`${base}${path}/ics`}>Download .ics</a>
         <BookmarkButton contentType="event" contentId={ev.id} saved={saved} path={path} />
+        {threadId ? <Link href={`/board/${threadId}`} className="btn btn-ghost inline-btn">Discuss on the board →</Link> : null}
       </div>
 
       <h2 style={{ fontSize: "1.4rem", marginTop: "2rem" }}>

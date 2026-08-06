@@ -42,6 +42,20 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
     .first<Topic & { category_name: string | null; category_slug: string | null }>();
   if (!topic) notFound();
 
+  // If this thread was auto-opened for an event/briefing, link back to it so the
+  // conversation and the source sit next to each other.
+  let source: { href: string; label: string; external: boolean } | null = null;
+  if (topic.source_type === "event" && topic.source_id) {
+    const e = await db.prepare("SELECT title FROM events WHERE id = ?").bind(topic.source_id).first<{ title: string }>();
+    if (e) source = { href: `/events/${topic.source_id}`, label: `About this event · ${e.title}`, external: false };
+  } else if (topic.source_type === "briefing" && topic.source_id) {
+    const b = await db.prepare("SELECT title, kind, url FROM briefings WHERE id = ?").bind(topic.source_id).first<{ title: string; kind: string; url: string }>();
+    if (b) {
+      const external = b.kind === "link" && !!b.url;
+      source = { href: external ? b.url : `/briefings/${topic.source_id}`, label: `About this briefing · ${b.title}`, external };
+    }
+  }
+
   const { results: posts } = await db
     .prepare(
       `SELECT p.id, p.user_id, p.body, p.created_at,
@@ -92,6 +106,16 @@ export default async function TopicView({ params }: { params: Promise<{ id: stri
           )}
         </div>
       </div>
+
+      {source ? (
+        <p className="meta" style={{ marginTop: "0.5rem" }}>
+          {source.external ? (
+            <a href={source.href} target="_blank" rel="noreferrer">{source.label} ↗</a>
+          ) : (
+            <Link href={source.href}>{source.label} →</Link>
+          )}
+        </p>
+      ) : null}
 
       <div style={{ marginTop: "1.25rem" }}>
         {posts.map((p, i) => {

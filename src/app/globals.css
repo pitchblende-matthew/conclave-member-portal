@@ -20,6 +20,12 @@
   --sage-soft: #9aae9d;
   --muted: #6f6e60;
   --line: rgba(44, 58, 49, 0.14);
+  /* Button colors — remapped per surface in dark mode so buttons stay readable
+     on both the dark-green canvas and the light tan cards. */
+  --btn-bg: var(--ink);
+  --btn-fg: var(--cream);
+  --btn-ghost-fg: var(--ink);
+  --btn-ghost-border: var(--ink);
 }
 
 /* Light mode is the original tokens (cream page, tan cards) — no overrides. */
@@ -62,6 +68,11 @@
   --olive: #c3c191;
   --sage-deep: #b3c4b6;
   --line: rgba(243, 238, 229, 0.16);
+  /* Buttons on the green canvas: light fill / light outline so they read. */
+  --btn-bg: #f3eee5;
+  --btn-fg: #2c3a31;
+  --btn-ghost-fg: #f3eee5;
+  --btn-ghost-border: rgba(243, 238, 229, 0.5);
 }
 /* Top bar sits on the green: its links/icons (which use --ink) go light */
 .app-dark .topbar { --ink: #f3eee5; }
@@ -94,6 +105,11 @@
   --olive: #7c7a52;
   --sage-deep: #45564b;
   --line: rgba(44, 58, 49, 0.14);
+  /* Buttons inside the light tan surfaces keep the original dark-on-tan look. */
+  --btn-bg: #2c3a31;
+  --btn-fg: #f2ede4;
+  --btn-ghost-fg: #2c3a31;
+  --btn-ghost-border: #2c3a31;
 }
 
 * { box-sizing: border-box; }
@@ -233,8 +249,8 @@ input:focus, textarea:focus, select:focus {
   padding: 0.85rem 1rem;
   border: none;
   border-radius: 8px;
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   font: inherit;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -244,8 +260,8 @@ input:focus, textarea:focus, select:focus {
 }
 .btn-ghost {
   background: transparent;
-  color: var(--ink);
-  border: 1px solid var(--ink);
+  color: var(--btn-ghost-fg);
+  border: 1px solid var(--btn-ghost-border);
 }
 .error { color: #9b2c2c; font-size: 0.85rem; margin-top: 1rem; }
 .note { color: var(--muted); font-size: 0.85rem; margin-top: 1rem; }
@@ -509,6 +525,11 @@ main.page { padding: 2.5rem 0 4rem; }
 .briefing-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
 .briefing-cover { width: 100%; height: 168px; object-fit: cover; display: block; }
 .briefing-body { padding: 1.1rem 1.25rem 1.3rem; }
+/* Uniform card height across the grid, with the "Discuss" link pinned below. */
+.briefings-grid { grid-auto-rows: 1fr; }
+.briefing-cell { display: flex; flex-direction: column; height: 100%; }
+.briefing-cell .briefing-card { flex: 1; margin-bottom: 0; }
+.briefing-discuss { display: inline-block; margin-top: 0.5rem; font-size: 0.8rem; text-decoration: none; }
 .briefing-hero {
   width: 100%; max-height: 420px; object-fit: cover; display: block;
   border-radius: 10px; margin: 1.25rem 0;

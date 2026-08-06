@@ -131,6 +131,28 @@ once as a Collection Page template. The portal is the source of truth; the sync 
 
 ---
 
+## Briefings from pitchblende.net (Insights sync)
+
+New posts on **pitchblende.net/insights** are imported into the **briefings** section
+as published "link" briefings, filed under the closest topic. Pitchblende's Webflow CMS
+is the source of truth; the sync is one-way and **insert-only** (keyed by post URL), so
+admin edits and unpublishing stick. Migration `0040` backfills the current posts;
+the sync keeps it current going forward.
+
+- **Sync engine:** `src/lib/briefings-sync.ts` — reads the Pitchblende "Blog Posts"
+  collection and inserts any post not already briefed.
+- **Trigger:** `GET /api/briefings/sync?key=<WEBFLOW_SYNC_SECRET>` (shares the events
+  sync's secret). Scheduled daily by `.github/workflows/briefings-sync.yml`.
+- **Config (Webflow Cloud → Environment variables):**
+  - `PITCHBLENDE_WEBFLOW_TOKEN` — a Webflow API token with **read** access to the
+    pitchblende.net site. Falls back to `WEBFLOW_API_TOKEN` if that token can read it
+    (e.g. a workspace-scoped token).
+  - `WEBFLOW_SYNC_SECRET` — the same secret used by the events sync.
+
+  With no token, the sync safely no-ops.
+
+---
+
 ## Before you go live (hardening checklist)
 
 This scaffold covers the core flow but intentionally leaves these to you / a developer:

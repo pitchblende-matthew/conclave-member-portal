@@ -13,5 +13,8 @@ interface CloudflareEnv {
   // Webflow CMS sync (marketing-site per-event pages). See src/lib/webflow-sync.ts.
   WEBFLOW_API_TOKEN?: string; // site API token with CMS read/write
   WEBFLOW_EVENTS_COLLECTION_ID?: string; // the "Events" collection id
-  WEBFLOW_SYNC_SECRET?: string; // shared secret guarding /api/webflow/sync
+  WEBFLOW_SYNC_SECRET?: string; // shared secret guarding /api/webflow/sync + /api/briefings/sync
+  // Briefings sync (pitchblende.net Insights -> briefings). See src/lib/briefings-sync.ts.
+  PITCHBLENDE_WEBFLOW_TOKEN?: string; // Webflow token with read access to pitchblende.net (falls back to WEBFLOW_API_TOKEN)
+  PITCHBLENDE_INSIGHTS_COLLECTION_ID?: string; // optional override for the Blog Posts collection id
 }

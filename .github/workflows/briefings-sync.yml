@@ -1,0 +1,38 @@
+name: Briefings sync
+
+# Webflow Cloud has no cron, so GitHub Actions plays scheduler (same pattern as
+# the digest and events sync): it pings the portal's briefings sync endpoint,
+# which imports newly-published pitchblende.net Insights posts into the
+# briefings section as link entries. Insert-only and idempotent, so daily is
+# plenty and extra runs are harmless.
+on:
+  schedule:
+    # Daily at 13:30 UTC (~9:30am ET). GitHub cron is always UTC.
+    - cron: "30 13 * * *"
+  # Allow a manual run from the Actions tab.
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger briefings sync
+        env:
+          WEBFLOW_SYNC_SECRET: ${{ secrets.WEBFLOW_SYNC_SECRET }}
+          # Override via repo variable BRIEFINGS_SYNC_URL if the portal moves.
+          BRIEFINGS_SYNC_URL: ${{ vars.BRIEFINGS_SYNC_URL || 'https://www.jointheconclave.com/portal/api/briefings/sync' }}
+        run: |
+          if [ -z "$WEBFLOW_SYNC_SECRET" ]; then
+            echo "::error::WEBFLOW_SYNC_SECRET repo secret is not set."
+            exit 1
+          fi
+          url="${BRIEFINGS_SYNC_URL}?key=${WEBFLOW_SYNC_SECRET}"
+          echo "GET ${BRIEFINGS_SYNC_URL}"
+          # Capture body + HTTP status; fail the job on any non-2xx response.
+          status=$(curl -sS -o response.json -w "%{http_code}" "$url")
+          echo "HTTP ${status}"
+          echo "Response: $(cat response.json)"
+          case "$status" in
+            2*) echo "Briefings sync endpoint accepted the request." ;;
+            *)  echo "::error::Briefings sync endpoint returned HTTP ${status}"; exit 1 ;;
+          esac

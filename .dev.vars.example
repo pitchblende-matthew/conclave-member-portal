@@ -8,4 +8,9 @@ NEXT_PUBLIC_BASE_PATH=/portal
 # to disable the sync locally. See src/lib/webflow-sync.ts.
 # WEBFLOW_API_TOKEN=            # Webflow site API token, CMS read + write scope
 # WEBFLOW_EVENTS_COLLECTION_ID= # id of the "Events" collection
-# WEBFLOW_SYNC_SECRET=          # any random string; guards /api/webflow/sync?key=
+# WEBFLOW_SYNC_SECRET=          # any random string; guards /api/webflow/sync?key= and /api/briefings/sync?key=
+
+# Briefings sync — imports new pitchblende.net Insights posts into the briefings
+# section as link entries. See src/lib/briefings-sync.ts.
+# PITCHBLENDE_WEBFLOW_TOKEN=        # Webflow token with READ access to pitchblende.net (falls back to WEBFLOW_API_TOKEN)
+# PITCHBLENDE_INSIGHTS_COLLECTION_ID= # optional; overrides the default Blog Posts collection id

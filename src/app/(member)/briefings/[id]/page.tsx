@@ -8,6 +8,7 @@ import { renderMarkdown } from "@/lib/markdown";
 import ReactButton from "@/components/react-button";
 import BookmarkButton from "@/components/bookmark-button";
 import { reactionCounts, myFlags } from "@/lib/engagement";
+import { topicForSource } from "@/lib/board-announce";
 import type { Briefing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function BriefingReader({ params }: { params: Promise<{ id:
     myFlags(user.id, "save", "briefing", [b.id]),
   ]);
   const path = `/briefings/${b.id}`;
+  const threadId = await topicForSource("briefing", b.id);
 
   return (
     <article style={{ maxWidth: 720, margin: "0 auto" }}>
@@ -58,6 +60,7 @@ export default async function BriefingReader({ params }: { params: Promise<{ id:
       <div className="btn-row" style={{ marginTop: "1.75rem", alignItems: "center" }}>
         <ReactButton contentType="briefing" contentId={b.id} count={rc.get(b.id) ?? 0} reacted={myReact.has(b.id)} path={path} />
         <BookmarkButton contentType="briefing" contentId={b.id} saved={mySave.has(b.id)} path={path} />
+        {threadId ? <Link href={`/board/${threadId}`} className="btn btn-ghost inline-btn">Discuss on the board →</Link> : null}
       </div>
     </article>
   );

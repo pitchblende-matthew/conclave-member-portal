@@ -69,6 +69,8 @@ export interface Topic {
   created_by: number;
   created_at: number;
   last_activity_at: number;
+  source_type: string; // '' | 'event' | 'briefing'
+  source_id: number;
 }
 
 export interface Category {

@@ -30,6 +30,7 @@ type Initial = {
   discoverRegionOnly: boolean;
   discoverPeersOnly: boolean;
   digestOptIn: boolean;
+  eventOptIn: boolean;
   avatarUrl: string | null;
   coverUrl: string | null;
 };
@@ -342,6 +343,10 @@ export default function ProfileForm({
           <label className="check-row">
             <input type="checkbox" name="digest" defaultChecked={initial.digestOptIn} />
             Email me the weekly digest — new members, events, and discussions
+          </label>
+          <label className="check-row">
+            <input type="checkbox" name="events" defaultChecked={initial.eventOptIn} />
+            Email me about new events, plus reminders before they happen
           </label>
         </fieldset>
 

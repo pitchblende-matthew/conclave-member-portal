@@ -33,6 +33,7 @@ export interface User {
   needs_password: number; // 1 = account created without a password (set on approval)
   alpha_tester: number; // 1 = can file in-app bug/feature feedback
   digest_opt_out: number; // 1 = excluded from the weekly digest
+  event_opt_out: number; // 1 = excluded from event announcements + reminders
   slack_user_id: string | null; // set when a member links their Slack (Phase 2)
   slack_team_id: string | null;
   slack_linked_at: number | null;

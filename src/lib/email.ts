@@ -78,7 +78,7 @@ export async function sendEmail({ to, subject, html, text }: SendArgs): Promise<
 const LOGO_URL =
   "https://cdn.prod.website-files.com/6a1629364bb647e65a025817/6a256014a18d5d024dbc45bc_conclave-bracketed-1600.png";
 
-function layout(heading: string, bodyHtml: string, cta?: { label: string; href: string }): string {
+function layout(heading: string, bodyHtml: string, cta?: { label: string; href: string }, unsubUrl?: string): string {
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f2ede4;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2ede4;padding:32px 12px;">
     <tr><td align="center">
@@ -90,7 +90,7 @@ function layout(heading: string, bodyHtml: string, cta?: { label: string; href: 
           ${cta ? `<div style="margin:26px 0 4px;"><a href="${cta.href}" style="display:inline-block;background:#2c3a31;color:#f2ede4;text-decoration:none;padding:12px 22px;border-radius:8px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:0.05em;text-transform:uppercase;">${esc(cta.label)}</a></div>` : ""}
         </td></tr>
       </table>
-      <div style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#7c7a52;margin-top:16px;">Private. By invitation.</div>
+      <div style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#7c7a52;margin-top:16px;">Private. By invitation.${unsubUrl ? ` · <a href="${unsubUrl}" style="color:#7c7a52;">Unsubscribe</a>` : ""}</div>
     </td></tr>
   </table></body></html>`;
 }
@@ -312,6 +312,67 @@ export async function emailSubmissionDecision(to: string, kind: "event" | "brief
       ? layout(`Your ${noun} is live`, `<p>Hello,</p><p>Your ${noun} <strong>“${esc(title)}”</strong> was approved and is now published on Conclave.</p>`, { label: `View ${noun}s`, href: siteUrl(where) })
       : layout(`About your ${noun}`, `<p>Hello,</p><p>Thanks for submitting <strong>“${esc(title)}”</strong>. An admin reviewed it and decided not to publish it this time.</p>`),
     text: approved ? `Your ${noun} "${title}" was approved.` : `Your ${noun} "${title}" was not approved.`,
+  });
+}
+
+// ---- Event announcements & reminders ----------------------------------------
+
+type EventEmailData = { id: number; title: string; description?: string; location?: string; starts_at: number; is_virtual?: number };
+
+function fmtEventWhen(ms: number): string {
+  try {
+    return (
+      new Date(ms).toLocaleString("en-US", {
+        weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York",
+      }) + " ET"
+    );
+  } catch {
+    return "";
+  }
+}
+
+function eventMeta(ev: EventEmailData): string {
+  const where = ev.is_virtual ? "Virtual — a link is shared with attendees" : ev.location || "";
+  return `<p style="margin:0 0 3px;"><strong>When:</strong> ${esc(fmtEventWhen(ev.starts_at))}</p>${where ? `<p style="margin:0 0 10px;"><strong>Where:</strong> ${esc(where)}</p>` : ""}`;
+}
+
+function eventWhereText(ev: EventEmailData): string {
+  return ev.is_virtual ? " · Virtual" : ev.location ? ` · ${ev.location}` : "";
+}
+
+export async function emailEventAdded(to: string, name: string, ev: EventEmailData, unsubUrl: string): Promise<void> {
+  const desc = ev.description ? `<p>${esc(ev.description.slice(0, 320))}${ev.description.length > 320 ? "…" : ""}</p>` : "";
+  await sendEmail({
+    to,
+    subject: `New Conclave event: ${ev.title}`,
+    html: layout(
+      "A new gathering",
+      `<p>${greeting(name)}</p><p>A new event has been added to the Conclave calendar:</p>
+       <p style="font-family:Georgia,'Times New Roman',serif;font-size:19px;color:#2c3a31;margin:0 0 10px;">${esc(ev.title)}</p>
+       ${eventMeta(ev)}${desc}<p>RSVP to hold your spot.</p>`,
+      { label: "View & RSVP", href: siteUrl(`/events/${ev.id}`) },
+      unsubUrl
+    ),
+    text: `New Conclave event: ${ev.title}\n${fmtEventWhen(ev.starts_at)}${eventWhereText(ev)}\n\nView & RSVP: ${siteUrl(`/events/${ev.id}`)}\n\nUnsubscribe from event emails: ${unsubUrl}`,
+  });
+}
+
+const REMIND_LABEL: Record<"week" | "3day" | "1day", string> = { week: "in one week", "3day": "in 3 days", "1day": "tomorrow" };
+
+export async function emailEventReminder(to: string, name: string, ev: EventEmailData, kind: "week" | "3day" | "1day", unsubUrl: string): Promise<void> {
+  const when = REMIND_LABEL[kind];
+  await sendEmail({
+    to,
+    subject: `Reminder: ${ev.title} is ${when}`,
+    html: layout(
+      "A reminder",
+      `<p>${greeting(name)}</p><p>You're on the list for:</p>
+       <p style="font-family:Georgia,'Times New Roman',serif;font-size:19px;color:#2c3a31;margin:0 0 10px;">${esc(ev.title)}</p>
+       ${eventMeta(ev)}<p>It's coming up <strong>${esc(when)}</strong> — we hope to see you there.</p>`,
+      { label: "View event", href: siteUrl(`/events/${ev.id}`) },
+      unsubUrl
+    ),
+    text: `Reminder: ${ev.title} is ${when}.\n${fmtEventWhen(ev.starts_at)}${eventWhereText(ev)}\n\nView event: ${siteUrl(`/events/${ev.id}`)}\n\nUnsubscribe from event emails: ${unsubUrl}`,
   });
 }
 

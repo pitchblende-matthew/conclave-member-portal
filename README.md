@@ -153,6 +153,29 @@ the sync keeps it current going forward.
 
 ---
 
+## Event emails (announcements + reminders)
+
+When an event is added, the network gets an announcement email; RSVP'd attendees
+then get reminders **1 week / 3 days / 1 day** before it.
+
+- **Runner:** `src/lib/event-emails.ts` — announces newly-added approved events
+  to opted-in members, and sends the three reminder windows to attendees. Every
+  send is idempotent (`event_email_log`, one row per event + kind), so extra
+  runs never double-send. No-ops when email isn't configured.
+- **Trigger:** `GET /api/events/notify/run?key=<DIGEST_SECRET>` — reuses the
+  digest secret and the existing `RESEND_API_KEY` / `EMAIL_FROM` config, so
+  there's **nothing new to set up** beyond the digest's env. Scheduled every 3h
+  by `.github/workflows/event-emails.yml`.
+- **Opt-out:** members toggle "event emails" in their profile, or one-click
+  unsubscribe (`/api/events/unsubscribe`) from any event email — tracked in
+  `users.event_opt_out`, independent of the weekly digest.
+
+Migration `0045` adds the log + opt-out column and marks existing events as
+already-announced (so no retroactive blast on first deploy; their reminders
+still fire).
+
+---
+
 ## Before you go live (hardening checklist)
 
 This scaffold covers the core flow but intentionally leaves these to you / a developer:

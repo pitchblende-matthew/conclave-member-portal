@@ -1,0 +1,37 @@
+name: Event emails
+
+# Webflow Cloud has no cron, so GitHub Actions plays scheduler (same pattern as
+# the weekly digest): it pings the portal's event-email runner, which sends
+# new-event announcements and 1-week / 3-day / 1-day reminders. Every send is
+# idempotent (logged per event + kind), so running often is harmless — a few
+# times a day keeps announcements prompt and reminder windows from being missed.
+on:
+  schedule:
+    # Every 3 hours.
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger event emails
+        env:
+          # Reuses the digest secret (same trust boundary: scheduler -> portal).
+          DIGEST_SECRET: ${{ secrets.DIGEST_SECRET }}
+          # Override via repo variable EVENT_EMAILS_URL if the portal moves.
+          EVENT_EMAILS_URL: ${{ vars.EVENT_EMAILS_URL || 'https://www.jointheconclave.com/portal/api/events/notify/run' }}
+        run: |
+          if [ -z "$DIGEST_SECRET" ]; then
+            echo "::error::DIGEST_SECRET repo secret is not set."
+            exit 1
+          fi
+          url="${EVENT_EMAILS_URL}?key=${DIGEST_SECRET}"
+          echo "GET ${EVENT_EMAILS_URL}"
+          status=$(curl -sS -o response.json -w "%{http_code}" "$url")
+          echo "HTTP ${status}"
+          echo "Response: $(cat response.json)"
+          case "$status" in
+            2*) echo "Event-email runner accepted the request." ;;
+            *)  echo "::error::Event-email runner returned HTTP ${status}"; exit 1 ;;
+          esac

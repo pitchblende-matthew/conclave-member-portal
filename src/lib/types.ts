@@ -34,6 +34,7 @@ export interface User {
   alpha_tester: number; // 1 = can file in-app bug/feature feedback
   digest_opt_out: number; // 1 = excluded from the weekly digest
   event_opt_out: number; // 1 = excluded from event announcements + reminders
+  intro_opt_out: number; // 1 = excluded from the monthly warm intros
   slack_user_id: string | null; // set when a member links their Slack (Phase 2)
   slack_team_id: string | null;
   slack_linked_at: number | null;

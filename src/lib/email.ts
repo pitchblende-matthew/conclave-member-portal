@@ -378,6 +378,48 @@ export async function emailEventReminder(to: string, name: string, ev: EventEmai
   });
 }
 
+// ---- Warm intros ------------------------------------------------------------
+
+type IntroPartner = { id: number; name: string; role?: string; company?: string | null; dma_name?: string; bio?: string; reason?: string };
+
+function monthLabel(round: string): string {
+  const [y, m] = round.split("-").map(Number);
+  try {
+    return new Date(Date.UTC(y, (m || 1) - 1, 1)).toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+  } catch {
+    return "monthly";
+  }
+}
+
+export async function emailIntro(to: string, name: string, partners: IntroPartner[], round: string, unsubUrl: string): Promise<void> {
+  const many = partners.length > 1;
+  const cards = partners
+    .map((p) => {
+      const sub = [p.role, p.company, p.dma_name].filter(Boolean).join(" · ");
+      return `<div style="margin:14px 0;padding:15px 17px;background:#f7f2e9;border:1px solid #e7ded0;border-radius:12px;">
+        <p style="margin:0 0 2px;font-family:Georgia,'Times New Roman',serif;font-size:18px;color:#2c3a31;">${esc(p.name)}</p>
+        ${sub ? `<p style="margin:0 0 8px;color:#6f6e60;font-size:13px;">${esc(sub)}</p>` : ""}
+        ${p.bio ? `<p style="margin:0 0 10px;font-size:14px;line-height:1.55;color:#33322b;">${esc(p.bio.slice(0, 220))}${p.bio.length > 220 ? "…" : ""}</p>` : ""}
+        ${p.reason ? `<p style="margin:0 0 10px;font-size:12px;font-style:italic;color:#7c7a52;">${esc(p.reason)}.</p>` : ""}
+        <a href="${siteUrl(`/directory/${p.id}`)}" style="color:#45564b;font-size:13px;">View profile</a> &nbsp;·&nbsp; <a href="${siteUrl(`/messages/${p.id}`)}" style="color:#45564b;font-size:13px;">Send a message</a>
+      </div>`;
+    })
+    .join("");
+  const intro = `<p>${greeting(name)}</p><p>Each month we introduce members who should know each other. This month, ${many ? "meet two people" : "meet someone"} worth your time:</p>`;
+  const outro = `<p style="margin-top:14px;">A two-line note is all it takes — that's the whole point. Enjoy.</p>`;
+  await sendEmail({
+    to,
+    subject: `Your ${monthLabel(round)} Conclave intro`,
+    html: layout("Your monthly intro", `${intro}${cards}${outro}`, undefined, unsubUrl),
+    text:
+      `${greeting(name)}\n\nYour ${monthLabel(round)} Conclave intro — ${many ? "two people" : "someone"} worth knowing:\n\n` +
+      partners
+        .map((p) => `${p.name}${p.role ? ` — ${p.role}` : ""}${p.dma_name ? ` (${p.dma_name})` : ""}\n  Profile: ${siteUrl(`/directory/${p.id}`)}\n  Message: ${siteUrl(`/messages/${p.id}`)}`)
+        .join("\n\n") +
+      `\n\nA two-line note is all it takes.\n\nUnsubscribe from intros: ${unsubUrl}`,
+  });
+}
+
 export async function emailAdminsNewRequest(applicantName: string): Promise<void> {
   const tos = await adminEmails();
   for (const to of tos) {

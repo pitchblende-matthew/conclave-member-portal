@@ -1,0 +1,35 @@
+name: Warm intros
+
+# Webflow Cloud has no cron, so GitHub Actions plays scheduler: monthly, it
+# pings the portal's intro runner, which pairs opted-in members 1:1 and emails
+# each of them their intro. Idempotent per month (keyed by round), so re-runs
+# are safe. Reuses the digest secret and existing email config.
+on:
+  schedule:
+    # 09:00 ET on the 1st of each month (14:00 UTC).
+    - cron: "0 14 1 * *"
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger warm intros
+        env:
+          DIGEST_SECRET: ${{ secrets.DIGEST_SECRET }}
+          # Override via repo variable INTROS_URL if the portal moves.
+          INTROS_URL: ${{ vars.INTROS_URL || 'https://www.jointheconclave.com/portal/api/intros/run' }}
+        run: |
+          if [ -z "$DIGEST_SECRET" ]; then
+            echo "::error::DIGEST_SECRET repo secret is not set."
+            exit 1
+          fi
+          url="${INTROS_URL}?key=${DIGEST_SECRET}"
+          echo "GET ${INTROS_URL}"
+          status=$(curl -sS -o response.json -w "%{http_code}" "$url")
+          echo "HTTP ${status}"
+          echo "Response: $(cat response.json)"
+          case "$status" in
+            2*) echo "Intro runner accepted the request." ;;
+            *)  echo "::error::Intro runner returned HTTP ${status}"; exit 1 ;;
+          esac

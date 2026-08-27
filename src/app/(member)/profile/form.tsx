@@ -31,6 +31,7 @@ type Initial = {
   discoverPeersOnly: boolean;
   digestOptIn: boolean;
   eventOptIn: boolean;
+  introOptIn: boolean;
   avatarUrl: string | null;
   coverUrl: string | null;
 };
@@ -347,6 +348,10 @@ export default function ProfileForm({
           <label className="check-row">
             <input type="checkbox" name="events" defaultChecked={initial.eventOptIn} />
             Email me about new events, plus reminders before they happen
+          </label>
+          <label className="check-row">
+            <input type="checkbox" name="intros" defaultChecked={initial.introOptIn} />
+            Include me in the monthly member intros — meet someone new each month
           </label>
         </fieldset>
 

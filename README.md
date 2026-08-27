@@ -176,6 +176,27 @@ still fire).
 
 ---
 
+## Warm intros ("The Handshake")
+
+Once a month, opted-in members are paired 1:1 and each gets an email introducing
+their match (name, role, a line of bio, a reason, and links to the profile /
+DMs). The matcher avoids recent repeats and prefers same-market pairs so they
+can meet in person; an odd member out joins one pair as a trio so no one is left
+out.
+
+- **Runner:** `src/lib/intros.ts` — pairs eligible members and emails them.
+  Idempotent per month (keyed by the `YYYY-MM` round in `intro_pairs`).
+- **Trigger:** `GET /api/intros/run?key=<DIGEST_SECRET>` (add `&force=1` to
+  re-pair the current month — it re-sends). Scheduled on the 1st of each month
+  by `.github/workflows/intros.yml`. Reuses the digest secret + email config —
+  **no new env**.
+- **Opt-out:** a profile toggle + one-click `/api/intros/unsubscribe`, tracked
+  in `users.intro_opt_out`.
+
+Migration `0047` adds `intro_pairs` + the opt-out column.
+
+---
+
 ## Before you go live (hardening checklist)
 
 This scaffold covers the core flow but intentionally leaves these to you / a developer:

@@ -69,6 +69,7 @@ export default async function Onboarding() {
             discoverPeersOnly: user.discover_peers_only === 1,
             digestOptIn: user.digest_opt_out !== 1,
             eventOptIn: user.event_opt_out !== 1,
+            introOptIn: user.intro_opt_out !== 1,
             avatarUrl: user.avatar_key ? mediaUrl(user.avatar_key) : null,
             coverUrl: user.cover_key ? mediaUrl(user.cover_key) : null,
           }}

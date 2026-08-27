@@ -47,7 +47,7 @@ export default async function AdminIntros() {
 
   return (
     <>
-      <p className="meta"><Link href="/admin">← Admin</Link></p>
+      <p className="meta"><Link href="/admin">← Admin</Link> &nbsp;·&nbsp; <Link href="/admin/intros/history">Round history →</Link></p>
       <div className="topline">
         <div>
           <div className="tag">Warm intros</div>

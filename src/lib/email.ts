@@ -420,6 +420,29 @@ export async function emailIntro(to: string, name: string, partners: IntroPartne
   });
 }
 
+export async function emailIntroFollowup(to: string, name: string, partner: IntroPartner, round: string, metUrl: string, unsubUrl: string): Promise<void> {
+  const sub = [partner.role, partner.company, partner.dma_name].filter(Boolean).join(" · ");
+  const card = `<div style="margin:14px 0;padding:15px 17px;background:#f7f2e9;border:1px solid #e7ded0;border-radius:12px;">
+      <p style="margin:0 0 2px;font-family:Georgia,'Times New Roman',serif;font-size:18px;color:#2c3a31;">${esc(partner.name)}</p>
+      ${sub ? `<p style="margin:0 0 8px;color:#6f6e60;font-size:13px;">${esc(sub)}</p>` : ""}
+      <a href="${siteUrl(`/messages/${partner.id}`)}" style="color:#45564b;font-size:13px;">Send a message</a> &nbsp;·&nbsp; <a href="${siteUrl(`/directory/${partner.id}`)}" style="color:#45564b;font-size:13px;">View profile</a>
+    </div>`;
+  const body =
+    `<p>${greeting(name)}</p>` +
+    `<p>A couple weeks ago we introduced you to <strong>${esc(partner.name)}</strong>. Did you two get a chance to connect?</p>` +
+    card +
+    `<p style="margin:4px 0 0;">If you haven't yet, a two-line note still counts — it's never too late. And if you already met, let us know so we don't keep nudging:</p>`;
+  await sendEmail({
+    to,
+    subject: `Did you connect with ${partner.name.split(" ")[0] || partner.name}?`,
+    html: layout("Following up on your intro", body, { label: "Yes — we connected", href: metUrl }, unsubUrl),
+    text:
+      `${greeting(name)}\n\nA couple weeks ago we introduced you to ${partner.name}. Did you two connect?\n\n` +
+      `Message them: ${siteUrl(`/messages/${partner.id}`)}\nTheir profile: ${siteUrl(`/directory/${partner.id}`)}\n\n` +
+      `Already met? Let us know: ${metUrl}\n\nUnsubscribe from intros: ${unsubUrl}`,
+  });
+}
+
 export async function emailAdminsNewRequest(applicantName: string): Promise<void> {
   const tos = await adminEmails();
   for (const to of tos) {

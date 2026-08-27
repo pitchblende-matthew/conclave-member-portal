@@ -6,13 +6,16 @@ import { connectionCounts } from "@/lib/connections";
 import { suggestedMembers } from "@/lib/suggestions";
 import { networkFeed } from "@/lib/feed";
 import { getSlackConfig } from "@/lib/slack";
+import { myLatestIntro } from "@/lib/intros";
 import Icon, { Flame } from "@/components/icons";
 import Eyebrow from "@/components/eyebrow";
+import Avatar from "@/components/avatar";
 import SectionDivider from "@/components/section-divider";
 import SuggestedMemberCard from "@/components/suggested-member-card";
 import SlackJoinCard from "@/components/slack-join-card";
 import LocalTime from "@/components/local-time";
 import type { Briefing } from "@/lib/types";
+import { markIntroMet } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +72,7 @@ export default async function Dashboard() {
   const marketLabel = hasDma ? user.dma_name : "the network";
   const suggestions = await suggestedMembers(user, 4);
   const feed = await networkFeed(user.id, 12);
+  const myIntro = await myLatestIntro(user.id);
 
   // Activation checklist — the first actions that turn a new member into an
   // active one (and that power matching). Hidden once everything's done.
@@ -132,6 +136,42 @@ export default async function Dashboard() {
 
       {/* Members-only Slack — appears once an admin sets an invite link */}
       <SlackJoinCard />
+
+      {/* Your warm intro this month */}
+      {myIntro && (
+        <section className="card" style={{ marginTop: "1.5rem" }}>
+          <div className="topline">
+            <h2 className="sec-head" style={{ fontSize: "1.4rem", margin: 0 }}><Icon name="connections" size={18} />Your intro this month</h2>
+            {myIntro.met && <span className="market-tag" style={{ background: "rgba(92,113,101,0.16)", color: "#45564b" }}>Connected ✓</span>}
+          </div>
+          <div className="member-card-head" style={{ marginTop: "0.75rem", gap: "0.85rem" }}>
+            <Avatar src={myIntro.partner.avatar_key ? mediaUrl(myIntro.partner.avatar_key) : null} name={myIntro.partner.name} size={52} />
+            <div style={{ minWidth: 0 }}>
+              <Link href={`/directory/${myIntro.partner.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                <strong style={{ fontSize: "1.15rem" }}>{myIntro.partner.name}</strong>
+              </Link>
+              {[myIntro.partner.role, myIntro.partner.company_name, myIntro.partner.dma_name].filter(Boolean).length > 0 && (
+                <p className="meta" style={{ margin: "0.1rem 0 0" }}>{[myIntro.partner.role, myIntro.partner.company_name, myIntro.partner.dma_name].filter(Boolean).join(" · ")}</p>
+              )}
+            </div>
+          </div>
+          {myIntro.partner.bio && (
+            <p className="meta" style={{ marginTop: "0.6rem", lineHeight: 1.55 }}>{myIntro.partner.bio.slice(0, 200)}{myIntro.partner.bio.length > 200 ? "…" : ""}</p>
+          )}
+          <div className="btn-row" style={{ marginTop: "0.9rem", alignItems: "center", flexWrap: "wrap" }}>
+            <Link href={`/messages/${myIntro.partner.id}`} className="btn inline-btn">Send a message</Link>
+            <Link href={`/directory/${myIntro.partner.id}`} className="btn btn-ghost inline-btn">View profile</Link>
+            {myIntro.met ? (
+              <span className="meta">You marked this as connected.</span>
+            ) : (
+              <form action={markIntroMet}>
+                <input type="hidden" name="pairId" value={myIntro.pairId} />
+                <button type="submit" className="btn btn-ghost inline-btn">We connected ✓</button>
+              </form>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Market snapshot */}
       <div className="grid" style={{ marginTop: "1.5rem" }}>

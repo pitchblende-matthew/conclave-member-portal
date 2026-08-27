@@ -167,7 +167,8 @@ export async function emailWeeklyDigest(to: string, name: string, data: DigestDa
     digestSection("Upcoming events", data.events.map((e) => ({ href: siteUrl(`/events/${e.id}`), main: e.title, sub: fmtDate(e.starts_at) }))) +
     digestSection("Active discussions", data.topics.map((t) => ({ href: siteUrl(`/board/${t.id}`), main: t.title, sub: `${Math.max(0, t.replies)} repl${t.replies === 1 ? "y" : "ies"}` }))) +
     digestSection("Fresh briefings", data.briefings.map((b) => ({ href: b.kind === "link" ? b.url : siteUrl(`/briefings/${b.id}`), main: b.title, external: b.kind === "link" }))) +
-    digestSection("Jobs & businesses", data.listings.map((l) => ({ href: siteUrl(`/${l.kind === "job" ? "jobs" : "businesses"}/${l.id}`), main: l.title, sub: l.kind === "job" ? "Job" : "For sale" })));
+    digestSection("Jobs & businesses", data.listings.map((l) => ({ href: siteUrl(`/${l.kind === "job" ? "jobs" : "businesses"}/${l.id}`), main: l.title, sub: l.kind === "job" ? "Job" : "For sale" }))) +
+    digestSection("Asks & offers", data.requests.map((r) => ({ href: siteUrl(`/requests/${r.id}`), main: r.title, sub: r.kind === "ask" ? "Ask" : "Offer" })));
 
   const para = (text: string, margin: string) => `<p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#33322b;margin:${margin};">${text}</p>`;
   const intro = para(greeting(name), "0") + para(weeklyIntro(now), "8px 0 0");
@@ -184,6 +185,7 @@ export async function emailWeeklyDigest(to: string, name: string, data: DigestDa
   block("Active discussions", data.topics.map((t) => `- ${t.title}`));
   block("Fresh briefings", data.briefings.map((b) => `- ${b.title}`));
   block("Jobs & businesses", data.listings.map((l) => `- ${l.title}`));
+  block("Asks & offers", data.requests.map((r) => `- ${r.title} (${r.kind === "ask" ? "Ask" : "Offer"})`));
   lines.push("That's the week in brief. Glad you're here. — The Conclave", "", `Open the portal: ${siteUrl("/dashboard")}`, `Unsubscribe: ${unsubUrl}`);
 
   await sendEmail({ to, subject: "This week in The Conclave", html, text: lines.join("\n") });

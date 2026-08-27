@@ -156,10 +156,10 @@ the sync keeps it current going forward.
 ## Event emails (announcements + reminders)
 
 When an event is added, the network gets an announcement email; RSVP'd attendees
-then get reminders **1 week / 3 days / 1 day** before it.
+then get reminders **~1 month / 1 week / 3 days / 1 day** before it.
 
 - **Runner:** `src/lib/event-emails.ts` — announces newly-added approved events
-  to opted-in members, and sends the three reminder windows to attendees. Every
+  to opted-in members, and sends the four reminder windows to attendees. Every
   send is idempotent (`event_email_log`, one row per event + kind), so extra
   runs never double-send. No-ops when email isn't configured.
 - **Trigger:** `GET /api/events/notify/run?key=<DIGEST_SECRET>` — reuses the

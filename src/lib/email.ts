@@ -357,9 +357,9 @@ export async function emailEventAdded(to: string, name: string, ev: EventEmailDa
   });
 }
 
-const REMIND_LABEL: Record<"week" | "3day" | "1day", string> = { week: "in one week", "3day": "in 3 days", "1day": "tomorrow" };
+const REMIND_LABEL: Record<"month" | "week" | "3day" | "1day", string> = { month: "in about a month", week: "in one week", "3day": "in 3 days", "1day": "tomorrow" };
 
-export async function emailEventReminder(to: string, name: string, ev: EventEmailData, kind: "week" | "3day" | "1day", unsubUrl: string): Promise<void> {
+export async function emailEventReminder(to: string, name: string, ev: EventEmailData, kind: "month" | "week" | "3day" | "1day", unsubUrl: string): Promise<void> {
   const when = REMIND_LABEL[kind];
   await sendEmail({
     to,

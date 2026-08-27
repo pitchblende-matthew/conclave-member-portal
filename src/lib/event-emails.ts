@@ -3,7 +3,7 @@ import { getDb } from "./db";
 import { emailEnabled, emailEventAdded, emailEventReminder, siteUrl } from "./email";
 
 // Scheduled runner for event emails: announces newly-added events to the whole
-// network, and reminds RSVP'd attendees at 1 week / 3 days / 1 day before.
+// network, and reminds RSVP'd attendees ~1 month / 1 week / 3 days / 1 day before.
 // Idempotent via event_email_log (one row per event+kind). Env-gated: no-ops
 // when email isn't configured.
 
@@ -106,7 +106,8 @@ export async function runEventEmails(): Promise<EventEmailResult> {
       // Reminders — to RSVP'd attendees, once per window. Each window is entered
       // exactly once as the event approaches; the log prevents duplicates.
       const days = (ev.starts_at - now) / DAY;
-      const bands: ("week" | "3day" | "1day")[] = [];
+      const bands: ("month" | "week" | "3day" | "1day")[] = [];
+      if (days > 21 && days <= 34) bands.push("month");
       if (days > 3 && days <= 7) bands.push("week");
       if (days > 1 && days <= 3) bands.push("3day");
       if (days > 0 && days <= 1) bands.push("1day");

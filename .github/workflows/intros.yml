@@ -1,13 +1,13 @@
 name: Warm intros
 
-# Webflow Cloud has no cron, so GitHub Actions plays scheduler: monthly, it
-# pings the portal's intro runner, which pairs opted-in members 1:1 and emails
-# each of them their intro. Idempotent per month (keyed by round), so re-runs
-# are safe. Reuses the digest secret and existing email config.
+# Webflow Cloud has no cron, so GitHub Actions plays scheduler. Runs daily: the
+# runner drafts each new month's pairings (and notifies admins to review), then
+# auto-sends a draft that's been sitting a few days if an admin hasn't sent it.
+# Idempotent per month (keyed by round). Reuses the digest secret + email config.
 on:
   schedule:
-    # 09:00 ET on the 1st of each month (14:00 UTC).
-    - cron: "0 14 1 * *"
+    # Daily at 09:00 ET (14:00 UTC).
+    - cron: "0 14 * * *"
   workflow_dispatch:
 
 jobs:

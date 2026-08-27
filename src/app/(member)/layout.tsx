@@ -89,6 +89,10 @@ function toItem(n: NotifRow): BellItem {
       text = `${who} responded to your post`;
       href = n.topic_id ? `/requests/${n.topic_id}` : "/requests";
       break;
+    case "intros_ready":
+      text = "This month's member intros are ready to review";
+      href = "/admin/intros";
+      break;
     default:
       text = "New activity";
   }

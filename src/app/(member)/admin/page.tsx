@@ -20,7 +20,7 @@ export default async function AdminHome() {
   if (user.is_admin !== 1) redirect("/dashboard");
   const lastDigest = await lastDigestAt();
 
-  const [requests, members, companies, events, pendingEvents, categories, briefingCategories, briefings, pendingBriefings, invites, openReports, inviteRequests, industries, functions, seniorities, expertise, openFeedback] = await Promise.all([
+  const [requests, members, companies, events, pendingEvents, categories, briefingCategories, briefings, pendingBriefings, invites, openReports, inviteRequests, industries, functions, seniorities, expertise, openFeedback, introMembers] = await Promise.all([
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'"),
     count("SELECT COUNT(*) AS n FROM users WHERE status = 'approved'"),
     count("SELECT COUNT(*) AS n FROM companies"),
@@ -38,6 +38,7 @@ export default async function AdminHome() {
     count("SELECT COUNT(*) AS n FROM seniorities"),
     count("SELECT COUNT(*) AS n FROM expertise"),
     count("SELECT COUNT(*) AS n FROM feedback WHERE status != 'closed'"),
+    count("SELECT COUNT(*) AS n FROM users WHERE status = 'approved' AND intro_opt_out = 0"),
   ]);
 
   const sections: { href: string; title: string; value: number; hint: string; icon: IconName }[] = [
@@ -47,6 +48,7 @@ export default async function AdminHome() {
     { href: "/admin/feedback", title: "Feedback", value: openFeedback, hint: openFeedback > 0 ? `${openFeedback} active from alpha testers` : "Alpha bug & feature reports", icon: "sparkle" },
     { href: "/admin/events", title: "Events", value: events, hint: pendingEvents > 0 ? `${pendingEvents} submission${pendingEvents === 1 ? "" : "s"} to review` : "Create, edit, see attendees", icon: "events" },
     { href: "/admin/briefings", title: "Briefings", value: briefings, hint: pendingBriefings > 0 ? `${pendingBriefings} submission${pendingBriefings === 1 ? "" : "s"} to review` : "Publish articles and links", icon: "briefings" },
+    { href: "/admin/intros", title: "Warm intros", value: introMembers, hint: "Review & send the monthly member intros", icon: "connections" },
     { href: "/admin/members", title: "Members", value: members, hint: "Promote admins, remove members", icon: "members" },
     { href: "/admin/companies", title: "Companies", value: companies, hint: "Edit or remove companies", icon: "companies" },
     { href: "/admin/industries", title: "Industries", value: industries, hint: "Organize companies by sector", icon: "categories" },

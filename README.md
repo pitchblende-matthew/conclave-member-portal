@@ -181,19 +181,27 @@ still fire).
 Once a month, opted-in members are paired 1:1 and each gets an email introducing
 their match (name, role, a line of bio, a reason, and links to the profile /
 DMs). The matcher avoids recent repeats and prefers same-market pairs so they
-can meet in person; an odd member out joins one pair as a trio so no one is left
-out.
+can meet in person.
 
-- **Runner:** `src/lib/intros.ts` — pairs eligible members and emails them.
-  Idempotent per month (keyed by the `YYYY-MM` round in `intro_pairs`).
-- **Trigger:** `GET /api/intros/run?key=<DIGEST_SECRET>` (add `&force=1` to
-  re-pair the current month — it re-sends). Scheduled on the 1st of each month
-  by `.github/workflows/intros.yml`. Reuses the digest secret + email config —
-  **no new env**.
+Pairings are **admin-curated**: the runner drafts the month's matches and
+notifies admins, who review, unpair/re-pair, and send from **`/admin/intros`**.
+If no one acts within a grace window (3 days), the runner auto-sends the draft on
+a later tick so intros never silently stop. The odd member out is left unpaired
+for an admin to place (or to carry to next month).
+
+- **Runner:** `src/lib/intros.ts` — `runIntros()` drafts a new month's pairings,
+  notifies admins, and auto-sends a stale draft. Idempotent per month (keyed by
+  the `YYYY-MM` round in `intro_pairs`; state in `intro_rounds`).
+- **Curation:** `/admin/intros` — generate/regenerate a draft, unpair or pair
+  members, and send now. Server actions in `admin/intros/actions.ts`.
+- **Trigger:** `GET /api/intros/run?key=<DIGEST_SECRET>`. Run **daily** by
+  `.github/workflows/intros.yml`; the runner decides whether to draft, wait, or
+  auto-send. Reuses the digest secret + email config — **no new env**.
 - **Opt-out:** a profile toggle + one-click `/api/intros/unsubscribe`, tracked
   in `users.intro_opt_out`.
 
-Migration `0047` adds `intro_pairs` + the opt-out column.
+Migration `0047` adds `intro_pairs` + the opt-out column; `0048` adds
+`intro_rounds` (per-month draft/sent state).
 
 ---
 

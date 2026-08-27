@@ -14,7 +14,8 @@ export type NotificationType =
   | "briefing_approved"
   | "briefing_declined"
   | "feedback"
-  | "feedback_reply";
+  | "feedback_reply"
+  | "request_response";
 
 // Insert a notification for `userId`. No-ops if there's no recipient or the
 // recipient is the actor (you never get notified about your own actions).

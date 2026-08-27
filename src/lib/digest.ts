@@ -53,6 +53,7 @@ export type DigestData = {
   topics: { id: number; title: string; replies: number }[];
   briefings: { id: number; title: string; kind: string; url: string }[];
   listings: { id: number; kind: string; title: string }[];
+  requests: { id: number; kind: string; title: string }[];
   empty: boolean;
 };
 
@@ -61,12 +62,13 @@ export async function buildDigest(): Promise<DigestData> {
   const db = getDb();
   const now = Date.now();
   const weekAgo = now - WEEK;
-  const [members, events, topics, briefings, listings] = await Promise.all([
+  const [members, events, topics, briefings, listings, requests] = await Promise.all([
     db.prepare("SELECT id, name, role FROM users WHERE status='approved' AND name != '' AND created_at>=? ORDER BY created_at DESC LIMIT 8").bind(weekAgo).all<{ id: number; name: string; role: string }>(),
     db.prepare("SELECT id, title, starts_at FROM events WHERE status='approved' AND starts_at>? AND starts_at<? ORDER BY starts_at ASC LIMIT 5").bind(now, now + 3 * WEEK).all<{ id: number; title: string; starts_at: number }>(),
     db.prepare("SELECT id, title, (SELECT COUNT(*) FROM posts p WHERE p.topic_id=t.id)-1 AS replies FROM topics t WHERE last_activity_at>=? ORDER BY last_activity_at DESC LIMIT 5").bind(weekAgo).all<{ id: number; title: string; replies: number }>(),
     db.prepare("SELECT id, title, kind, url FROM briefings WHERE published=1 AND published_at>=? ORDER BY published_at DESC LIMIT 5").bind(weekAgo).all<{ id: number; title: string; kind: string; url: string }>(),
     db.prepare("SELECT id, kind, title FROM listings WHERE status='open' AND created_at>=? ORDER BY created_at DESC LIMIT 5").bind(weekAgo).all<{ id: number; kind: string; title: string }>(),
+    db.prepare("SELECT id, kind, title FROM requests WHERE status='open' AND created_at>=? ORDER BY created_at DESC LIMIT 5").bind(weekAgo).all<{ id: number; kind: string; title: string }>(),
   ]);
   const data: DigestData = {
     members: members.results,
@@ -74,9 +76,10 @@ export async function buildDigest(): Promise<DigestData> {
     topics: topics.results,
     briefings: briefings.results,
     listings: listings.results,
+    requests: requests.results,
     empty: false,
   };
-  data.empty = !data.members.length && !data.events.length && !data.topics.length && !data.briefings.length && !data.listings.length;
+  data.empty = !data.members.length && !data.events.length && !data.topics.length && !data.briefings.length && !data.listings.length && !data.requests.length;
   return data;
 }
 

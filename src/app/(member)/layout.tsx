@@ -84,6 +84,11 @@ function toItem(n: NotifRow): BellItem {
       text = "The team replied to your feedback";
       href = "/feedback";
       break;
+    // Reuses topic_id to carry the request id (see requests/actions.ts).
+    case "request_response":
+      text = `${who} responded to your post`;
+      href = n.topic_id ? `/requests/${n.topic_id}` : "/requests";
+      break;
     default:
       text = "New activity";
   }

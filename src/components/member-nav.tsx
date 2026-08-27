@@ -51,7 +51,7 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
         <div className={`nav-group${menu === "community" ? " open" : ""}`}>
           <button
             type="button"
-            className={`nav-link nav-group-btn${groupActive(["/board", "/events", "/briefings", "/jobs", "/businesses"]) ? " active" : ""}`}
+            className={`nav-link nav-group-btn${groupActive(["/board", "/requests", "/events", "/briefings", "/jobs", "/businesses"]) ? " active" : ""}`}
             aria-expanded={menu === "community"}
             aria-haspopup="true"
             onClick={() => toggleMenu("community")}
@@ -60,6 +60,7 @@ export default function MemberNav({ isAdmin, logoutHref, unreadMessages = 0 }: {
           </button>
           <div className="nav-dropdown">
             <Link href="/board" className="nav-drop-link" onClick={close}><Icon name="board" size={16} />Board</Link>
+            <Link href="/requests" className="nav-drop-link" onClick={close}><Icon name="connections" size={16} />Asks &amp; Offers</Link>
             <Link href="/events" className="nav-drop-link" onClick={close}><Icon name="events" size={16} />Events</Link>
             <Link href="/briefings" className="nav-drop-link" onClick={close}><Icon name="briefings" size={16} />Briefings</Link>
             <Link href="/jobs" className="nav-drop-link" onClick={close}><Icon name="briefcase" size={16} />Jobs</Link>

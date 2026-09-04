@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { mountPath } from "@/lib/base-path";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
@@ -51,7 +52,7 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
   const tags = (await tagsForItems("event", [eventId])).get(eventId) ?? [];
   const saved = (await myFlags(user.id, "save", "event", [eventId])).has(eventId);
   const threadId = await topicForSource("event", eventId);
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const base = mountPath();
   const path = `/events/${eventId}`;
 
   return (

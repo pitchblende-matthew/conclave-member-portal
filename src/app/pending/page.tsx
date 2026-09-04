@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { mountPath } from "@/lib/base-path";
 import { getSessionUser } from "@/lib/auth";
 import Wordmark from "@/components/wordmark";
 import HearthGlow from "@/components/hearth-glow";
@@ -11,7 +12,7 @@ export default async function Pending() {
   if (user.status === "approved") redirect(user.onboarded === 1 ? "/dashboard" : "/onboarding");
 
   const declined = user.status === "declined";
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const base = mountPath();
 
   return (
     <div className="auth-wrap">

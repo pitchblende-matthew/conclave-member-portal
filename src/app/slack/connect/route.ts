@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { generateToken } from "@/lib/crypto";
 import { slackOAuthEnabled, slackAuthorizeUrl, getConfiguredTeamId } from "@/lib/slack";
+import { mountPath } from "@/lib/base-path";
 
 export const dynamic = "force-dynamic";
 
-const base = () => process.env.NEXT_PUBLIC_BASE_PATH || "";
+const base = () => mountPath();
 
 // Start "Sign in with Slack": stash a CSRF state cookie, then bounce to Slack.
 export async function GET() {

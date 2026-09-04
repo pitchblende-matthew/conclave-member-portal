@@ -1,4 +1,5 @@
 import { destroySession } from "@/lib/auth";
+import { mountPath } from "@/lib/base-path";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 // A relative target resolves against the public domain the visitor is on.
 export async function GET() {
   await destroySession();
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const base = mountPath();
   return new Response(null, {
     status: 303,
     headers: { Location: `${base}/signed-out` },

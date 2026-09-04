@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { mountPath } from "@/lib/base-path";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -21,7 +22,7 @@ export default async function AdminInvites() {
     .prepare("SELECT token, email, used_by, created_at FROM invites ORDER BY created_at DESC")
     .all<InviteRow>();
 
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const base = mountPath();
 
   return (
     <>

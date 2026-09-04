@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { regionFromForm } from "@/lib/region";
 import { notifyAdmins } from "@/lib/notifications";
 import { emailAdminsNewSubmission } from "@/lib/email";
+import { slackAdminNewSubmission } from "@/lib/slack-bridge";
 import { readTagIds, setContentTags } from "@/lib/content-tags";
 
 export type SubmitState = { ok?: boolean; error?: string };
@@ -44,6 +45,7 @@ export async function submitEvent(_prev: SubmitState, formData: FormData): Promi
 
   await notifyAdmins("event_submitted", { actorId: user.id });
   await emailAdminsNewSubmission("event", user.name, title);
+  await slackAdminNewSubmission("event", user.name, title);
   revalidatePath("/admin/events");
   return { ok: true };
 }

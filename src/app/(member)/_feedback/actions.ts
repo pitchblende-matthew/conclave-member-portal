@@ -7,6 +7,7 @@ import { createFeedback, type FeedbackKind } from "@/lib/feedback";
 import { storeImage } from "@/lib/media";
 import { notifyAdmins } from "@/lib/notifications";
 import { emailAdminsFeedback } from "@/lib/email";
+import { slackAdminFeedback } from "@/lib/slack-bridge";
 
 export type FeedbackState = { ok?: boolean; error?: string };
 
@@ -39,6 +40,7 @@ export async function submitFeedback(_prev: FeedbackState, formData: FormData): 
   await createFeedback(user.id, kind, page, body.slice(0, 4000), screenshotKey, userAgent);
   await notifyAdmins("feedback", { actorId: user.id });
   await emailAdminsFeedback(kind, user.name, page, body.slice(0, 4000));
+  await slackAdminFeedback(kind, user.name, page, body.slice(0, 4000));
   revalidatePath("/admin/feedback");
   revalidatePath("/admin");
   revalidatePath("/feedback");

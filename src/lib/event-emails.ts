@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "./db";
 import { emailEnabled, emailEventAdded, emailEventReminder, siteUrl } from "./email";
+import { slackDmEventReminder } from "./slack-bridge";
 
 // Scheduled runner for event emails: announces newly-added events to the whole
 // network, and reminds RSVP'd attendees ~1 month / 1 week / 3 days / 1 day before.
@@ -116,6 +117,7 @@ export async function runEventEmails(): Promise<EventEmailResult> {
         if (await alreadySent(ev.id, kind)) continue;
         for (const m of await attendees(ev.id)) {
           await emailEventReminder(m.email, m.name, ev, kind, await eventUnsubUrl(m.id));
+          await slackDmEventReminder(m.id, ev, kind);
           result.reminders += 1;
         }
         await markSent(ev.id, kind);

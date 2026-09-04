@@ -273,10 +273,18 @@ present, mirroring the email integration's gating. Configure it all at
      The pitchblende briefings **sync** also announces the briefings it imports,
      but flood-capped: a normal incremental run posts each new item, while a
      large backfill (more than a handful) posts a single summary line instead.
-   - **Member DMs** via the **bot token** — the bot DMs linked members about a new
-     direct message, a connection request, and their monthly intro. Requires
-     `SLACK_BOT_TOKEN` (scopes `chat:write` + `im:write`); DMs reach only members
-     who've linked Slack. A webhook can't DM — that's what the bot token is for.
+   - **Member & admin DMs** via the **bot token** — mirror the notification
+     emails into Slack. Requires `SLACK_BOT_TOKEN` (scopes `chat:write` +
+     `im:write`); DMs reach only people who've linked Slack (a webhook can't DM).
+     - **Members** get a DM for: a new direct message, a connection request,
+       their monthly intro + follow-up, an event **reminder**, a content
+       submission approved/declined, and an admin feedback reply.
+     - **Admins** get a DM for: a new access request, a new event/briefing
+       submission, a content report, and new tester feedback (`dmAdmins`).
+     - **Deliberately not DM'd** (to avoid noise/duplication): the *new-event*
+       broadcast (already a channel announcement), the weekly digest (the channel
+       carries each item), and onboarding/access/password emails (recipient
+       hasn't linked Slack, and security notices shouldn't route to chat).
 
    The simplest full setup is **bot-token-only**: one `SLACK_BOT_TOKEN`, the bot
    invited to a channel, and that channel set as the default destination — it

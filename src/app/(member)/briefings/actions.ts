@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
 import { emailAdminsNewSubmission } from "@/lib/email";
+import { slackAdminNewSubmission } from "@/lib/slack-bridge";
 import { fetchOgImage } from "@/lib/opengraph";
 import { readTagIds, setContentTags } from "@/lib/content-tags";
 
@@ -45,6 +46,7 @@ export async function submitBriefing(_prev: SubmitBriefingState, formData: FormD
 
   await notifyAdmins("briefing_submitted", { actorId: user.id });
   await emailAdminsNewSubmission("briefing", user.name, title);
+  await slackAdminNewSubmission("briefing", user.name, title);
   revalidatePath("/admin/briefings");
   return { ok: true };
 }

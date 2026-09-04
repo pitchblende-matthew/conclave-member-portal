@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { setFeedbackStatus, deleteFeedback, replyToFeedback, FEEDBACK_STATUSES, type FeedbackStatus } from "@/lib/feedback";
 import { notify } from "@/lib/notifications";
 import { emailFeedbackReply } from "@/lib/email";
+import { slackDmFeedbackReply } from "@/lib/slack-bridge";
 
 const VALID = new Set(FEEDBACK_STATUSES.map((s) => s.value));
 
@@ -18,6 +19,7 @@ export async function replyFeedback(formData: FormData): Promise<void> {
   if (rec) {
     await notify(rec.user_id, "feedback_reply", { actorId: me.id });
     await emailFeedbackReply(rec.email, rec.name, reply);
+    await slackDmFeedbackReply(rec.user_id, reply);
   }
   revalidatePath("/admin/feedback");
   revalidatePath("/feedback");

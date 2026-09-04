@@ -1,5 +1,5 @@
 import { siteUrl } from "./email";
-import { postSlackCategory, dmMember } from "./slack";
+import { postSlackCategory, dmMember, dmAdmins } from "./slack";
 
 // Compose layer over the Slack primitives in ./slack: turns portal activity into
 // Slack messages. Channel announcements go out via the incoming webhook; member
@@ -68,4 +68,50 @@ export async function slackDmIntro(userId: number, partner: { id: number; name: 
     `${link(siteUrl(`/messages/${partner.id}`), "Send a message")}  ·  ${link(siteUrl(`/directory/${partner.id}`), "View profile")}`,
   ];
   await dmMember(userId, lines.join("\n"));
+}
+
+export async function slackDmIntroFollowup(userId: number, partner: { id: number; name: string }): Promise<void> {
+  await dmMember(userId, `:wave: Did you and *${mrk(partner.name)}* connect? A two-line note still counts. ${link(siteUrl(`/messages/${partner.id}`), "Say hello")}`);
+}
+
+export async function slackDmSubmissionDecision(userId: number, kind: "event" | "briefing", title: string, approved: boolean): Promise<void> {
+  const where = kind === "event" ? "/events" : "/briefings";
+  const text = approved
+    ? `:white_check_mark: Your ${kind} *${mrk(title)}* was approved and is live. ${link(siteUrl(where), `View ${kind}s`)}`
+    : `:no_entry_sign: Your ${kind} *${mrk(title)}* wasn't approved this time.`;
+  await dmMember(userId, text);
+}
+
+const REMINDER_WHEN: Record<"month" | "week" | "3day" | "1day", string> = {
+  month: "in about a month",
+  week: "in a week",
+  "3day": "in 3 days",
+  "1day": "tomorrow",
+};
+
+export async function slackDmEventReminder(userId: number, ev: { id: number; title: string; starts_at: number }, kind: "month" | "week" | "3day" | "1day"): Promise<void> {
+  await dmMember(userId, `:calendar: Reminder — *${mrk(ev.title)}* is ${REMINDER_WHEN[kind]} (${slackDate(ev.starts_at)}). ${link(siteUrl(`/events/${ev.id}`), "View event")}`);
+}
+
+export async function slackDmFeedbackReply(userId: number, reply: string): Promise<void> {
+  await dmMember(userId, `:speech_balloon: An admin replied to your feedback:\n> ${mrk(reply.slice(0, 300))}\n${link(siteUrl("/dashboard"), "Open the portal")}`);
+}
+
+// ---- Admin DMs (parity with the admin-notification emails) -----------------
+
+export async function slackAdminNewRequest(name: string): Promise<void> {
+  await dmAdmins(`:inbox_tray: *${mrk(name || "Someone")}* requested access to Conclave. ${link(siteUrl("/admin/requests"), "Review")}`);
+}
+
+export async function slackAdminNewSubmission(kind: "event" | "briefing", submitter: string, title: string): Promise<void> {
+  const where = kind === "event" ? "/admin/events" : "/admin/briefings";
+  await dmAdmins(`:tray: *${mrk(submitter)}* submitted a ${kind}: *${mrk(title)}* — awaiting review. ${link(siteUrl(where), "Review")}`);
+}
+
+export async function slackAdminNewReport(reporter: string, targetType: string): Promise<void> {
+  await dmAdmins(`:triangular_flag_on_post: *${mrk(reporter)}* reported ${mrk(targetType)} content. ${link(siteUrl("/admin/reports"), "Review report")}`);
+}
+
+export async function slackAdminFeedback(kind: "bug" | "feature", tester: string, page: string, body: string): Promise<void> {
+  await dmAdmins(`:memo: New ${kind} from *${mrk(tester)}* (${mrk(page)}):\n> ${mrk(body.slice(0, 300))}\n${link(siteUrl("/admin/feedback"), "Open feedback")}`);
 }

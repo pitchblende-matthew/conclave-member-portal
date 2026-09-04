@@ -9,7 +9,7 @@ import { notify } from "@/lib/notifications";
 import { emailSubmissionDecision } from "@/lib/email";
 import { readTagIds, setContentTags } from "@/lib/content-tags";
 import { announceEvent } from "@/lib/board-announce";
-import { slackAnnounceEvent } from "@/lib/slack-bridge";
+import { slackAnnounceEvent, slackDmSubmissionDecision } from "@/lib/slack-bridge";
 
 export type EventState = { ok?: boolean; error?: string };
 
@@ -116,6 +116,7 @@ export async function approveEvent(formData: FormData): Promise<void> {
     await notify(ev.submitted_by, "event_approved", { actorId: admin.id });
     const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(ev.submitted_by).first<{ email: string }>();
     if (u?.email) await emailSubmissionDecision(u.email, "event", ev.title, true);
+    await slackDmSubmissionDecision(ev.submitted_by, "event", ev.title, true);
   }
   // Now visible on the calendar — open a discussion thread (idempotent) + announce.
   if (ev) {
@@ -137,6 +138,7 @@ export async function declineEvent(formData: FormData): Promise<void> {
     await notify(ev.submitted_by, "event_declined", { actorId: admin.id });
     const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(ev.submitted_by).first<{ email: string }>();
     if (u?.email) await emailSubmissionDecision(u.email, "event", ev.title, false);
+    await slackDmSubmissionDecision(ev.submitted_by, "event", ev.title, false);
   }
   revalidatePath("/admin/events");
 }

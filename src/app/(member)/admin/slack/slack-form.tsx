@@ -45,18 +45,20 @@ export default function SlackForm({
         If set, &ldquo;Connect Slack&rdquo; only accepts accounts in this workspace. Find it in Slack →
         About this workspace.
       </p>
-      <label htmlFor="webhookUrl" style={{ marginTop: "1rem" }}>Channel webhook (bridge)</label>
+      <label htmlFor="webhookUrl" style={{ marginTop: "1rem" }}>Default channel or webhook (bridge)</label>
       <input
         id="webhookUrl"
         name="webhookUrl"
-        type="url"
+        type="text"
         defaultValue={initial.webhookUrl}
-        placeholder="https://hooks.slack.com/services/…"
+        placeholder="#general — or https://hooks.slack.com/services/…"
         autoComplete="off"
       />
       <p className="note" style={{ marginTop: "0.35rem" }}>
-        An incoming-webhook URL to post new events, briefings, discussions, and asks &amp; offers to a
-        channel. Leave blank to turn channel announcements off.
+        Where new events, briefings, discussions, and asks &amp; offers get posted. Enter a{" "}
+        <strong>channel</strong> (<code>#general</code> or a channel id) for the bot to post to — invite the bot
+        to that channel first — or an <strong>incoming-webhook URL</strong>. Leave blank to turn channel
+        announcements off.
       </p>
       {state?.error && <div className="error" role="alert">{state.error}</div>}
       {state?.ok && <p className="note" role="status">Saved.</p>}

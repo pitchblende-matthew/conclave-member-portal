@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { isValidSlackInvite, isValidSlackWebhook, saveSlackSettings, saveBridgeRouting, BRIDGE_CATEGORIES, type BridgeRouting } from "@/lib/slack";
+import { isValidSlackInvite, isValidBridgeDestination, saveSlackSettings, saveBridgeRouting, BRIDGE_CATEGORIES, type BridgeRouting } from "@/lib/slack";
 
 export type SlackSettingsState = { ok?: boolean; error?: string };
 
@@ -24,8 +24,8 @@ export async function updateSlackSettings(
   if (teamId && !/^T[A-Z0-9]{6,}$/.test(teamId)) {
     return { error: "Workspace team id should look like T0123ABCD (find it in Slack under About this workspace)." };
   }
-  if (webhookUrl && !isValidSlackWebhook(webhookUrl)) {
-    return { error: "That doesn't look like a Slack incoming webhook. Expected https://hooks.slack.com/services/…" };
+  if (webhookUrl && !isValidBridgeDestination(webhookUrl)) {
+    return { error: "That should be a channel (#general or a channel id like C0123ABCD) or an incoming webhook (https://hooks.slack.com/services/…)." };
   }
   await saveSlackSettings(inviteUrl, workspaceName, teamId, webhookUrl);
   revalidatePath("/admin/slack");
@@ -43,8 +43,8 @@ export async function updateBridgeRouting(
   const routing = {} as BridgeRouting;
   for (const { key, label } of BRIDGE_CATEGORIES) {
     const url = String(formData.get(`${key}_url`) || "").trim();
-    if (url && !isValidSlackWebhook(url)) {
-      return { error: `The ${label} channel webhook doesn't look like a Slack incoming webhook (https://hooks.slack.com/services/…).` };
+    if (url && !isValidBridgeDestination(url)) {
+      return { error: `The ${label} destination should be a channel (#name or channel id) or an incoming webhook.` };
     }
     routing[key] = { on: formData.get(`${key}_on`) === "1", url };
   }

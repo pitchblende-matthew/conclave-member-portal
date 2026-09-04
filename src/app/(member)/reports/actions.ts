@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
 import { emailAdminsNewReport } from "@/lib/email";
+import { slackAdminNewReport } from "@/lib/slack-bridge";
 import { rateLimited } from "@/lib/rate-limit";
 
 export type ReportState = { ok?: boolean; error?: string };
@@ -34,6 +35,7 @@ export async function createReport(_prev: ReportState, formData: FormData): Prom
       .run();
     await notifyAdmins("content_reported", { actorId: me.id });
     await emailAdminsNewReport(me.name, targetType);
+    await slackAdminNewReport(me.name, targetType);
   }
   revalidatePath("/admin/reports");
   return { ok: true };

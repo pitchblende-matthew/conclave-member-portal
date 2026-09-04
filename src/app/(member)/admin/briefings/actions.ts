@@ -10,7 +10,7 @@ import { emailSubmissionDecision } from "@/lib/email";
 import { fetchOgImage } from "@/lib/opengraph";
 import { readTagIds, setContentTags } from "@/lib/content-tags";
 import { announceBriefing } from "@/lib/board-announce";
-import { slackAnnounceBriefing } from "@/lib/slack-bridge";
+import { slackAnnounceBriefing, slackDmSubmissionDecision } from "@/lib/slack-bridge";
 import type { Briefing } from "@/lib/types";
 
 export type BriefingState = { ok?: boolean; error?: string };
@@ -59,6 +59,7 @@ export async function approveBriefing(formData: FormData): Promise<void> {
     await notify(b.submitted_by, "briefing_approved", { actorId: admin.id });
     const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(b.submitted_by).first<{ email: string }>();
     if (u?.email) await emailSubmissionDecision(u.email, "briefing", b.title, true);
+    await slackDmSubmissionDecision(b.submitted_by, "briefing", b.title, true);
   }
   // Now published — open a discussion thread (idempotent) + announce once.
   if (b) {
@@ -80,6 +81,7 @@ export async function declineBriefing(formData: FormData): Promise<void> {
     await notify(b.submitted_by, "briefing_declined", { actorId: admin.id });
     const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(b.submitted_by).first<{ email: string }>();
     if (u?.email) await emailSubmissionDecision(u.email, "briefing", b.title, false);
+    await slackDmSubmissionDecision(b.submitted_by, "briefing", b.title, false);
   }
   revalidatePath("/admin/briefings");
 }

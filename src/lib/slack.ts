@@ -268,6 +268,20 @@ export async function dmMember(userId: number, text: string): Promise<boolean> {
   return dmSlackUser(slackUserId, text);
 }
 
+// DM every admin who's linked Slack (parity with admin notification emails).
+// Returns how many were reached. No-op when the bot isn't configured.
+export async function dmAdmins(text: string): Promise<number> {
+  if (!slackBotEnabled()) return 0;
+  const { results } = await getDb()
+    .prepare("SELECT slack_user_id FROM users WHERE is_admin = 1 AND slack_user_id IS NOT NULL AND status = 'approved'")
+    .all<{ slack_user_id: string }>();
+  let sent = 0;
+  for (const a of results) {
+    if (await dmSlackUser(a.slack_user_id, text)) sent += 1;
+  }
+  return sent;
+}
+
 // ---- Phase 2: identity linking via "Sign in with Slack" (OpenID Connect) ----
 // Client id/secret are env secrets (never stored in the DB). The workspace team
 // id (optional, for verifying the linked account belongs to the Conclave

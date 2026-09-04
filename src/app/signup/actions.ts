@@ -7,6 +7,7 @@ import { hashPassword } from "@/lib/crypto";
 import { createSession } from "@/lib/auth";
 import { regionFromForm, validateRegion, locationLabel } from "@/lib/region";
 import { emailWelcome, emailAccessPending, emailAdminsNewRequest } from "@/lib/email";
+import { slackAdminNewRequest } from "@/lib/slack-bridge";
 import { rateLimited } from "@/lib/rate-limit";
 
 export type SignupState = { error?: string };
@@ -94,6 +95,7 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
   } else {
     await emailAccessPending(email, name);
     await emailAdminsNewRequest(name);
+    await slackAdminNewRequest(name);
   }
 
   await createSession(userId);

@@ -3,6 +3,7 @@ import { corsHeaders, corsPreflight } from "@/lib/cors";
 import { rateLimited } from "@/lib/rate-limit";
 import { hashPassword, generateToken } from "@/lib/crypto";
 import { emailAccessPending, emailAdminsNewRequest } from "@/lib/email";
+import { slackAdminNewRequest } from "@/lib/slack-bridge";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,7 @@ export async function POST(req: Request) {
       .run();
     await emailAccessPending(email, name.trim());
     await emailAdminsNewRequest(name.trim());
+    await slackAdminNewRequest(name.trim());
   }
 
   return Response.json({ ok: true }, { headers: corsHeaders });

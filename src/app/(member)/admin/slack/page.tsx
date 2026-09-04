@@ -7,19 +7,23 @@ import {
   slackLinkedCounts,
   slackWebhookEnabled,
   slackBotEnabled,
+  getBridgeRouting,
+  BRIDGE_CATEGORIES,
 } from "@/lib/slack";
 import SlackForm from "./slack-form";
+import RoutingForm from "./routing-form";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Slack — Admin — Conclave" };
 
 export default async function AdminSlackPage() {
   await requireAdmin();
-  const [settings, config, counts, webhookOn] = await Promise.all([
+  const [settings, config, counts, webhookOn, routing] = await Promise.all([
     getSlackSettings(),
     getSlackConfig(),
     slackLinkedCounts(),
     slackWebhookEnabled(),
+    getBridgeRouting(),
   ]);
   const oauth = slackOAuthEnabled();
   const botOn = slackBotEnabled();
@@ -85,6 +89,15 @@ export default async function AdminSlackPage() {
           A webhook can only post to a channel — DMs need the bot token. Create an incoming webhook under your
           Slack app → <em>Incoming Webhooks</em>; add a bot token under <em>OAuth &amp; Permissions</em>.
         </p>
+      </div>
+
+      <div className="card" style={{ marginTop: "1rem", maxWidth: 560 }}>
+        <h3 style={{ fontSize: "1.3rem", margin: 0 }}>Announcement routing</h3>
+        <p className="meta" style={{ margin: "0.25rem 0 0.75rem" }}>
+          Choose which activity types announce, and optionally send each to its own channel. Leave a channel
+          blank to use the main webhook above. Turning one off silences it everywhere.
+        </p>
+        <RoutingForm categories={BRIDGE_CATEGORIES} routing={routing} />
       </div>
 
       <div className="card" style={{ marginTop: "1rem", maxWidth: 560 }}>

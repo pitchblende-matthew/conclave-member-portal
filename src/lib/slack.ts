@@ -94,9 +94,8 @@ export async function slackWebhookEnabled(): Promise<boolean> {
   return !!(await getSlackWebhook());
 }
 
-// Post a plain mrkdwn message to the configured channel. No-op when unset.
-export async function postSlackChannel(text: string): Promise<void> {
-  const url = await getSlackWebhook();
+// POST an mrkdwn message to a specific webhook URL. Best-effort; never throws.
+async function postToWebhook(url: string, text: string): Promise<void> {
   if (!url) return;
   try {
     await fetch(url, {
@@ -107,6 +106,71 @@ export async function postSlackChannel(text: string): Promise<void> {
   } catch {
     /* best-effort — never break the caller on a Slack outage */
   }
+}
+
+// Post to the default (fallback) channel. No-op when unset.
+export async function postSlackChannel(text: string): Promise<void> {
+  await postToWebhook(await getSlackWebhook(), text);
+}
+
+// ---- Announcement routing: per-category on/off + optional channel override --
+// Each activity type can be switched off, or pointed at its own webhook. When a
+// category has no override it falls back to the default webhook, so an existing
+// single-webhook setup keeps announcing everything (categories default to on).
+
+export type BridgeCategory = "events" | "briefings" | "discussions" | "requests";
+export const BRIDGE_CATEGORIES: readonly { key: BridgeCategory; label: string; hint: string }[] = [
+  { key: "events", label: "Events", hint: "New events on the calendar" },
+  { key: "briefings", label: "Briefings", hint: "Newly published briefings" },
+  { key: "discussions", label: "Discussions", hint: "New board topics" },
+  { key: "requests", label: "Asks & offers", hint: "New asks and offers" },
+];
+export type BridgeRoute = { on: boolean; url: string };
+export type BridgeRouting = Record<BridgeCategory, BridgeRoute>;
+const ROUTING_KEY = "slack_bridge_routing";
+
+// Read the stored routing, defaulting every category to on with no override.
+export async function getBridgeRouting(): Promise<BridgeRouting> {
+  let parsed: Partial<Record<BridgeCategory, Partial<BridgeRoute>>> = {};
+  const raw = await getSetting(ROUTING_KEY);
+  if (raw) {
+    try {
+      parsed = JSON.parse(raw) as Partial<Record<BridgeCategory, Partial<BridgeRoute>>>;
+    } catch {
+      parsed = {};
+    }
+  }
+  const out = {} as BridgeRouting;
+  for (const { key } of BRIDGE_CATEGORIES) {
+    const r = parsed[key];
+    out[key] = {
+      on: typeof r?.on === "boolean" ? r.on : true,
+      url: typeof r?.url === "string" ? r.url : "",
+    };
+  }
+  return out;
+}
+
+export async function saveBridgeRouting(routing: BridgeRouting): Promise<void> {
+  const clean = {} as BridgeRouting;
+  for (const { key } of BRIDGE_CATEGORIES) {
+    const r = routing[key];
+    clean[key] = { on: !!r?.on, url: (r?.url || "").trim() };
+  }
+  await setSetting(ROUTING_KEY, JSON.stringify(clean));
+}
+
+// The webhook a category should post to (its override, else the default), or ""
+// if the category is switched off or nothing is configured.
+export async function webhookForCategory(cat: BridgeCategory): Promise<string> {
+  const routing = await getBridgeRouting();
+  if (!routing[cat].on) return "";
+  return routing[cat].url || (await getSlackWebhook());
+}
+
+// Post a category's announcement to its resolved channel. No-op when off/unset.
+export async function postSlackCategory(cat: BridgeCategory, text: string): Promise<void> {
+  await postToWebhook(await webhookForCategory(cat), text);
 }
 
 // Bot token is an env secret (never stored in the DB), like the OAuth secret.

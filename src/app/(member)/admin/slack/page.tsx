@@ -5,6 +5,8 @@ import {
   slackOAuthEnabled,
   slackRedirectUri,
   slackLinkedCounts,
+  slackWebhookEnabled,
+  slackBotEnabled,
 } from "@/lib/slack";
 import SlackForm from "./slack-form";
 
@@ -13,12 +15,14 @@ export const metadata = { title: "Slack — Admin — Conclave" };
 
 export default async function AdminSlackPage() {
   await requireAdmin();
-  const [settings, config, counts] = await Promise.all([
+  const [settings, config, counts, webhookOn] = await Promise.all([
     getSlackSettings(),
     getSlackConfig(),
     slackLinkedCounts(),
+    slackWebhookEnabled(),
   ]);
   const oauth = slackOAuthEnabled();
+  const botOn = slackBotEnabled();
   const redirectUri = slackRedirectUri();
 
   return (
@@ -59,6 +63,28 @@ export default async function AdminSlackPage() {
           <li>Set <code>SLACK_CLIENT_ID</code> and <code>SLACK_CLIENT_SECRET</code> as secrets in Webflow Cloud (and ensure <code>EMAIL_BASE_URL</code> is set for the redirect to resolve).</li>
           <li>Optionally set the workspace team id above to restrict linking to your workspace.</li>
         </ol>
+      </div>
+
+      <div className="card" style={{ marginTop: "1rem", maxWidth: 560 }}>
+        <h3 style={{ fontSize: "1.3rem", margin: 0 }}>The bridge (portal → Slack)</h3>
+        <p className="meta" style={{ margin: "0.25rem 0 0.5rem" }}>Two independent channels, each on only when configured:</p>
+        <ul className="meta" style={{ margin: 0, paddingLeft: "1.2rem", lineHeight: 1.8 }}>
+          <li>
+            <strong>Channel announcements</strong>: {webhookOn ? "on" : "off"} — posts new events, briefings,
+            discussions, and asks &amp; offers to a channel. Set the <strong>channel webhook</strong> in the
+            invite form above (or <code>SLACK_WEBHOOK_URL</code>).
+          </li>
+          <li>
+            <strong>Member DMs</strong>: {botOn ? "on" : "off"} — DMs linked members about new messages,
+            connection requests, and their monthly intro. Requires a bot token
+            (<code>SLACK_BOT_TOKEN</code>, scope <code>chat:write</code>) set as a secret in Webflow Cloud.
+            Members must have linked Slack above to receive DMs.
+          </li>
+        </ul>
+        <p className="note" style={{ marginTop: "0.75rem" }}>
+          A webhook can only post to a channel — DMs need the bot token. Create an incoming webhook under your
+          Slack app → <em>Incoming Webhooks</em>; add a bot token under <em>OAuth &amp; Permissions</em>.
+        </p>
       </div>
 
       <div className="card" style={{ marginTop: "1rem", maxWidth: 560 }}>

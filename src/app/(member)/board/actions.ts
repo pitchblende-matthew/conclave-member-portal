@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
 import { rateLimited } from "@/lib/rate-limit";
 import { readTagIds, setContentTags } from "@/lib/content-tags";
+import { slackAnnounceTopic } from "@/lib/slack-bridge";
 import type { Post, Topic } from "@/lib/types";
 
 export type BoardState = { ok?: boolean; error?: string };
@@ -38,6 +39,7 @@ export async function createTopic(_prev: BoardState, formData: FormData): Promis
 
   const tags = readTagIds(formData);
   await setContentTags("topic", topicId, tags.industry, tags.function);
+  await slackAnnounceTopic({ id: topicId, title, dma_name: dmaName });
 
   revalidatePath("/board");
   redirect(`/board/${topicId}`);

@@ -13,6 +13,7 @@ export type SlackConfig = { inviteUrl: string; workspaceName: string };
 const INVITE_KEY = "slack_invite_url";
 const NAME_KEY = "slack_workspace_name";
 const TEAM_KEY = "slack_team_id";
+const WEBHOOK_KEY = "slack_webhook_url";
 const DEFAULT_NAME = "the Conclave Slack";
 
 async function getSetting(key: string): Promise<string | null> {
@@ -55,20 +56,106 @@ export async function getSlackConfig(): Promise<SlackConfig | null> {
 }
 
 // Raw stored values for the admin settings form.
-export async function getSlackSettings(): Promise<{ inviteUrl: string; workspaceName: string; teamId: string }> {
+export async function getSlackSettings(): Promise<{ inviteUrl: string; workspaceName: string; teamId: string; webhookUrl: string }> {
   return {
     inviteUrl: (await getSetting(INVITE_KEY)) || "",
     workspaceName: (await getSetting(NAME_KEY)) || "",
     teamId: (await getSetting(TEAM_KEY)) || "",
+    webhookUrl: (await getSetting(WEBHOOK_KEY)) || "",
   };
 }
 
-// Persist the invite link + workspace name (+ optional workspace team id). An
-// empty invite clears the member-facing integration.
-export async function saveSlackSettings(inviteUrl: string, workspaceName: string, teamId = ""): Promise<void> {
+// Persist the invite link + workspace name (+ optional workspace team id +
+// optional incoming-webhook URL). An empty invite clears the member-facing
+// integration; an empty webhook turns off channel announcements.
+export async function saveSlackSettings(inviteUrl: string, workspaceName: string, teamId = "", webhookUrl = ""): Promise<void> {
   await setSetting(INVITE_KEY, inviteUrl.trim());
   await setSetting(NAME_KEY, workspaceName.trim());
   await setSetting(TEAM_KEY, teamId.trim());
+  await setSetting(WEBHOOK_KEY, webhookUrl.trim());
+}
+
+// ---- Phase 3: the bridge — portal activity flows into Slack -----------------
+// Two independent, separately-gated channels:
+//   • Channel announcements via an incoming webhook (admin-set or env).
+//   • Member DMs via a bot token (env secret only) to members who've linked.
+// Both fail closed and never throw into the caller, mirroring email gating.
+
+// A Slack incoming webhook is https://hooks.slack.com/services/…
+export function isValidSlackWebhook(url: string): boolean {
+  return /^https:\/\/hooks\.slack\.com\/(services|triggers)\//i.test(url.trim());
+}
+
+export async function getSlackWebhook(): Promise<string> {
+  return (await getSetting(WEBHOOK_KEY)) || envVar("SLACK_WEBHOOK_URL");
+}
+
+export async function slackWebhookEnabled(): Promise<boolean> {
+  return !!(await getSlackWebhook());
+}
+
+// Post a plain mrkdwn message to the configured channel. No-op when unset.
+export async function postSlackChannel(text: string): Promise<void> {
+  const url = await getSlackWebhook();
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+  } catch {
+    /* best-effort — never break the caller on a Slack outage */
+  }
+}
+
+// Bot token is an env secret (never stored in the DB), like the OAuth secret.
+function slackBotToken(): string {
+  return envVar("SLACK_BOT_TOKEN");
+}
+
+export function slackBotEnabled(): boolean {
+  return !!slackBotToken();
+}
+
+async function slackApi(method: string, body: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+  const token = slackBotToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`https://slack.com/api/${method}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    });
+    return (await res.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+// DM a member by their Slack user id: open (or reuse) the IM channel, then post.
+// No-op when the bot isn't configured. Best-effort — swallows failures.
+export async function dmSlackUser(slackUserId: string, text: string): Promise<boolean> {
+  if (!slackBotEnabled() || !slackUserId) return false;
+  const opened = await slackApi("conversations.open", { users: slackUserId });
+  const channel = opened && opened.ok ? ((opened.channel as { id?: string })?.id ?? "") : "";
+  if (!channel) return false;
+  const posted = await slackApi("chat.postMessage", { channel, text, unfurl_links: false });
+  return !!(posted && posted.ok);
+}
+
+// The linked Slack user id for a member, or null if they haven't linked.
+export async function slackUserIdFor(userId: number): Promise<string | null> {
+  const row = await getDb().prepare("SELECT slack_user_id FROM users WHERE id = ?").bind(userId).first<{ slack_user_id: string | null }>();
+  return row?.slack_user_id ?? null;
+}
+
+// DM a member if the bot is on and they've linked Slack. Returns whether sent.
+export async function dmMember(userId: number, text: string): Promise<boolean> {
+  if (!slackBotEnabled()) return false;
+  const slackUserId = await slackUserIdFor(userId);
+  if (!slackUserId) return false;
+  return dmSlackUser(slackUserId, text);
 }
 
 // ---- Phase 2: identity linking via "Sign in with Slack" (OpenID Connect) ----

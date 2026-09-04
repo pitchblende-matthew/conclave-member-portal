@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
 import { rateLimited } from "@/lib/rate-limit";
 import { REQUEST_CATEGORIES, insertRequest, insertResponse, setRequestStatus, removeRequest } from "@/lib/requests";
+import { slackAnnounceRequest } from "@/lib/slack-bridge";
 import type { RequestKind } from "@/lib/requests";
 
 export type RequestState = { ok?: boolean; error?: string };
@@ -25,6 +26,7 @@ export async function createRequest(_prev: RequestState, formData: FormData): Pr
   if (await rateLimited(`request:${user.id}`, 8, 60_000)) return { error: "You're posting too fast — please wait a moment." };
 
   const id = await insertRequest({ kind, userId: user.id, title, body, category });
+  await slackAnnounceRequest({ id, title, kind });
   revalidatePath("/requests");
   redirect(`/requests/${id}`);
 }

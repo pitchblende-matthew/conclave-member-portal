@@ -6,7 +6,7 @@ import { updateSlackSettings, type SlackSettingsState } from "./actions";
 export default function SlackForm({
   initial,
 }: {
-  initial: { inviteUrl: string; workspaceName: string; teamId: string };
+  initial: { inviteUrl: string; workspaceName: string; teamId: string; webhookUrl: string };
 }) {
   const [state, formAction, pending] = useActionState<SlackSettingsState, FormData>(
     updateSlackSettings,
@@ -44,6 +44,19 @@ export default function SlackForm({
       <p className="note" style={{ marginTop: "0.35rem" }}>
         If set, &ldquo;Connect Slack&rdquo; only accepts accounts in this workspace. Find it in Slack →
         About this workspace.
+      </p>
+      <label htmlFor="webhookUrl" style={{ marginTop: "1rem" }}>Channel webhook (bridge)</label>
+      <input
+        id="webhookUrl"
+        name="webhookUrl"
+        type="url"
+        defaultValue={initial.webhookUrl}
+        placeholder="https://hooks.slack.com/services/…"
+        autoComplete="off"
+      />
+      <p className="note" style={{ marginTop: "0.35rem" }}>
+        An incoming-webhook URL to post new events, briefings, discussions, and asks &amp; offers to a
+        channel. Leave blank to turn channel announcements off.
       </p>
       {state?.error && <div className="error" role="alert">{state.error}</div>}
       {state?.ok && <p className="note" role="status">Saved.</p>}

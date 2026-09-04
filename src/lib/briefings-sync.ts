@@ -1,6 +1,14 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "./db";
 import { announceBriefing } from "./board-announce";
+import { slackAnnounceBriefing } from "./slack-bridge";
+import { postSlackCategory } from "./slack";
+import { siteUrl } from "./email";
+
+// Post at most this many individual briefing announcements per sync run; beyond
+// it, a single summary line — so a normal incremental sync posts each new item
+// but a large first-time backfill can't flood the channel.
+const SLACK_ANNOUNCE_CAP = 6;
 
 // Pull published pitchblende.net Insights posts into the portal's briefings as
 // 'link' entries, so new posts appear automatically. Pitchblende's Webflow CMS
@@ -129,6 +137,7 @@ export async function syncBriefingsFromPitchblende(): Promise<BriefingsSyncResul
     return { ...result, ok: false, reason: `insights fetch failed: ${String(e)}`, errors: [String(e)] };
   }
 
+  const newlyCreated: { id: number; title: string; url: string; summary: string }[] = [];
   for (const p of posts) {
     try {
       if (p.isArchived || p.isDraft) continue;
@@ -161,11 +170,27 @@ export async function syncBriefingsFromPitchblende(): Promise<BriefingsSyncResul
         .bind(title, summary, url, cover, Number.isNaN(publishedAt) ? now : publishedAt, categoryId, now, now)
         .run();
       result.created++;
+      const briefingId = Number(ins.meta.last_row_id);
+      newlyCreated.push({ id: briefingId, title, url, summary });
       // Open a discussion thread for the newly imported post.
-      await announceBriefing(Number(ins.meta.last_row_id), { title, summary, url });
+      await announceBriefing(briefingId, { title, summary, url });
     } catch (e) {
       result.errors.push(`post ${String(p?.fieldData?.slug ?? p?.id)}: ${String(e)}`);
     }
+  }
+
+  // Announce new briefings to Slack — each one when the run is small, or a single
+  // summary line for a large backfill so the channel isn't flooded. Best-effort.
+  try {
+    if (newlyCreated.length > 0 && newlyCreated.length <= SLACK_ANNOUNCE_CAP) {
+      for (const b of newlyCreated) {
+        await slackAnnounceBriefing({ id: b.id, kind: "link", title: b.title, url: b.url, summary: b.summary });
+      }
+    } else if (newlyCreated.length > SLACK_ANNOUNCE_CAP) {
+      await postSlackCategory("briefings", `:newspaper: *${newlyCreated.length} new briefings* just published — <${siteUrl("/briefings")}|browse them>`);
+    }
+  } catch (e) {
+    result.errors.push(`slack announce: ${String(e)}`);
   }
 
   result.ok = result.errors.length === 0;

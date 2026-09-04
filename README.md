@@ -232,25 +232,33 @@ present, mirroring the email integration's gating. Configure it all at
    account (stores `slack_user_id`); admins see linked coverage. Needs
    `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` secrets.
 3. **The bridge** (`src/lib/slack-bridge.ts`) — portal activity flows *into*
-   Slack, over two independent, separately-gated transports:
-   - **Channel announcements** via an **incoming webhook** — new events,
-     briefings, discussions, and asks & offers post to a channel. Admin-set
-     (`slack_webhook_url`) or `SLACK_WEBHOOK_URL`. Bulk briefing sync is
-     intentionally *not* bridged, so a backfill can't flood the channel.
-     **Routing** (`slack_bridge_routing` in `app_settings`): each activity type
-     can be switched off or pointed at its own channel webhook, falling back to
-     the default when no override is set — so e.g. events → `#events`, briefings
-     → `#reading`. Edit it under Announcement routing at `/admin/slack`.
-   - **Member DMs** via a **bot token** — the bot DMs linked members about a new
+   Slack, over two independent, separately-gated capabilities:
+   - **Channel announcements** — new events, briefings, discussions, and asks &
+     offers post to a channel. Each announcement goes to a **destination**, which
+     is either a **channel** the bot posts to (`#events` or a channel id — needs
+     the bot token below, and the bot invited to that channel) **or** an
+     **incoming-webhook URL**; the code auto-detects which by shape. The default
+     destination is admin-set (`slack_webhook_url`, despite the name it holds a
+     channel or a webhook) or env (`SLACK_WEBHOOK_URL` / `SLACK_CHANNEL`). Bulk
+     briefing sync is intentionally *not* bridged, so a backfill can't flood the
+     channel. **Routing** (`slack_bridge_routing` in `app_settings`): each
+     activity type can be switched off or pointed at its own destination, falling
+     back to the default when no override is set — so e.g. events → `#events`,
+     briefings → `#reading`. Edit it under Announcement routing at `/admin/slack`.
+   - **Member DMs** via the **bot token** — the bot DMs linked members about a new
      direct message, a connection request, and their monthly intro. Requires
-     `SLACK_BOT_TOKEN` (scope `chat:write`); DMs reach only members who've linked
-     Slack. A webhook can't DM — that's what the bot token is for.
+     `SLACK_BOT_TOKEN` (scopes `chat:write` + `im:write`); DMs reach only members
+     who've linked Slack. A webhook can't DM — that's what the bot token is for.
 
-   Both transports fail closed and never throw into the caller (a Slack outage
-   never breaks a post/message/RSVP). Wiring lives at the existing create/publish
-   sites and alongside the matching email sends.
+   The simplest full setup is **bot-token-only**: one `SLACK_BOT_TOKEN`, the bot
+   invited to a channel, and that channel set as the default destination — it
+   powers both announcements and DMs. Both capabilities fail closed and never
+   throw into the caller (a Slack outage never breaks a post/message/RSVP). Wiring
+   lives at the existing create/publish sites and alongside the matching email
+   sends.
 
-No migration — the webhook URL lives in `app_settings`; the bot token is env-only.
+No migration — the destination + routing live in `app_settings`; the bot token
+is env-only.
 
 ---
 

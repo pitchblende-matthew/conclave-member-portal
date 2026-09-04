@@ -28,10 +28,10 @@ export default function RoutingForm({
             </label>
             <p className="note" style={{ margin: "0.15rem 0 0.4rem 1.6rem" }}>{c.hint}</p>
             <input
-              type="url"
+              type="text"
               name={`${c.key}_url`}
               defaultValue={r.url}
-              placeholder="Channel webhook override (optional) — defaults to the main webhook"
+              placeholder="#channel or webhook override (optional) — defaults to the main destination"
               autoComplete="off"
               style={{ marginLeft: "1.6rem", width: "calc(100% - 1.6rem)" }}
             />

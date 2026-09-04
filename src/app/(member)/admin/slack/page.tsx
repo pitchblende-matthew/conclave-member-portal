@@ -5,7 +5,7 @@ import {
   slackOAuthEnabled,
   slackRedirectUri,
   slackLinkedCounts,
-  slackWebhookEnabled,
+  channelBridgeEnabled,
   slackBotEnabled,
   getBridgeRouting,
   BRIDGE_CATEGORIES,
@@ -18,11 +18,11 @@ export const metadata = { title: "Slack — Admin — Conclave" };
 
 export default async function AdminSlackPage() {
   await requireAdmin();
-  const [settings, config, counts, webhookOn, routing] = await Promise.all([
+  const [settings, config, counts, channelOn, routing] = await Promise.all([
     getSlackSettings(),
     getSlackConfig(),
     slackLinkedCounts(),
-    slackWebhookEnabled(),
+    channelBridgeEnabled(),
     getBridgeRouting(),
   ]);
   const oauth = slackOAuthEnabled();
@@ -74,20 +74,23 @@ export default async function AdminSlackPage() {
         <p className="meta" style={{ margin: "0.25rem 0 0.5rem" }}>Two independent channels, each on only when configured:</p>
         <ul className="meta" style={{ margin: 0, paddingLeft: "1.2rem", lineHeight: 1.8 }}>
           <li>
-            <strong>Channel announcements</strong>: {webhookOn ? "on" : "off"} — posts new events, briefings,
-            discussions, and asks &amp; offers to a channel. Set the <strong>channel webhook</strong> in the
-            invite form above (or <code>SLACK_WEBHOOK_URL</code>).
+            <strong>Channel announcements</strong>: {channelOn ? "on" : "off"} — posts new events, briefings,
+            discussions, and asks &amp; offers to a channel. Set a <strong>default channel or webhook</strong> in
+            the invite form above. A channel needs the bot token (below) and the bot invited to it; a webhook
+            works on its own.
           </li>
           <li>
             <strong>Member DMs</strong>: {botOn ? "on" : "off"} — DMs linked members about new messages,
             connection requests, and their monthly intro. Requires a bot token
-            (<code>SLACK_BOT_TOKEN</code>, scope <code>chat:write</code>) set as a secret in Webflow Cloud.
-            Members must have linked Slack above to receive DMs.
+            (<code>SLACK_BOT_TOKEN</code>, scopes <code>chat:write</code> + <code>im:write</code>) set as a
+            secret in Webflow Cloud. Members must have linked Slack above to receive DMs.
           </li>
         </ul>
         <p className="note" style={{ marginTop: "0.75rem" }}>
-          A webhook can only post to a channel — DMs need the bot token. Create an incoming webhook under your
-          Slack app → <em>Incoming Webhooks</em>; add a bot token under <em>OAuth &amp; Permissions</em>.
+          Simplest with just a bot token: add one under your Slack app → <em>OAuth &amp; Permissions</em>, invite
+          the bot to your channel (<code>/invite</code>), then set that channel as the default above — it powers
+          both announcements and DMs. A webhook (<em>Incoming Webhooks</em>) is an alternative for channel posts
+          only.
         </p>
       </div>
 

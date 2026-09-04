@@ -81,17 +81,32 @@ export async function saveSlackSettings(inviteUrl: string, workspaceName: string
 //   • Member DMs via a bot token (env secret only) to members who've linked.
 // Both fail closed and never throw into the caller, mirroring email gating.
 
+// A channel announcement's "destination" is either an incoming-webhook URL or a
+// Slack channel the bot posts to (a #name or a channel id). This lets a
+// workspace bridge with just a bot token — no webhook plumbing — or with a
+// webhook, or a mix, all through one field.
+
 // A Slack incoming webhook is https://hooks.slack.com/services/…
 export function isValidSlackWebhook(url: string): boolean {
   return /^https:\/\/hooks\.slack\.com\/(services|triggers)\//i.test(url.trim());
 }
 
-export async function getSlackWebhook(): Promise<string> {
-  return (await getSetting(WEBHOOK_KEY)) || envVar("SLACK_WEBHOOK_URL");
+// A channel reference: #general, or a channel/group/DM id like C0123ABCD.
+export function isSlackChannelRef(s: string): boolean {
+  const t = s.trim();
+  return /^#[^\s#]+$/.test(t) || /^[CGD][A-Z0-9]{6,}$/.test(t);
 }
 
-export async function slackWebhookEnabled(): Promise<boolean> {
-  return !!(await getSlackWebhook());
+// A destination is valid if it's a webhook URL or a channel reference.
+export function isValidBridgeDestination(s: string): boolean {
+  const t = s.trim();
+  return isValidSlackWebhook(t) || isSlackChannelRef(t);
+}
+
+// The default destination for announcements: admin-set (slack_webhook_url — the
+// key predates channel support) or env. Accepts a webhook URL or a channel.
+export async function getDefaultDestination(): Promise<string> {
+  return (await getSetting(WEBHOOK_KEY)) || envVar("SLACK_WEBHOOK_URL") || envVar("SLACK_CHANNEL");
 }
 
 // POST an mrkdwn message to a specific webhook URL. Best-effort; never throws.
@@ -108,15 +123,29 @@ async function postToWebhook(url: string, text: string): Promise<void> {
   }
 }
 
-// Post to the default (fallback) channel. No-op when unset.
-export async function postSlackChannel(text: string): Promise<void> {
-  await postToWebhook(await getSlackWebhook(), text);
+// Send an mrkdwn message to a destination — webhook or bot channel — picking the
+// transport by shape. No-op when empty (or when a channel is set but the bot
+// isn't configured). The bot must be a member of the channel it posts to.
+async function postDestination(dest: string, text: string): Promise<void> {
+  const d = (dest || "").trim();
+  if (!d) return;
+  if (isValidSlackWebhook(d)) {
+    await postToWebhook(d, text);
+    return;
+  }
+  await botPostChannel(d, text);
 }
 
-// ---- Announcement routing: per-category on/off + optional channel override --
-// Each activity type can be switched off, or pointed at its own webhook. When a
-// category has no override it falls back to the default webhook, so an existing
-// single-webhook setup keeps announcing everything (categories default to on).
+// Post to the default destination. No-op when unset.
+export async function postSlackChannel(text: string): Promise<void> {
+  await postDestination(await getDefaultDestination(), text);
+}
+
+// ---- Announcement routing: per-category on/off + optional destination override
+// Each activity type can be switched off, or pointed at its own destination (a
+// channel or webhook). With no override it falls back to the default
+// destination, so a single-destination setup announces everything (categories
+// default to on).
 
 export type BridgeCategory = "events" | "briefings" | "discussions" | "requests";
 export const BRIDGE_CATEGORIES: readonly { key: BridgeCategory; label: string; hint: string }[] = [
@@ -160,17 +189,25 @@ export async function saveBridgeRouting(routing: BridgeRouting): Promise<void> {
   await setSetting(ROUTING_KEY, JSON.stringify(clean));
 }
 
-// The webhook a category should post to (its override, else the default), or ""
-// if the category is switched off or nothing is configured.
-export async function webhookForCategory(cat: BridgeCategory): Promise<string> {
+// The destination a category should post to (its override, else the default),
+// or "" if the category is switched off or nothing is configured.
+export async function destinationForCategory(cat: BridgeCategory): Promise<string> {
   const routing = await getBridgeRouting();
   if (!routing[cat].on) return "";
-  return routing[cat].url || (await getSlackWebhook());
+  return routing[cat].url || (await getDefaultDestination());
 }
 
-// Post a category's announcement to its resolved channel. No-op when off/unset.
+// Post a category's announcement to its resolved destination. No-op when off/unset.
 export async function postSlackCategory(cat: BridgeCategory, text: string): Promise<void> {
-  await postToWebhook(await webhookForCategory(cat), text);
+  await postDestination(await destinationForCategory(cat), text);
+}
+
+// Whether channel announcements can go anywhere: a default destination is set,
+// or at least one category has its own override.
+export async function channelBridgeEnabled(): Promise<boolean> {
+  if (await getDefaultDestination()) return true;
+  const routing = await getBridgeRouting();
+  return BRIDGE_CATEGORIES.some((c) => routing[c.key].on && routing[c.key].url);
 }
 
 // Bot token is an env secret (never stored in the DB), like the OAuth secret.
@@ -205,6 +242,15 @@ export async function dmSlackUser(slackUserId: string, text: string): Promise<bo
   const channel = opened && opened.ok ? ((opened.channel as { id?: string })?.id ?? "") : "";
   if (!channel) return false;
   const posted = await slackApi("chat.postMessage", { channel, text, unfurl_links: false });
+  return !!(posted && posted.ok);
+}
+
+// Post an mrkdwn message to a channel (name or id) via the bot. No-op when the
+// bot isn't configured. The bot must be a member of the channel (invite it with
+// /invite in Slack); posting to a channel it isn't in fails silently.
+export async function botPostChannel(channel: string, text: string): Promise<boolean> {
+  if (!slackBotEnabled() || !channel) return false;
+  const posted = await slackApi("chat.postMessage", { channel: channel.trim(), text, unfurl_links: false, unfurl_media: false });
   return !!(posted && posted.ok);
 }
 

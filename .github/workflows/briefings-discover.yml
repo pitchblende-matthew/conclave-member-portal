@@ -1,0 +1,36 @@
+name: Briefings discover
+
+# Webflow Cloud has no cron, so GitHub Actions plays scheduler. Runs daily: pings
+# the portal's discovery endpoint, which pulls fresh articles from curated RSS
+# feeds, has Claude pick the best few, and publishes them as briefings (and posts
+# them to Slack). Insert-only + deduped by URL, so re-runs are safe. Reuses the
+# digest secret.
+on:
+  schedule:
+    # Daily at 08:00 ET (13:00 UTC), ahead of the workday.
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger briefings discovery
+        env:
+          DIGEST_SECRET: ${{ secrets.DIGEST_SECRET }}
+          # Override via repo variable DISCOVER_URL if the portal moves.
+          DISCOVER_URL: ${{ vars.DISCOVER_URL || 'https://www.jointheconclave.com/portal/api/briefings/discover' }}
+        run: |
+          if [ -z "$DIGEST_SECRET" ]; then
+            echo "::error::DIGEST_SECRET repo secret is not set."
+            exit 1
+          fi
+          url="${DISCOVER_URL}?key=${DIGEST_SECRET}"
+          echo "GET ${DISCOVER_URL}"
+          status=$(curl -sS -o response.json -w "%{http_code}" "$url")
+          echo "HTTP ${status}"
+          echo "Response: $(cat response.json)"
+          case "$status" in
+            2*) echo "Briefings discovery accepted the request." ;;
+            *)  echo "::error::Briefings discovery returned HTTP ${status}"; exit 1 ;;
+          esac

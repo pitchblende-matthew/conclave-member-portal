@@ -176,6 +176,32 @@ still fire).
 
 ---
 
+## Daily briefing discovery
+
+A daily job finds fresh industry articles and publishes the best few as `link`
+briefings — so the feed stays current without manual curation.
+
+- **Sources:** a curated set of marketing / advertising / media **RSS feeds**
+  (`src/lib/briefings-discover.ts`, `DEFAULT_FEEDS`; override with the
+  `BRIEFINGS_DISCOVER_FEEDS` env — comma-separated URLs). Parsed on the edge
+  (RSS + Atom), filtered to the last few days, deduped by URL against what's
+  already stored.
+- **Ranking:** **Claude** picks the 3–5 most valuable items for the audience,
+  writes a clean one-line summary, and files each under a topic. Needs
+  `ANTHROPIC_API_KEY` (model via `BRIEFINGS_LLM_MODEL`, default
+  `claude-sonnet-5`). With no key it still runs, falling back to newest-first
+  with the feed's own summary.
+- **Publish:** picks go live immediately (`published = 1`), open a discussion
+  thread, and post to Slack (flood-capped) — same path as the pitchblende sync.
+- **Trigger:** `GET /api/briefings/discover?key=<DIGEST_SECRET>`, run **daily**
+  by `.github/workflows/briefings-discover.yml`. Insert-only + deduped, so
+  re-runs never double-post.
+
+No migration — briefings and categories already exist; only
+`ANTHROPIC_API_KEY` is new (and optional).
+
+---
+
 ## Warm intros ("The Handshake")
 
 Once a month, opted-in members are paired 1:1 and each gets an email introducing

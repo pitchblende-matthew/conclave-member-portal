@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
 import { emailConnectionRequest } from "@/lib/email";
+import { slackDmConnectionRequest } from "@/lib/slack-bridge";
 import { rateLimited } from "@/lib/rate-limit";
 import type { Connection } from "@/lib/types";
 
@@ -46,6 +47,7 @@ export async function sendConnect(formData: FormData): Promise<void> {
     await notify(other, "connection_request", { actorId: me.id });
     const target = await db.prepare("SELECT email, name FROM users WHERE id = ?").bind(other).first<{ email: string; name: string }>();
     if (target?.email) await emailConnectionRequest(target.email, target.name, me.name);
+    await slackDmConnectionRequest(other, me.name);
   } else if (row.status === "pending" && row.addressee_id === me.id) {
     await db.prepare("UPDATE connections SET status = 'accepted', responded_at = ? WHERE id = ?").bind(now, row.id).run();
     // They asked first, so accepting it connects us — let them know.

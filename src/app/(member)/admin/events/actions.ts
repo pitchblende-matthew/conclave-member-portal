@@ -9,6 +9,7 @@ import { notify } from "@/lib/notifications";
 import { emailSubmissionDecision } from "@/lib/email";
 import { readTagIds, setContentTags } from "@/lib/content-tags";
 import { announceEvent } from "@/lib/board-announce";
+import { slackAnnounceEvent } from "@/lib/slack-bridge";
 
 export type EventState = { ok?: boolean; error?: string };
 
@@ -62,8 +63,9 @@ export async function createEvent(_prev: EventState, formData: FormData): Promis
   const eventId = Number(res.meta.last_row_id);
   const tags = readTagIds(formData);
   await setContentTags("event", eventId, tags.industry, tags.function);
-  // Admin-created events are live immediately — open a discussion thread.
+  // Admin-created events are live immediately — open a discussion thread + announce.
   await announceEvent(eventId, { title: e.title, description: e.description });
+  await slackAnnounceEvent({ id: eventId, title: e.title, starts_at: e.startsAt, is_virtual: e.isVirtual ? 1 : 0, location: e.location, dma_name: region.dma_name });
 
   revalidatePath("/admin/events");
   revalidatePath("/events");
@@ -108,15 +110,18 @@ export async function approveEvent(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const id = Number(formData.get("eventId"));
   if (!id) return;
-  const ev = await getDb().prepare("SELECT submitted_by, title, description FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string; description: string }>();
+  const ev = await getDb().prepare("SELECT submitted_by, title, description, starts_at, is_virtual, location, dma_name FROM events WHERE id = ?").bind(id).first<{ submitted_by: number | null; title: string; description: string; starts_at: number; is_virtual: number; location: string; dma_name: string }>();
   await getDb().prepare("UPDATE events SET status = 'approved' WHERE id = ?").bind(id).run();
   if (ev?.submitted_by) {
     await notify(ev.submitted_by, "event_approved", { actorId: admin.id });
     const u = await getDb().prepare("SELECT email FROM users WHERE id = ?").bind(ev.submitted_by).first<{ email: string }>();
     if (u?.email) await emailSubmissionDecision(u.email, "event", ev.title, true);
   }
-  // Now visible on the calendar — open a discussion thread (idempotent).
-  if (ev) await announceEvent(id, { title: ev.title, description: ev.description });
+  // Now visible on the calendar — open a discussion thread (idempotent) + announce.
+  if (ev) {
+    await announceEvent(id, { title: ev.title, description: ev.description });
+    await slackAnnounceEvent({ id, title: ev.title, starts_at: ev.starts_at, is_virtual: ev.is_virtual, location: ev.location, dma_name: ev.dma_name });
+  }
   revalidatePath("/admin/events");
   revalidatePath("/events");
 }

@@ -218,6 +218,38 @@ columns (`intro_rounds.followed_up_at`, `intro_pairs.met_at` / `met_by`).
 
 ---
 
+## Slack
+
+Slack support rolls out in three phases, each **invisible until configured** —
+nothing shows in the UI and no calls go out until the relevant setting/secret is
+present, mirroring the email integration's gating. Configure it all at
+**`/admin/slack`**.
+
+1. **Invite link** — a shared `join.slack.com/…` link surfaced to approved
+   members (dashboard + approval email). Admin-set (`slack_invite_url`) or
+   `SLACK_INVITE_URL`.
+2. **Sign in with Slack** — OIDC identity linking so members connect their Slack
+   account (stores `slack_user_id`); admins see linked coverage. Needs
+   `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` secrets.
+3. **The bridge** (`src/lib/slack-bridge.ts`) — portal activity flows *into*
+   Slack, over two independent, separately-gated transports:
+   - **Channel announcements** via an **incoming webhook** — new events,
+     briefings, discussions, and asks & offers post to a channel. Admin-set
+     (`slack_webhook_url`) or `SLACK_WEBHOOK_URL`. Bulk briefing sync is
+     intentionally *not* bridged, so a backfill can't flood the channel.
+   - **Member DMs** via a **bot token** — the bot DMs linked members about a new
+     direct message, a connection request, and their monthly intro. Requires
+     `SLACK_BOT_TOKEN` (scope `chat:write`); DMs reach only members who've linked
+     Slack. A webhook can't DM — that's what the bot token is for.
+
+   Both transports fail closed and never throw into the caller (a Slack outage
+   never breaks a post/message/RSVP). Wiring lives at the existing create/publish
+   sites and alongside the matching email sends.
+
+No migration — the webhook URL lives in `app_settings`; the bot token is env-only.
+
+---
+
 ## Before you go live (hardening checklist)
 
 This scaffold covers the core flow but intentionally leaves these to you / a developer:

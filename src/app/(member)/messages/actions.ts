@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { connectionState } from "@/lib/connections";
 import { notify } from "@/lib/notifications";
 import { emailNewMessage } from "@/lib/email";
+import { slackDmMessage } from "@/lib/slack-bridge";
 import { rateLimited } from "@/lib/rate-limit";
 
 export type MessageState = { ok?: boolean; error?: string };
@@ -35,6 +36,7 @@ export async function sendMessage(_prev: MessageState, formData: FormData): Prom
   await notify(other, "message", { actorId: me.id });
   const u = await db.prepare("SELECT email, name FROM users WHERE id = ?").bind(other).first<{ email: string; name: string }>();
   if (u?.email) await emailNewMessage(u.email, u.name, me.name);
+  await slackDmMessage(other, me.name);
 
   revalidatePath(`/messages/${other}`);
   revalidatePath("/messages");

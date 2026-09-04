@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "./db";
 import { emailEnabled, emailIntro, emailIntroFollowup, siteUrl } from "./email";
+import { slackDmIntro } from "./slack-bridge";
 import { notifyAdmins } from "./notifications";
 
 // Warm intros — a monthly 1:1 pairing of members, admin-curated then emailed.
@@ -242,6 +243,8 @@ export async function sendRound(round: string): Promise<{ emailed: number; error
       } catch (e) {
         result.errors.push(`intro ${m.id}: ${String(e)}`);
       }
+      // Also DM the intro in Slack if the member's linked (best-effort, no-op otherwise).
+      await slackDmIntro(m.id, { id: other.id, name: other.name, role: other.role, company: other.company_name });
     }
   }
   await db.prepare("UPDATE intro_rounds SET status='sent', sent_at=? WHERE round=?").bind(Date.now(), round).run();

@@ -32,7 +32,7 @@ const DEFAULT_FEEDS: { url: string; source: string }[] = [
   { url: "https://digiday.com/feed/", source: "Digiday" },
   { url: "https://www.marketingdive.com/feeds/news/", source: "Marketing Dive" },
   { url: "https://www.adweek.com/feed/", source: "Adweek" },
-  { url: "https://www.thedrum.com/rss.xml", source: "The Drum" },
+  { url: "https://www.adexchanger.com/feed/", source: "AdExchanger" },
   { url: "https://searchengineland.com/feed", source: "Search Engine Land" },
   { url: "https://www.socialmediatoday.com/feeds/news/", source: "Social Media Today" },
   { url: "https://martech.org/feed/", source: "MarTech" },

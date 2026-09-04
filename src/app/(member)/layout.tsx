@@ -9,6 +9,7 @@ import NotificationsBell, { type BellItem } from "@/components/notifications-bel
 import ThemeToggle from "@/components/theme-toggle";
 import FeedbackWidget from "./_feedback/feedback-widget";
 import { unreadMessageCount } from "@/lib/messages";
+import { mountPath } from "@/lib/base-path";
 
 export const dynamic = "force-dynamic";
 
@@ -135,7 +136,7 @@ export default async function MemberLayout({ children }: { children: React.React
           <MemberNav
             isAdmin={user.is_admin === 1}
             unreadMessages={unreadMessages}
-            logoutHref={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logout`}
+            logoutHref={`${mountPath()}/logout`}
           />
           <ThemeToggle initial={theme} />
           <NotificationsBell items={notifs.map(toItem)} unread={unread} />

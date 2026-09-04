@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { exchangeSlackCode, linkSlack, getConfiguredTeamId } from "@/lib/slack";
+import { mountPath } from "@/lib/base-path";
 
 export const dynamic = "force-dynamic";
 
-const base = () => process.env.NEXT_PUBLIC_BASE_PATH || "";
+const base = () => mountPath();
 
 // Relative redirect (per the logout route: absolute URLs break behind the
 // Webflow Cloud proxy) that also clears the one-time state cookie.

@@ -1,5 +1,6 @@
 import type { User } from "@/lib/types";
 import { getSlackConfig, slackOAuthEnabled } from "@/lib/slack";
+import { mountPath } from "@/lib/base-path";
 import { disconnectSlack } from "./slack-actions";
 
 const STATUS: Record<string, { ok: boolean; text: string }> = {
@@ -15,7 +16,7 @@ export default async function SlackCard({ user, status }: { user: User; status?:
   const [config, oauth] = [await getSlackConfig(), slackOAuthEnabled()];
   if (!config && !oauth) return null;
 
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const base = mountPath();
   const linked = !!user.slack_user_id;
   const msg = status ? STATUS[status] : undefined;
   const workspace = config?.workspaceName || "the Conclave Slack";

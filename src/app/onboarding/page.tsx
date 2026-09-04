@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { mountPath } from "@/lib/base-path";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -26,7 +27,7 @@ export default async function Onboarding() {
     getUserExpertiseIds(user.id),
   ]);
 
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const base = mountPath();
   // Match the portal theme (defaults to dark), rendered server-side to avoid a flash.
   const theme = (await cookies()).get("theme")?.value === "light" ? "light" : "dark";
 

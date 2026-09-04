@@ -1,6 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "./db";
-import { emailEnabled, emailIntro, siteUrl } from "./email";
+import { emailEnabled, emailIntro, emailIntroFollowup, siteUrl } from "./email";
 import { notifyAdmins } from "./notifications";
 
 // Warm intros — a monthly 1:1 pairing of members, admin-curated then emailed.
@@ -12,6 +12,7 @@ import { notifyAdmins } from "./notifications";
 
 const DAY = 86400000;
 const AUTO_SEND_AFTER = 3 * DAY; // grace period for admins to review before auto-send
+const FOLLOWUP_AFTER = 7 * DAY; // wait after send before nudging pairs to connect
 
 function digestSecret(): string {
   try {
@@ -40,6 +41,33 @@ export async function applyIntroUnsubscribe(userId: number, token: string): Prom
   if (token !== (await introUnsubToken(userId))) return false;
   await getDb().prepare("UPDATE users SET intro_opt_out=1 WHERE id=?").bind(userId).run();
   return true;
+}
+
+// One-click "we met" token, scoped to a specific pair + member.
+export async function metToken(pairId: number, userId: number): Promise<string> {
+  return (await sha256hex(`${pairId}.${userId}.conclave-met.${digestSecret()}`)).slice(0, 24);
+}
+
+async function metUrl(pairId: number, userId: number): Promise<string> {
+  return siteUrl(`/api/intros/met?p=${pairId}&u=${userId}&t=${await metToken(pairId, userId)}`);
+}
+
+// Mark a pair as met, if the given member actually belongs to it. Idempotent —
+// the first marker sticks. Returns whether the pair is (now) marked met.
+export async function markMet(pairId: number, userId: number): Promise<boolean> {
+  if (!pairId || !userId) return false;
+  const db = getDb();
+  const row = await db.prepare("SELECT user_a, user_b, met_at FROM intro_pairs WHERE id=?").bind(pairId).first<{ user_a: number; user_b: number; met_at: number | null }>();
+  if (!row || (row.user_a !== userId && row.user_b !== userId)) return false;
+  if (row.met_at) return true;
+  await db.prepare("UPDATE intro_pairs SET met_at=?, met_by=? WHERE id=? AND met_at IS NULL").bind(Date.now(), userId, pairId).run();
+  return true;
+}
+
+export async function applyMetToken(pairId: number, userId: number, token: string): Promise<boolean> {
+  if (!pairId || !userId || !token) return false;
+  if (token !== (await metToken(pairId, userId))) return false;
+  return await markMet(pairId, userId);
 }
 
 export type IntroMember = {
@@ -220,6 +248,61 @@ export async function sendRound(round: string): Promise<{ emailed: number; error
   return result;
 }
 
+// A week after a round is sent, nudge each paired member to actually connect.
+// Runs over any sent round that hasn't been followed up yet; keyed by
+// intro_rounds.followed_up_at so it fires once per round. Opt-outs are honored.
+export async function sendFollowups(): Promise<{ rounds: number; emailed: number; errors: string[] }> {
+  const out = { rounds: 0, emailed: 0, errors: [] as string[] };
+  if (!emailEnabled()) return out;
+  const db = getDb();
+  const cutoff = Date.now() - FOLLOWUP_AFTER;
+  const { results: due } = await db
+    .prepare("SELECT round FROM intro_rounds WHERE status='sent' AND followed_up_at IS NULL AND sent_at IS NOT NULL AND sent_at <= ? ORDER BY round ASC")
+    .bind(cutoff)
+    .all<{ round: string }>();
+
+  for (const { round } of due) {
+    const { results: rows } = await db
+      .prepare(
+        `SELECT p.id, p.met_at,
+                a.id AS a_id, a.email AS a_email, a.name AS a_name, a.role AS a_role, a.dma_name AS a_dma, a.bio AS a_bio, a.intro_opt_out AS a_opt, ca.name AS a_company,
+                b.id AS b_id, b.email AS b_email, b.name AS b_name, b.role AS b_role, b.dma_name AS b_dma, b.bio AS b_bio, b.intro_opt_out AS b_opt, cb.name AS b_company
+         FROM intro_pairs p
+         JOIN users a ON a.id = p.user_a
+         JOIN users b ON b.id = p.user_b
+         LEFT JOIN companies ca ON ca.id = a.company_id
+         LEFT JOIN companies cb ON cb.id = b.company_id
+         WHERE p.round = ?`
+      )
+      .bind(round)
+      .all<{
+        id: number; met_at: number | null;
+        a_id: number; a_email: string; a_name: string; a_role: string; a_dma: string; a_bio: string; a_opt: number; a_company: string | null;
+        b_id: number; b_email: string; b_name: string; b_role: string; b_dma: string; b_bio: string; b_opt: number; b_company: string | null;
+      }>();
+
+    for (const r of rows) {
+      if (r.met_at) continue; // they already connected — no nudge needed
+      const sides = [
+        { to: r.a_email, name: r.a_name, self: r.a_id, opt: r.a_opt, partner: { id: r.b_id, name: r.b_name, role: r.b_role, company: r.b_company, dma_name: r.b_dma, bio: r.b_bio } },
+        { to: r.b_email, name: r.b_name, self: r.b_id, opt: r.b_opt, partner: { id: r.a_id, name: r.a_name, role: r.a_role, company: r.a_company, dma_name: r.a_dma, bio: r.a_bio } },
+      ];
+      for (const side of sides) {
+        if (side.opt || !side.to) continue;
+        try {
+          await emailIntroFollowup(side.to, side.name, side.partner, round, await metUrl(r.id, side.self), await introUnsubUrl(side.self));
+          out.emailed += 1;
+        } catch (e) {
+          out.errors.push(`followup pair ${r.id} → ${side.self}: ${String(e)}`);
+        }
+      }
+    }
+    await db.prepare("UPDATE intro_rounds SET followed_up_at=? WHERE round=?").bind(Date.now(), round).run();
+    out.rounds += 1;
+  }
+  return out;
+}
+
 export type IntroResult = {
   ok: boolean;
   skipped?: boolean;
@@ -227,29 +310,109 @@ export type IntroResult = {
   round?: string;
   drafted?: number;
   emailed?: number;
+  followedUp?: number;
   errors: string[];
 };
 
 // Scheduled orchestration (runs daily): draft a new month's pairings and notify
-// admins; auto-send a draft that's been sitting past the grace period.
+// admins; auto-send a draft past the grace period; and nudge sent rounds a week
+// on. Follow-ups run on every tick regardless of the current round's state.
 export async function runIntros(): Promise<IntroResult> {
   const errors: string[] = [];
   if (!emailEnabled()) return { ok: false, skipped: true, reason: "Email isn't configured.", errors };
+
+  const followups = await sendFollowups();
+  errors.push(...followups.errors);
+  const followUp = { followedUp: followups.emailed };
+
   const round = currentRound();
   const s = await getRoundStatus(round);
 
-  if (s?.status === "sent") return { ok: true, skipped: true, reason: `Intros already sent for ${round}.`, round, errors };
+  if (s?.status === "sent") return { ok: errors.length === 0, skipped: true, reason: `Intros already sent for ${round}.`, round, ...followUp, errors };
 
   if (!s) {
     const drafted = await generateDraft(round);
     await notifyAdmins("intros_ready");
-    return { ok: true, round, drafted, reason: "Draft created; admins notified to review.", errors };
+    return { ok: errors.length === 0, round, drafted, reason: "Draft created; admins notified to review.", ...followUp, errors };
   }
 
   // status is draft — auto-send once past the grace window.
   if (Date.now() - s.created_at >= AUTO_SEND_AFTER) {
     const res = await sendRound(round);
-    return { ok: res.errors.length === 0, round, emailed: res.emailed, errors: res.errors };
+    errors.push(...res.errors);
+    return { ok: errors.length === 0, round, emailed: res.emailed, ...followUp, errors };
   }
-  return { ok: true, skipped: true, reason: "Draft awaiting admin review.", round, errors };
+  return { ok: errors.length === 0, skipped: true, reason: "Draft awaiting admin review.", round, ...followUp, errors };
+}
+
+// The member-facing card: this member's most recent *sent* intro, if any.
+export type MyIntro = { round: string; pairId: number; met: boolean; iMarkedMet: boolean; partner: IntroMember };
+
+export async function myLatestIntro(userId: number): Promise<MyIntro | null> {
+  const db = getDb();
+  const row = await db
+    .prepare(
+      `SELECT p.id AS pair_id, p.round, p.met_at, p.met_by,
+              CASE WHEN p.user_a = ?1 THEN p.user_b ELSE p.user_a END AS partner_id
+       FROM intro_pairs p
+       JOIN intro_rounds r ON r.round = p.round
+       WHERE r.status = 'sent' AND (p.user_a = ?1 OR p.user_b = ?1)
+       ORDER BY r.sent_at DESC, p.round DESC LIMIT 1`
+    )
+    .bind(userId)
+    .first<{ pair_id: number; round: string; met_at: number | null; met_by: number | null; partner_id: number }>();
+  if (!row) return null;
+  const partner = await db
+    .prepare(
+      `SELECT u.id, u.email, u.name, u.role, u.bio, u.dma_slug, u.dma_name, u.function_id, u.avatar_key,
+              COALESCE(c.name, NULLIF(u.company,'')) AS company_name
+       FROM users u LEFT JOIN companies c ON c.id = u.company_id WHERE u.id = ?`
+    )
+    .bind(row.partner_id)
+    .first<IntroMember>();
+  if (!partner) return null;
+  return { round: row.round, pairId: row.pair_id, met: !!row.met_at, iMarkedMet: row.met_by === userId, partner };
+}
+
+// Admin round history: every round, newest first, with its pairs and met status.
+export type HistoryMember = { id: number; name: string; avatar_key: string | null };
+export type HistoryRound = {
+  round: string;
+  status: "draft" | "sent";
+  created_at: number;
+  sent_at: number | null;
+  followed_up_at: number | null;
+  pairs: { a: HistoryMember; b: HistoryMember; met: boolean }[];
+  metCount: number;
+};
+
+export async function introHistory(limit = 24): Promise<HistoryRound[]> {
+  const db = getDb();
+  const { results: rounds } = await db
+    .prepare("SELECT round, status, created_at, sent_at, followed_up_at FROM intro_rounds ORDER BY round DESC LIMIT ?")
+    .bind(limit)
+    .all<{ round: string; status: "draft" | "sent"; created_at: number; sent_at: number | null; followed_up_at: number | null }>();
+  if (rounds.length === 0) return [];
+  const ph = rounds.map(() => "?").join(",");
+  const { results: pairs } = await db
+    .prepare(
+      `SELECT p.round, p.met_at,
+              a.id AS a_id, a.name AS a_name, a.avatar_key AS a_avatar,
+              b.id AS b_id, b.name AS b_name, b.avatar_key AS b_avatar
+       FROM intro_pairs p
+       JOIN users a ON a.id = p.user_a
+       JOIN users b ON b.id = p.user_b
+       WHERE p.round IN (${ph}) ORDER BY p.id ASC`
+    )
+    .bind(...rounds.map((r) => r.round))
+    .all<{ round: string; met_at: number | null; a_id: number; a_name: string; a_avatar: string | null; b_id: number; b_name: string; b_avatar: string | null }>();
+  const byRound = new Map<string, HistoryRound["pairs"]>();
+  const metByRound = new Map<string, number>();
+  for (const p of pairs) {
+    const list = byRound.get(p.round) ?? [];
+    list.push({ a: { id: p.a_id, name: p.a_name, avatar_key: p.a_avatar }, b: { id: p.b_id, name: p.b_name, avatar_key: p.b_avatar }, met: !!p.met_at });
+    byRound.set(p.round, list);
+    if (p.met_at) metByRound.set(p.round, (metByRound.get(p.round) ?? 0) + 1);
+  }
+  return rounds.map((r) => ({ ...r, pairs: byRound.get(r.round) ?? [], metCount: metByRound.get(r.round) ?? 0 }));
 }

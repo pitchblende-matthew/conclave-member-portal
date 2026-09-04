@@ -189,19 +189,32 @@ If no one acts within a grace window (3 days), the runner auto-sends the draft o
 a later tick so intros never silently stop. The odd member out is left unpaired
 for an admin to place (or to carry to next month).
 
-- **Runner:** `src/lib/intros.ts` — `runIntros()` drafts a new month's pairings,
-  notifies admins, and auto-sends a stale draft. Idempotent per month (keyed by
-  the `YYYY-MM` round in `intro_pairs`; state in `intro_rounds`).
-- **Curation:** `/admin/intros` — generate/regenerate a draft, unpair or pair
-  members, and send now. Server actions in `admin/intros/actions.ts`.
-- **Trigger:** `GET /api/intros/run?key=<DIGEST_SECRET>`. Run **daily** by
-  `.github/workflows/intros.yml`; the runner decides whether to draft, wait, or
-  auto-send. Reuses the digest secret + email config — **no new env**.
-- **Opt-out:** a profile toggle + one-click `/api/intros/unsubscribe`, tracked
-  in `users.intro_opt_out`.
+A week after a round sends, the runner **follows up** with each still-unmet pair
+("did you two connect?"). Either member can mark the pair as connected — from the
+email's one-click link or their dashboard — which stops the nudges and feeds the
+admin history. Each member also sees **their intro of the month on the dashboard**
+(partner card + message/profile links), not just in email.
 
-Migration `0047` adds `intro_pairs` + the opt-out column; `0048` adds
-`intro_rounds` (per-month draft/sent state).
+- **Runner:** `src/lib/intros.ts` — `runIntros()` runs daily: drafts a new
+  month's pairings, notifies admins, auto-sends a stale draft, and sends
+  follow-ups for sent rounds a week on. Idempotent per month (keyed by the
+  `YYYY-MM` round in `intro_pairs`; state in `intro_rounds`).
+- **Curation:** `/admin/intros` — generate/regenerate a draft, unpair or pair
+  members, and send now. **`/admin/intros/history`** shows every past round: who
+  was paired, when it sent, and how many met.
+- **Member view:** the dashboard shows the member's latest sent intro with a
+  "We connected ✓" action (`markIntroMet`).
+- **Trigger:** `GET /api/intros/run?key=<DIGEST_SECRET>`. Run **daily** by
+  `.github/workflows/intros.yml`; the runner decides whether to draft, wait,
+  auto-send, or follow up. Reuses the digest secret + email config — **no new
+  env**.
+- **Opt-out / met:** a profile toggle + one-click `/api/intros/unsubscribe`
+  (`users.intro_opt_out`); one-click "we met" via `/api/intros/met`
+  (`intro_pairs.met_at` / `met_by`).
+
+Migrations: `0047` adds `intro_pairs` + the opt-out column; `0048` adds
+`intro_rounds` (per-month draft/sent state); `0049` adds follow-up + "we met"
+columns (`intro_rounds.followed_up_at`, `intro_pairs.met_at` / `met_by`).
 
 ---
 

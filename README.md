@@ -239,12 +239,14 @@ present, mirroring the email integration's gating. Configure it all at
      the bot token below, and the bot invited to that channel) **or** an
      **incoming-webhook URL**; the code auto-detects which by shape. The default
      destination is admin-set (`slack_webhook_url`, despite the name it holds a
-     channel or a webhook) or env (`SLACK_WEBHOOK_URL` / `SLACK_CHANNEL`). Bulk
-     briefing sync is intentionally *not* bridged, so a backfill can't flood the
-     channel. **Routing** (`slack_bridge_routing` in `app_settings`): each
+     channel or a webhook) or env (`SLACK_WEBHOOK_URL` / `SLACK_CHANNEL`).
+     **Routing** (`slack_bridge_routing` in `app_settings`): each
      activity type can be switched off or pointed at its own destination, falling
      back to the default when no override is set — so e.g. events → `#events`,
      briefings → `#reading`. Edit it under Announcement routing at `/admin/slack`.
+     The pitchblende briefings **sync** also announces the briefings it imports,
+     but flood-capped: a normal incremental run posts each new item, while a
+     large backfill (more than a handful) posts a single summary line instead.
    - **Member DMs** via the **bot token** — the bot DMs linked members about a new
      direct message, a connection request, and their monthly intro. Requires
      `SLACK_BOT_TOKEN` (scopes `chat:write` + `im:write`); DMs reach only members

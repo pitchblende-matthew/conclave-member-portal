@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { isValidSlackInvite, isValidSlackWebhook, saveSlackSettings } from "@/lib/slack";
+import { isValidSlackInvite, isValidSlackWebhook, saveSlackSettings, saveBridgeRouting, BRIDGE_CATEGORIES, type BridgeRouting } from "@/lib/slack";
 
 export type SlackSettingsState = { ok?: boolean; error?: string };
 
@@ -30,5 +30,25 @@ export async function updateSlackSettings(
   await saveSlackSettings(inviteUrl, workspaceName, teamId, webhookUrl);
   revalidatePath("/admin/slack");
   revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+// Per-category announcement routing: which activity types announce, and to which
+// channel (an optional webhook override, else the default webhook).
+export async function updateBridgeRouting(
+  _prev: SlackSettingsState,
+  formData: FormData
+): Promise<SlackSettingsState> {
+  await requireAdmin();
+  const routing = {} as BridgeRouting;
+  for (const { key, label } of BRIDGE_CATEGORIES) {
+    const url = String(formData.get(`${key}_url`) || "").trim();
+    if (url && !isValidSlackWebhook(url)) {
+      return { error: `The ${label} channel webhook doesn't look like a Slack incoming webhook (https://hooks.slack.com/services/…).` };
+    }
+    routing[key] = { on: formData.get(`${key}_on`) === "1", url };
+  }
+  await saveBridgeRouting(routing);
+  revalidatePath("/admin/slack");
   return { ok: true };
 }

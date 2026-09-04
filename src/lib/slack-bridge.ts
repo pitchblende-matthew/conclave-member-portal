@@ -1,5 +1,5 @@
 import { siteUrl } from "./email";
-import { postSlackChannel, dmMember } from "./slack";
+import { postSlackCategory, dmMember } from "./slack";
 
 // Compose layer over the Slack primitives in ./slack: turns portal activity into
 // Slack messages. Channel announcements go out via the incoming webhook; member
@@ -31,24 +31,24 @@ export async function slackAnnounceEvent(ev: { id: number; title: string; starts
     `:calendar: *New event* — ${link(siteUrl(`/events/${ev.id}`), ev.title)}`,
     `${slackDate(ev.starts_at)}${where ? ` · ${mrk(where)}` : ""}`,
   ];
-  await postSlackChannel(lines.join("\n"));
+  await postSlackCategory("events", lines.join("\n"));
 }
 
 export async function slackAnnounceBriefing(b: { id: number; title: string; kind?: string; url?: string; summary?: string }): Promise<void> {
   const href = b.kind === "link" && b.url ? b.url : siteUrl(`/briefings/${b.id}`);
   const lines = [`:newspaper: *New briefing* — ${link(href, b.title)}`];
   if (b.summary) lines.push(mrk(b.summary.slice(0, 200)));
-  await postSlackChannel(lines.join("\n"));
+  await postSlackCategory("briefings", lines.join("\n"));
 }
 
 export async function slackAnnounceTopic(t: { id: number; title: string; dma_name?: string }): Promise<void> {
   const scope = t.dma_name ? ` _(${mrk(t.dma_name)})_` : "";
-  await postSlackChannel(`:speech_balloon: *New discussion* — ${link(siteUrl(`/board/${t.id}`), t.title)}${scope}`);
+  await postSlackCategory("discussions", `:speech_balloon: *New discussion* — ${link(siteUrl(`/board/${t.id}`), t.title)}${scope}`);
 }
 
 export async function slackAnnounceRequest(r: { id: number; title: string; kind: "ask" | "offer" }): Promise<void> {
   const label = r.kind === "offer" ? "New offer" : "New ask";
-  await postSlackChannel(`:handshake: *${label}* — ${link(siteUrl(`/requests/${r.id}`), r.title)}`);
+  await postSlackCategory("requests", `:handshake: *${label}* — ${link(siteUrl(`/requests/${r.id}`), r.title)}`);
 }
 
 // ---- Member DMs (bot) ------------------------------------------------------

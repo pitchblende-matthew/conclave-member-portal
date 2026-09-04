@@ -237,6 +237,10 @@ present, mirroring the email integration's gating. Configure it all at
      briefings, discussions, and asks & offers post to a channel. Admin-set
      (`slack_webhook_url`) or `SLACK_WEBHOOK_URL`. Bulk briefing sync is
      intentionally *not* bridged, so a backfill can't flood the channel.
+     **Routing** (`slack_bridge_routing` in `app_settings`): each activity type
+     can be switched off or pointed at its own channel webhook, falling back to
+     the default when no override is set — so e.g. events → `#events`, briefings
+     → `#reading`. Edit it under Announcement routing at `/admin/slack`.
    - **Member DMs** via a **bot token** — the bot DMs linked members about a new
      direct message, a connection request, and their monthly intro. Requires
      `SLACK_BOT_TOKEN` (scope `chat:write`); DMs reach only members who've linked

@@ -5,6 +5,7 @@ import { announceBriefing } from "./board-announce";
 import { slackAnnounceBriefing } from "./slack-bridge";
 import { postSlackCategory } from "./slack";
 import { siteUrl } from "./email";
+import { stripCdata, decodeEntities, stripHtml } from "./html";
 
 // Daily briefing discovery: pull fresh industry articles from a curated set of
 // RSS feeds, let Claude pick the few most worth members' time (and write clean
@@ -78,32 +79,6 @@ function hostOf(u: string): string {
 // ---- feed parsing (no XML lib on the edge; regex is enough for RSS/Atom) -----
 
 type FeedItem = { title: string; url: string; summary: string; published: number; source: string };
-
-function stripCdata(s: string): string {
-  return s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1");
-}
-
-function decodeEntities(s: string): string {
-  return s
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;|&apos;/g, "'")
-    .replace(/&#x2f;/gi, "/")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&nbsp;/g, " ");
-}
-
-function stripHtml(s: string): string {
-  // Two passes: strip literal tags, decode entities (which may *reveal*
-  // entity-encoded tags like `&lt;figure&gt;` that some feeds ship), then strip
-  // those too. Decoding last would leave raw `<figure>` markup in the text.
-  let t = stripCdata(s).replace(/<[^>]+>/g, " ");
-  t = decodeEntities(t);
-  t = t.replace(/<[^>]+>/g, " ");
-  return t.replace(/\s+/g, " ").trim();
-}
 
 function tagText(block: string, tag: string): string {
   const m = block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, "i"));

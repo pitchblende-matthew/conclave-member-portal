@@ -1,0 +1,32 @@
+name: Briefings cleanup
+
+# One-off maintenance, run on demand (no schedule): pings the portal's cleanup
+# endpoint, which re-strips HTML from stored briefing summaries so past entries
+# render as clean text. Idempotent — safe to run more than once. Reuses the
+# digest secret.
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger briefings cleanup
+        env:
+          DIGEST_SECRET: ${{ secrets.DIGEST_SECRET }}
+          # Override via repo variable CLEANUP_URL if the portal moves.
+          CLEANUP_URL: ${{ vars.CLEANUP_URL || 'https://www.jointheconclave.com/portal/api/briefings/cleanup' }}
+        run: |
+          if [ -z "$DIGEST_SECRET" ]; then
+            echo "::error::DIGEST_SECRET repo secret is not set."
+            exit 1
+          fi
+          url="${CLEANUP_URL}?key=${DIGEST_SECRET}"
+          echo "GET ${CLEANUP_URL}"
+          status=$(curl -sS -o response.json -w "%{http_code}" "$url")
+          echo "HTTP ${status}"
+          echo "Response: $(cat response.json)"
+          case "$status" in
+            2*) echo "Briefings cleanup accepted the request." ;;
+            *)  echo "::error::Briefings cleanup returned HTTP ${status}"; exit 1 ;;
+          esac

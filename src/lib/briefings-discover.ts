@@ -96,7 +96,13 @@ function decodeEntities(s: string): string {
 }
 
 function stripHtml(s: string): string {
-  return decodeEntities(stripCdata(s).replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+  // Two passes: strip literal tags, decode entities (which may *reveal*
+  // entity-encoded tags like `&lt;figure&gt;` that some feeds ship), then strip
+  // those too. Decoding last would leave raw `<figure>` markup in the text.
+  let t = stripCdata(s).replace(/<[^>]+>/g, " ");
+  t = decodeEntities(t);
+  t = t.replace(/<[^>]+>/g, " ");
+  return t.replace(/\s+/g, " ").trim();
 }
 
 function tagText(block: string, tag: string): string {
